@@ -1,0 +1,5 @@
+# SMRT auto-generated routes (from Vite plugin)
+src/lib/server/smrt-register.ts
+src/routes/api/generated/**/+server.ts
+src/types/smrt-generated/
+src/types/virtual-modules.d.ts

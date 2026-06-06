@@ -1,0 +1,40 @@
+# Lefthook Git Hooks Configuration
+
+pre-commit:
+  skip:
+    - ref: main
+      env:
+        - CI
+  commands:
+    biome:
+      glob: "*.{js,mjs,cjs,ts,tsx,json,jsonc}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      fail_text: |
+        Biome formatting/linting failed. Run `pnpm format`, then stage the fixes.
+
+    validate-workflows:
+      glob: ".github/workflows/*.{yml,yaml}"
+      run: pnpm workflows:check
+
+    validate-sops:
+      glob: "manifests/**/*.{yaml,yml}"
+      run: pnpm sops:check
+
+commit-msg:
+  skip:
+    - ref: main
+      env:
+        - CI
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+      fail_text: |
+        Use Conventional Commits: <type>(<scope>): <subject>
+
+pre-push:
+  commands:
+    check:
+      run: pnpm check
+      skip:
+        - merge
+        - rebase

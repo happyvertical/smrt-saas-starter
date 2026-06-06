@@ -1,0 +1,27 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-environment
+      - name: Validate dev
+        run: pnpm check
+      - name: Build runtime images
+        run: |
+          echo "Build and push web/worker images tagged dev-${GITHUB_SHA::12} and dev-latest"
+      - name: Update dev manifests
+        run: |
+          echo "Patch manifests/overlays/dev with immutable image digests"

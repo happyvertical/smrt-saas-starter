@@ -1,0 +1,39 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-environment
+      - name: Validate production
+        run: pnpm check
+      - name: Build production images
+        run: |
+          echo "Build and push web/worker images tagged ${GITHUB_SHA::12} and latest"
+      - name: Update production manifests
+        run: |
+          echo "Patch manifests/overlays/production with immutable image digests"
+      - name: Sync main back to dev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create \
+            --base dev \
+            --head main \
+            --title "chore: sync main back to dev" \
+            --body "Automated sync after production deploy." \
+          || gh pr list --base dev --head main --json url --jq '.[0].url'

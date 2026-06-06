@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smrt-saas-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smrt-saas-worker
+  template:
+    metadata:
+      labels:
+        app: smrt-saas-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/happyvertical/smrt-saas-starter-worker:dev-latest
+          envFrom:
+            - configMapRef:
+                name: smrt-saas-config
+            - secretRef:
+                name: smrt-saas-secret

@@ -1,0 +1,29 @@
+{
+  "name": "@happyvertical/smrt-saas-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Background worker for SMRT SaaS starter jobs.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "biome lint src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@happyvertical/jobs": "catalog:",
+    "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-jobs": "catalog:",
+    "@happyvertical/smrt-saas-objects": "workspace:*",
+    "@happyvertical/smrt-core": "catalog:",
+    "@happyvertical/smrt-tenancy": "catalog:"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
+  }
+}

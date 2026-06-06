@@ -1,0 +1,95 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!apps/mobile/.gradle",
+      "!apps/mobile/iosApp/*.xcodeproj",
+      "!apps/web/.svelte-kit",
+      "!apps/web/build",
+      "!apps/web/src/types/smrt-generated",
+      "!apps/web/src/types/virtual-modules.d.ts",
+      "!**/build",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/.turbo",
+      "!**/.smrt",
+      "!packages/mobile-contract/generated",
+      "!apps/mobile/shared/src/commonMain/kotlin/generated"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "style": {
+        "useConst": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte"],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": [
+        "**/*.yaml",
+        "**/*.yml",
+        "**/*.md",
+        "**/*.kts",
+        "**/*.toml",
+        "**/*.swift",
+        "**/*.kt"
+      ],
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.test.mjs", "**/__tests__/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
+}

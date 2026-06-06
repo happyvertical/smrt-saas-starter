@@ -1,0 +1,53 @@
+{
+  "name": "smrt-saas-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canonical HappyVertical SMRT multi-tenant SaaS starter, reference app, and ecosystem demo.",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "format": "biome check --write .",
+    "format:check": "biome check .",
+    "lint": "pnpm deps:check && biome lint . && pnpm -r --if-present lint",
+    "lint:fix": "biome lint --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "pnpm -r --if-present test && node --test scripts/__tests__/*.test.mjs",
+    "test:e2e": "pnpm -r --if-present test:e2e",
+    "build": "turbo run build",
+    "db:migrate": "pnpm --filter @happyvertical/smrt-saas-web db:migrate",
+    "deps:check": "node scripts/check-dependencies.mjs",
+    "workflows:check": "node scripts/check-workflows.mjs",
+    "manifests:check": "node scripts/check-manifests.mjs",
+    "sops:check": "node scripts/check-sops.mjs",
+    "validate": "node scripts/validate-scaffold.mjs",
+    "check": "pnpm deps:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm workflows:check && pnpm manifests:check && pnpm sops:check && pnpm validate",
+    "mobile:validate": "pnpm --filter @happyvertical/smrt-saas-mobile validate:shell",
+    "mobile:generate": "pnpm --filter @happyvertical/smrt-saas-mobile-contract generate",
+    "objects:test": "pnpm --filter @happyvertical/smrt-saas-objects test",
+    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || echo 'Skipping lefthook install (not in git repository)'"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@playwright/test": "^1.58.2",
+    "@sveltejs/adapter-node": "^5.5.4",
+    "@sveltejs/kit": "^2.55.0",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@types/node": "^24.10.1",
+    "@vitest/coverage-v8": "^4.1.5",
+    "lefthook": "^2.1.6",
+    "playwright": "^1.58.2",
+    "svelte": "^5.55.5",
+    "svelte-check": "^4.0.0",
+    "turbo": "^2.9.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.5"
+  }
+}

@@ -1,0 +1,37 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-environment
+      - name: Validate staging
+        run: pnpm check
+      - name: Build staging images
+        run: |
+          echo "Build and push web/worker images tagged staging-${GITHUB_SHA::12} and staging-latest"
+      - name: Update staging manifests
+        run: |
+          echo "Patch manifests/overlays/staging with immutable image digests"
+      - name: Open staging to main PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create \
+            --base main \
+            --head staging \
+            --title "chore: promote staging to main" \
+            --body "Automated promotion from staging to main." \
+          || gh pr list --base main --head staging --json url --jq '.[0].url'

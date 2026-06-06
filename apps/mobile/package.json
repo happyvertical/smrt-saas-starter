@@ -1,0 +1,17 @@
+{
+  "name": "@happyvertical/smrt-saas-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kotlin Multiplatform mobile shell for the SMRT SaaS starter.",
+  "type": "module",
+  "scripts": {
+    "validate:shell": "node scripts/validate-shell.mjs",
+    "build": "pnpm validate:shell",
+    "typecheck": "pnpm validate:shell",
+    "test": "pnpm validate:shell",
+    "lint": "pnpm validate:shell"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

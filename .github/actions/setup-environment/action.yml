@@ -1,0 +1,33 @@
+name: Setup environment
+description: Install Node, pnpm, and workspace dependencies.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+        cache: "pnpm"
+
+    - name: Enable pnpm
+      shell: bash
+      run: |
+        corepack enable
+        corepack prepare pnpm@10.33.0 --activate
+
+    - name: Configure GitHub Packages
+      shell: bash
+      run: |
+        echo "@happyvertical:registry=https://npm.pkg.github.com" >> "$HOME/.npmrc"
+        echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> "$HOME/.npmrc"
+      env:
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN || github.token }}
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+      env:
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN || github.token }}
+        GH_PACKAGES_TOKEN: ${{ env.GH_PACKAGES_TOKEN || github.token }}
+        GITHUB_PACKAGES_TOKEN: ${{ env.GITHUB_PACKAGES_TOKEN || github.token }}

@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: smrt-saas-production
+resources:
+  - ../../base
+images:
+  - name: ghcr.io/happyvertical/smrt-saas-starter-web
+    newTag: latest
+  - name: ghcr.io/happyvertical/smrt-saas-starter-worker
+    newTag: latest
+patches:
+  - target:
+      kind: ConfigMap
+      name: smrt-saas-config
+    patch: |-
+      - op: replace
+        path: /data/PUBLIC_APP_NAME
+        value: SMRT SaaS Starter
