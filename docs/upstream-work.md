@@ -26,7 +26,7 @@ pnpm build
 
 ## SMRT: Tenant Metering
 
-Status: initial tenant subscription metering is complete in `@happyvertical/smrt-subscriptions@0.27.11` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435).
+Status: initial tenant subscription metering is complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
 
 Covered surface:
 
@@ -37,7 +37,7 @@ Covered surface:
 
 ## SMRT: Subscriptions
 
-Status: complete in `@happyvertical/smrt-subscriptions@0.27.11` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435).
+Status: complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
 
 Covered surface:
 

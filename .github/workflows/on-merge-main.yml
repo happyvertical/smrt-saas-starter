@@ -17,6 +17,22 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     environment: production
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: smrt_saas
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
       - uses: actions/checkout@v4
         with:

@@ -27,6 +27,7 @@ GH_PACKAGES_TOKEN="$token" GITHUB_PACKAGES_TOKEN="$token" NODE_AUTH_TOKEN="$toke
 cp .env.example .env
 pnpm services:up
 pnpm db:migrate
+pnpm db:smoke
 pnpm check
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
@@ -36,6 +37,8 @@ The web app defaults to `http://localhost:5173` and uses local Postgres at
 The local service stack starts with a Docker Compose Postgres service named
 `postgres`; later dependencies should be added to the same compose file and
 made available through the `services:*` scripts.
+`pnpm check` includes `pnpm db:smoke`, so keep Postgres running before local
+full-repo validation.
 
 ## Repository Shape
 

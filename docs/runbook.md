@@ -6,6 +6,7 @@
 pnpm install
 pnpm services:up
 pnpm db:migrate
+pnpm db:smoke
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
 
@@ -32,6 +33,9 @@ pnpm sops:check
 pnpm validate
 pnpm check
 ```
+
+`pnpm check` runs the Postgres migration smoke path. Start local services first
+with `pnpm services:up`; CI workflows provide an isolated Postgres service.
 
 ## Branch Flow
 

@@ -15,6 +15,7 @@
     "dev": "vite dev --host 0.0.0.0",
     "build": "vite build",
     "db:migrate": "node scripts/smrt-db-migrate.mjs",
+    "db:smoke": "node scripts/smrt-db-smoke.mjs",
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "biome lint src",

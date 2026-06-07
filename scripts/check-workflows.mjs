@@ -24,6 +24,17 @@ for (const file of workflowFiles) {
   if (!text.includes("setup-environment")) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
+  if (text.includes("pnpm check")) {
+    for (const phrase of [
+      "postgres:18-alpine",
+      "POSTGRES_DB: smrt_saas",
+      "DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas",
+    ]) {
+      if (!text.includes(phrase)) {
+        throw new Error(`${file} must configure CI Postgres for pnpm check: ${phrase}`);
+      }
+    }
+  }
 }
 
 console.log(`Validated ${workflowFiles.length} GitHub workflow files.`);

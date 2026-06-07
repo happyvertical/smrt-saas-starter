@@ -53,7 +53,7 @@ for (const phrase of [
   "postgres:",
   "POSTGRES_DB",
   "pg_isready",
-  "postgres-data:/var/lib/postgresql/data",
+  "postgres-data:/var/lib/postgresql",
 ]) {
   if (!compose.includes(phrase)) {
     throw new Error(`docker-compose.yml must include: ${phrase}`);
@@ -61,10 +61,15 @@ for (const phrase of [
 }
 
 const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-for (const scriptName of ["services:up", "services:down", "services:logs", "db:up"]) {
+for (const scriptName of ["services:up", "services:down", "services:logs", "db:up", "db:smoke"]) {
   if (!packageJson.scripts?.[scriptName]) {
     throw new Error(`package.json must include script: ${scriptName}`);
   }
+}
+
+const webPackageJson = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
+if (!webPackageJson.scripts?.["db:smoke"]) {
+  throw new Error("apps/web/package.json must include script: db:smoke");
 }
 
 console.log("Scaffold validation passed.");
