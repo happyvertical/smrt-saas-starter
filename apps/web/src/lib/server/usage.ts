@@ -41,7 +41,7 @@ export async function getUsageSummaries(tenantId?: string | null): Promise<Usage
     }));
     const aiUsage = await getAiUsageSummaries(activeTenantId);
 
-    return mergeUsageSummaries([...persisted, ...aiUsage]);
+    return mergeUsageSummaries([...persisted, ...aiUsage], activeTenantId);
   });
 }
 
@@ -189,7 +189,10 @@ function usageSummaryFromQuantity(
   };
 }
 
-function mergeUsageSummaries(summaries: UsageSummary[]): UsageSummary[] {
+export function mergeUsageSummaries(
+  summaries: UsageSummary[],
+  tenantId = DEMO_TENANT_ID,
+): UsageSummary[] {
   const records = summaries.map((summary) => ({
     tenantId: summary.tenantId,
     metricKey: summary.metricKey,
@@ -197,7 +200,7 @@ function mergeUsageSummaries(summaries: UsageSummary[]): UsageSummary[] {
     windowStart: summary.windowStart,
     windowEnd: summary.windowEnd,
   }));
-  return summarizeUsageRecords(records);
+  return summarizeUsageRecords(records, tenantId);
 }
 
 function readAiMetricQuantity(
