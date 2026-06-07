@@ -8,14 +8,10 @@ import {
   SubscriptionResolver,
   TenantSubscriptionCollection,
 } from "@happyvertical/smrt-subscriptions";
+import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import { getSmrtConfig } from "$lib/server/smrt";
-import {
-  DEMO_TENANT_ID,
-  getActiveTenantId,
-  getCurrentMonthWindow,
-  isUuid,
-  readFeatureLabel,
-} from "$lib/server/starter-data";
+import { getCurrentMonthWindow, isUuid, readFeatureLabel } from "$lib/server/starter-data";
+import { withActiveTenant } from "$lib/server/tenant-context";
 import { summarizeUsageMetric } from "$lib/server/usage";
 
 export interface StarterFeatureGrant extends PlanFeatureGrant {
@@ -41,30 +37,33 @@ export interface BillingOverview {
   periodEnd: string;
 }
 
-export async function getBillingOverview(
-  tenantId: string | null | undefined = DEMO_TENANT_ID,
-): Promise<BillingOverview> {
-  const activeTenantId = getActiveTenantId(tenantId);
-  const { plans, subscriptions } = await createSubscriptionCollections();
-  const resolver = new SubscriptionResolver({
-    plans,
-    subscriptions,
-    usage: {
-      summarize: summarizeUsageMetric,
-    },
-  });
-  const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
-  const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
-  const plan = snapshot.planId ? await plans.get({ id: snapshot.planId }) : null;
-  const currentPlan = await resolveDisplayPlan(plans, plan);
+export async function getBillingOverview(tenantId?: string | null): Promise<BillingOverview> {
+  return await withActiveTenant(tenantId, async (activeTenantId) => {
+    const { plans, subscriptions } = await createSubscriptionCollections();
+    const resolver = new SubscriptionResolver({
+      plans: {
+        get: (criteria) => withSystemContext(() => plans.get(criteria)),
+      },
+      subscriptions,
+      usage: {
+        summarize: summarizeUsageMetric,
+      },
+    });
+    const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
+    const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+    const plan = snapshot.planId
+      ? await withSystemContext(() => plans.get({ id: snapshot.planId }))
+      : null;
+    const currentPlan = await resolveDisplayPlan(plans, plan);
 
-  return {
-    tenantId: activeTenantId,
-    currentPlan,
-    periodEnd:
-      subscription?.currentPeriodEnd?.toISOString() ?? getCurrentMonthWindow().end.toISOString(),
-    snapshot,
-  };
+    return {
+      tenantId: activeTenantId,
+      currentPlan,
+      periodEnd:
+        subscription?.currentPeriodEnd?.toISOString() ?? getCurrentMonthWindow().end.toISOString(),
+      snapshot,
+    };
+  });
 }
 
 export async function getPlanCards(currentPlanId: string) {
@@ -96,12 +95,12 @@ export async function getStripePriceId(planId: string): Promise<string | null> {
   return plan.stripePriceId || process.env[envKey] || null;
 }
 
-export async function getStripeCustomerId(
-  tenantId: string | null | undefined = DEMO_TENANT_ID,
-): Promise<string | null> {
-  const { subscriptions } = await createSubscriptionCollections();
-  const subscription = await subscriptions.findCurrentForTenant(getActiveTenantId(tenantId));
-  return subscription?.stripeCustomerId || null;
+export async function getStripeCustomerId(tenantId?: string | null): Promise<string | null> {
+  return await withActiveTenant(tenantId, async (activeTenantId) => {
+    const { subscriptions } = await createSubscriptionCollections();
+    const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+    return subscription?.stripeCustomerId || null;
+  });
 }
 
 async function createSubscriptionCollections() {
@@ -114,14 +113,14 @@ async function createSubscriptionCollections() {
 
 async function getActivePlans(): Promise<StarterPlan[]> {
   const { plans } = await createSubscriptionCollections();
-  return (await plans.findActive()).map(toStarterPlan);
+  return (await withSystemContext(() => plans.findActive())).map(toStarterPlan);
 }
 
 async function resolveDisplayPlan(
   plans: SubscriptionPlanCollection,
   plan: SubscriptionPlan | null,
 ): Promise<StarterPlan> {
-  const displayPlan = plan ?? (await plans.findActive())[0];
+  const displayPlan = plan ?? (await withSystemContext(() => plans.findActive()))[0];
   if (!displayPlan) {
     throw new Error("No active subscription plans are seeded");
   }
@@ -133,9 +132,11 @@ async function findPlan(
   plans: SubscriptionPlanCollection,
   planId: string,
 ): Promise<SubscriptionPlan | null> {
-  return isUuid(planId)
-    ? ((await plans.get({ id: planId })) ?? null)
-    : await plans.findByPlanKey(planId);
+  return await withSystemContext(async () =>
+    isUuid(planId)
+      ? ((await plans.get({ id: planId })) ?? null)
+      : await plans.findByPlanKey(planId),
+  );
 }
 
 function toStarterPlan(plan: SubscriptionPlan): StarterPlan {

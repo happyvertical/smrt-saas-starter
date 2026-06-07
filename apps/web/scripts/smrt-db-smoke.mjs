@@ -5,6 +5,7 @@ import {
   TenantSubscriptionCollection,
   TenantUsageMetricCollection,
 } from "@happyvertical/smrt-subscriptions";
+import { enableTenancy, withSystemContext, withTenant } from "@happyvertical/smrt-tenancy";
 
 import "@happyvertical/smrt-saas-objects";
 import "@happyvertical/smrt-subscriptions";
@@ -30,6 +31,7 @@ const db = await resolveDatabase(
   { type: "postgres", url: databaseUrl },
   { dbid: `smrt-saas-starter-db-smoke:${process.pid}` },
 );
+enableTenancy();
 
 try {
   const tablesResult = await db.query(`
@@ -116,13 +118,24 @@ try {
   const subscriptions = await TenantSubscriptionCollection.create({ db });
   const usageMetrics = await TenantUsageMetricCollection.create({ db });
   const resolver = new SubscriptionResolver({
-    plans,
+    plans: {
+      get: (criteria) => withSystemContext(() => plans.get(criteria)),
+    },
     subscriptions,
     usage: {
       summarize: (options) => usageMetrics.summarizeUsage(options),
     },
   });
-  const entitlements = await resolver.resolveTenantEntitlements(demoTenant.id);
+  const scopedPlans = await withSystemContext(() => plans.findActive());
+  if (scopedPlans.length < starterData.plans.length) {
+    throw new Error(
+      `Expected system plan reader to find at least ${starterData.plans.length} active plans, found ${scopedPlans.length}`,
+    );
+  }
+
+  const entitlements = await withTenant({ tenantId: demoTenant.id }, () =>
+    resolver.resolveTenantEntitlements(demoTenant.id),
+  );
 
   if (entitlements.planKey !== starterData.demoSubscription.planKey) {
     throw new Error(

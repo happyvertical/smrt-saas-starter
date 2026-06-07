@@ -92,5 +92,13 @@ async function findTenantIdBySlug(slug: string): Promise<string | null> {
 }
 
 function isMissingTenantsTableError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("tenants");
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const code = (error as Error & { code?: string }).code;
+  return (
+    code === "42P01" ||
+    error.message.includes('relation "tenants" does not exist') ||
+    error.message.includes("no such table: tenants")
+  );
 }

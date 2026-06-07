@@ -9,40 +9,40 @@ import {
 } from "@happyvertical/smrt-subscriptions";
 import { getAppDatabase } from "$lib/server/db";
 import { getSmrtConfig } from "$lib/server/smrt";
-import { DEMO_TENANT_ID, getActiveTenantId, getCurrentMonthWindow } from "$lib/server/starter-data";
+import { DEMO_TENANT_ID, getCurrentMonthWindow } from "$lib/server/starter-data";
+import { withActiveTenant } from "$lib/server/tenant-context";
 
 const logger = createLogger(process.env.NODE_ENV === "test" ? false : { level: resolveLogLevel() });
 
-export async function getUsageSummaries(
-  tenantId: string | null | undefined = DEMO_TENANT_ID,
-): Promise<UsageSummary[]> {
-  const activeTenantId = getActiveTenantId(tenantId);
-  const db = await getAppDatabase();
-  const result = await db.query(
-    `
-      SELECT
-        tenant_id,
-        metric_key,
-        SUM(quantity)::float AS quantity,
-        window_start,
-        window_end
-      FROM _smrt_tenant_usage_metrics
-      WHERE tenant_id = ?
-      GROUP BY tenant_id, metric_key, window_start, window_end
-      ORDER BY window_start DESC, metric_key ASC
-    `,
-    activeTenantId,
-  );
-  const persisted = result.rows.map((row) => ({
-    tenantId: String(row.tenant_id),
-    metricKey: String(row.metric_key),
-    quantity: numberFromRow(row.quantity),
-    windowStart: dateFromRow(row.window_start),
-    windowEnd: dateFromRow(row.window_end),
-  }));
-  const aiUsage = await getAiUsageSummaries(activeTenantId);
+export async function getUsageSummaries(tenantId?: string | null): Promise<UsageSummary[]> {
+  return await withActiveTenant(tenantId, async (activeTenantId) => {
+    const db = await getAppDatabase();
+    const result = await db.query(
+      `
+        SELECT
+          tenant_id,
+          metric_key,
+          SUM(quantity)::float AS quantity,
+          window_start,
+          window_end
+        FROM _smrt_tenant_usage_metrics
+        WHERE tenant_id = ?
+        GROUP BY tenant_id, metric_key, window_start, window_end
+        ORDER BY window_start DESC, metric_key ASC
+      `,
+      activeTenantId,
+    );
+    const persisted = result.rows.map((row) => ({
+      tenantId: String(row.tenant_id),
+      metricKey: String(row.metric_key),
+      quantity: numberFromRow(row.quantity),
+      windowStart: dateFromRow(row.window_start),
+      windowEnd: dateFromRow(row.window_end),
+    }));
+    const aiUsage = await getAiUsageSummaries(activeTenantId);
 
-  return mergeUsageSummaries([...persisted, ...aiUsage]);
+    return mergeUsageSummaries([...persisted, ...aiUsage]);
+  });
 }
 
 export function summarizeUsageRecords(
@@ -78,33 +78,37 @@ export function summarizeUsageRecords(
 }
 
 export async function recordUsageMetric(options: RecordUsageOptions): Promise<UsageMetricRecord> {
-  const usageMetrics = await TenantUsageMetricCollection.create(getSmrtConfig("TenantUsageMetric"));
-  const record = await usageMetrics.recordUsage({
-    ...options,
-    tenantId: getActiveTenantId(options.tenantId),
-  });
+  return await withActiveTenant(options.tenantId, async (activeTenantId) => {
+    const usageMetrics = await TenantUsageMetricCollection.create(
+      getSmrtConfig("TenantUsageMetric"),
+    );
+    const record = await usageMetrics.recordUsage({
+      ...options,
+      tenantId: activeTenantId,
+    });
 
-  logger.info("Tenant usage metric recorded", {
-    tenantId: record.tenantId,
-    metricKey: record.metricKey,
-    quantity: record.quantity,
-    source: record.source,
-    sourceId: record.sourceId,
-    windowStart: record.windowStart.toISOString(),
-    windowEnd: record.windowEnd.toISOString(),
-    dimensions: record.dimensions,
-  });
+    logger.info("Tenant usage metric recorded", {
+      tenantId: record.tenantId,
+      metricKey: record.metricKey,
+      quantity: record.quantity,
+      source: record.source,
+      sourceId: record.sourceId,
+      windowStart: record.windowStart.toISOString(),
+      windowEnd: record.windowEnd.toISOString(),
+      dimensions: record.dimensions,
+    });
 
-  return {
-    tenantId: record.tenantId ?? getActiveTenantId(options.tenantId),
-    metricKey: record.metricKey,
-    quantity: record.quantity,
-    windowStart: record.windowStart,
-    windowEnd: record.windowEnd,
-    source: record.source,
-    sourceId: record.sourceId,
-    dimensions: record.getDimensions(),
-  };
+    return {
+      tenantId: record.tenantId ?? activeTenantId,
+      metricKey: record.metricKey,
+      quantity: record.quantity,
+      windowStart: record.windowStart,
+      windowEnd: record.windowEnd,
+      source: record.source,
+      sourceId: record.sourceId,
+      dimensions: record.getDimensions(),
+    };
+  });
 }
 
 export function getUsageWindow(thresholdWindow: ThresholdWindow = "month", now = new Date()) {
@@ -116,21 +120,28 @@ export async function summarizeUsageMetric(options: {
   metricKey: string;
   window: { start: Date; end: Date };
 }): Promise<UsageSummary> {
-  const usageMetrics = await TenantUsageMetricCollection.create(getSmrtConfig("TenantUsageMetric"));
-  const tenantUsage = await usageMetrics.summarizeUsage(options);
-  if (!options.metricKey.startsWith("ai.")) {
-    return tenantUsage;
-  }
+  return await withActiveTenant(options.tenantId, async (activeTenantId) => {
+    const usageMetrics = await TenantUsageMetricCollection.create(
+      getSmrtConfig("TenantUsageMetric"),
+    );
+    const tenantUsage = await usageMetrics.summarizeUsage({
+      ...options,
+      tenantId: activeTenantId,
+    });
+    if (!options.metricKey.startsWith("ai.")) {
+      return tenantUsage;
+    }
 
-  const aiSummary = await safeSummarizeTenantAiUsage(options.tenantId, options.window);
-  if (!aiSummary) {
-    return tenantUsage;
-  }
+    const aiSummary = await safeSummarizeTenantAiUsage(activeTenantId, options.window);
+    if (!aiSummary) {
+      return tenantUsage;
+    }
 
-  return {
-    ...tenantUsage,
-    quantity: tenantUsage.quantity + readAiMetricQuantity(options.metricKey, aiSummary),
-  };
+    return {
+      ...tenantUsage,
+      quantity: tenantUsage.quantity + readAiMetricQuantity(options.metricKey, aiSummary),
+    };
+  });
 }
 
 async function getAiUsageSummaries(tenantId: string): Promise<UsageSummary[]> {
@@ -227,7 +238,15 @@ function numberFromRow(value: unknown): number {
 }
 
 function isMissingAiUsageTableError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("_smrt_ai_usage");
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const code = (error as Error & { code?: string }).code;
+  return (
+    code === "42P01" ||
+    error.message.includes('relation "_smrt_ai_usage" does not exist') ||
+    error.message.includes("no such table: _smrt_ai_usage")
+  );
 }
 
 function resolveLogLevel(): LogLevel {
