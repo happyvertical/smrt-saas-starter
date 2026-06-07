@@ -92,6 +92,24 @@ export async function syncStripeBillingEvent(
     };
   }
 
+  if (existing && isStaleStripeEvent(existing, update)) {
+    return {
+      action: "ignored",
+      reason: "stale-event",
+      tenantId: existing.tenantId,
+      subscriptionId: existing.id,
+    };
+  }
+
+  if (existing && isDifferentSubscriptionMutation(existing, update)) {
+    return {
+      action: "ignored",
+      reason: "subscription-mismatch",
+      tenantId: existing.tenantId,
+      subscriptionId: existing.id,
+    };
+  }
+
   const tenantId = eventTenantId ?? existing?.tenantId;
   if (!tenantId) {
     return { action: "ignored", reason: "tenant-not-resolved" };
@@ -389,6 +407,32 @@ function mergeSubscriptionMetadata(
       priceId: update.stripePriceId ?? readString(existingStripe?.priceId),
     },
   };
+}
+
+function isStaleStripeEvent(
+  existing: SyncedSubscriptionRecord,
+  update: StripeSubscriptionUpdate,
+): boolean {
+  const lastEventAt = dateFromStripeValue(readRecord(existing.metadata.stripe)?.lastEventAt);
+  return Boolean(lastEventAt && lastEventAt.getTime() > update.eventCreatedAt.getTime());
+}
+
+function isDifferentSubscriptionMutation(
+  existing: SyncedSubscriptionRecord,
+  update: StripeSubscriptionUpdate,
+): boolean {
+  if (!existing.stripeSubscriptionId || !update.stripeSubscriptionId) {
+    return false;
+  }
+
+  if (existing.stripeSubscriptionId === update.stripeSubscriptionId) {
+    return false;
+  }
+
+  return (
+    update.eventType === "customer.subscription.updated" ||
+    update.eventType === "customer.subscription.deleted"
+  );
 }
 
 function findSeedPlanByStripePriceId(stripePriceId: string) {

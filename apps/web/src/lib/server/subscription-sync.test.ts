@@ -248,6 +248,125 @@ describe("Stripe subscription sync", () => {
     });
   });
 
+  it("ignores stale Stripe events older than the last synced event", async () => {
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_test",
+          status: "active",
+          metadata: {
+            stripe: {
+              lastEventAt: "2026-06-08T00:00:00.000Z",
+              lastEventId: "evt_newer",
+              lastEventType: "customer.subscription.updated",
+              priceId: "price_growth",
+            },
+          },
+        }),
+      ],
+    );
+    const event = stripeEvent("customer.subscription.updated", {
+      id: "sub_test",
+      object: "subscription",
+      customer: "cus_test",
+      status: "past_due",
+      items: {
+        data: [{ price: { id: "price_growth" } }],
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "ignored",
+      reason: "stale-event",
+      tenantId,
+    });
+
+    expect(store.subscriptions[0]).toMatchObject({
+      status: "active",
+      stripeSubscriptionId: "sub_test",
+    });
+    expect(store.subscriptions[0]?.metadata).toMatchObject({
+      stripe: {
+        lastEventId: "evt_newer",
+      },
+    });
+  });
+
+  it("ignores old subscription mutations matched only by Stripe customer id", async () => {
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_new",
+          status: "active",
+        }),
+      ],
+    );
+    const event = stripeEvent("customer.subscription.deleted", {
+      id: "sub_old",
+      object: "subscription",
+      customer: "cus_test",
+      status: "canceled",
+      canceled_at: 1_780_790_400,
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "ignored",
+      reason: "subscription-mismatch",
+      tenantId,
+    });
+
+    expect(store.subscriptions[0]).toMatchObject({
+      status: "active",
+      stripeSubscriptionId: "sub_new",
+    });
+  });
+
+  it("allows checkout completion to replace an existing Stripe subscription id", async () => {
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_old",
+          status: "active",
+        }),
+      ],
+    );
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_test",
+      object: "checkout.session",
+      mode: "subscription",
+      customer: "cus_test",
+      subscription: "sub_new",
+      client_reference_id: tenantId,
+      metadata: {
+        tenantId,
+        planId: growthPlan.id,
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "updated",
+      tenantId,
+      planId: growthPlan.id,
+    });
+
+    expect(store.subscriptions[0]).toMatchObject({
+      status: "active",
+      stripeSubscriptionId: "sub_new",
+    });
+  });
+
   it("ignores unrelated Stripe events", () => {
     expect(
       normalizeStripeSubscriptionUpdate(
