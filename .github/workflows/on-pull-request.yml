@@ -11,6 +11,9 @@ permissions:
   contents: read
   packages: read
 
+env:
+  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
 jobs:
   check:
     runs-on: ubuntu-latest

@@ -23,16 +23,19 @@ runs:
 
     - name: Configure GitHub Packages
       shell: bash
-      run: |
-        echo "@happyvertical:registry=https://npm.pkg.github.com" >> "$HOME/.npmrc"
-        echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> "$HOME/.npmrc"
       env:
-        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN || github.token }}
+        GH_PACKAGES_TOKEN: ${{ env.GH_PACKAGES_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        token="${GH_PACKAGES_TOKEN:-${NODE_AUTH_TOKEN:-$GITHUB_TOKEN}}"
+        echo "@happyvertical:registry=https://npm.pkg.github.com" >> "$HOME/.npmrc"
+        echo "//npm.pkg.github.com/:_authToken=${token}" >> "$HOME/.npmrc"
 
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
       env:
-        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN || github.token }}
-        GH_PACKAGES_TOKEN: ${{ env.GH_PACKAGES_TOKEN || github.token }}
-        GITHUB_PACKAGES_TOKEN: ${{ env.GITHUB_PACKAGES_TOKEN || github.token }}
+        NODE_AUTH_TOKEN: ${{ env.NODE_AUTH_TOKEN || env.GH_PACKAGES_TOKEN || github.token }}
+        GH_PACKAGES_TOKEN: ${{ env.GH_PACKAGES_TOKEN || env.NODE_AUTH_TOKEN || github.token }}
+        GITHUB_PACKAGES_TOKEN: ${{ env.GITHUB_PACKAGES_TOKEN || env.GH_PACKAGES_TOKEN || env.NODE_AUTH_TOKEN || github.token }}

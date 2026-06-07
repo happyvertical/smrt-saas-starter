@@ -10,6 +10,9 @@ permissions:
   contents: write
   packages: write
 
+env:
+  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest

@@ -5,7 +5,11 @@ on:
 
 permissions:
   contents: write
+  packages: read
   pull-requests: write
+
+env:
+  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
 jobs:
   promote:
