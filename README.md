@@ -24,7 +24,8 @@ This repo is intended to be used as:
 ```sh
 token="$(gh auth token)"
 GH_PACKAGES_TOKEN="$token" GITHUB_PACKAGES_TOKEN="$token" NODE_AUTH_TOKEN="$token" pnpm install
-docker compose up -d postgres
+cp .env.example .env
+pnpm services:up
 pnpm db:migrate
 pnpm check
 pnpm --filter @happyvertical/smrt-saas-web dev
@@ -32,6 +33,9 @@ pnpm --filter @happyvertical/smrt-saas-web dev
 
 The web app defaults to `http://localhost:5173` and uses local Postgres at
 `postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas`.
+The local service stack starts with a Docker Compose Postgres service named
+`postgres`; later dependencies should be added to the same compose file and
+made available through the `services:*` scripts.
 
 ## Repository Shape
 

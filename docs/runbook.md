@@ -4,7 +4,22 @@
 
 ```sh
 pnpm install
+pnpm services:up
+pnpm db:migrate
 pnpm --filter @happyvertical/smrt-saas-web dev
+```
+
+## Local Services
+
+The starter uses Docker Compose for local dependencies. The initial service is
+Postgres and matches the default app connection string:
+`postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas`.
+
+```sh
+pnpm services:up
+pnpm services:ps
+pnpm services:logs
+pnpm services:down
 ```
 
 ## Validation

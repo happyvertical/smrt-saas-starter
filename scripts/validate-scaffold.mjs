@@ -9,6 +9,8 @@ const requiredFiles = [
   "CLAUDE.md",
   ".mcp.json",
   ".sops.yaml",
+  ".env.example",
+  "docker-compose.yml",
   "apps/web/package.json",
   "apps/web/src/routes/+page.svelte",
   "apps/web/src/routes/app/+layout.svelte",
@@ -34,9 +36,34 @@ for (const phrase of ["SOPS", "isolated SMRT or SDK worktree", "UUID columns sta
 }
 
 const readme = await readFile(join(root, "README.md"), "utf8");
-for (const phrase of ["SMRT", "Stripe", "Kotlin Multiplatform", "right-dock chat"]) {
+for (const phrase of [
+  "SMRT",
+  "Stripe",
+  "Kotlin Multiplatform",
+  "right-dock chat",
+  "Docker Compose Postgres",
+]) {
   if (!readme.includes(phrase)) {
     throw new Error(`README.md must mention: ${phrase}`);
+  }
+}
+
+const compose = await readFile(join(root, "docker-compose.yml"), "utf8");
+for (const phrase of [
+  "postgres:",
+  "POSTGRES_DB",
+  "pg_isready",
+  "postgres-data:/var/lib/postgresql/data",
+]) {
+  if (!compose.includes(phrase)) {
+    throw new Error(`docker-compose.yml must include: ${phrase}`);
+  }
+}
+
+const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+for (const scriptName of ["services:up", "services:down", "services:logs", "db:up"]) {
+  if (!packageJson.scripts?.[scriptName]) {
+    throw new Error(`package.json must include script: ${scriptName}`);
   }
 }
 
