@@ -155,6 +155,39 @@ try {
     });
   }
 
+  for (const promptOverride of starterData.promptOverrides) {
+    await db.upsert("_smrt_prompt_overrides", ["key", "context"], {
+      id: promptOverride.id,
+      slug: promptOverride.slug,
+      context: demoTenant.id,
+      updated_at: now.toISOString(),
+      key: promptOverride.key,
+      tenant_id: demoTenant.id,
+      template: promptOverride.template,
+      profile: promptOverride.profile ?? null,
+      model: promptOverride.model ?? null,
+      params: promptOverride.params ? JSON.stringify(promptOverride.params) : null,
+    });
+  }
+
+  for (const languageOverride of starterData.languageOverrides) {
+    await db.upsert("_smrt_language_overrides", ["key", "locale", "context"], {
+      id: languageOverride.id,
+      slug: languageOverride.slug,
+      context: demoTenant.id,
+      updated_at: now.toISOString(),
+      key: languageOverride.key,
+      locale: languageOverride.locale,
+      tenant_id: demoTenant.id,
+      template: languageOverride.template,
+      auto_generated: false,
+      source_hash: null,
+      ai_model: null,
+      reviewed_at: null,
+      reviewed_by: null,
+    });
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -164,6 +197,8 @@ try {
         plans: starterData.plans.length,
         subscriptionPlan: demoPlan.planKey,
         usageMetrics: starterData.usageSeeds.length,
+        promptOverrides: starterData.promptOverrides.length,
+        languageOverrides: starterData.languageOverrides.length,
         windowStart: window.start.toISOString(),
         windowEnd: window.end.toISOString(),
       },

@@ -219,5 +219,102 @@
       "quantity": 128,
       "source": "smrt-app-mcp"
     }
+  ],
+  "prompts": [
+    {
+      "key": "starter.assistant.system",
+      "label": "Assistant system prompt",
+      "description": "Base behavior for tenant workspace chat and MCP tool use.",
+      "template": "You are the tenant workspace assistant for {tenantName}. Keep answers tenant-scoped, use available MCP tools before guessing, and call out subscription or usage limits when they affect the answer.",
+      "ai": {
+        "profile": "default",
+        "params": {
+          "temperature": 0.3
+        }
+      },
+      "editable": {
+        "template": true,
+        "profile": true,
+        "model": true,
+        "params": true
+      }
+    },
+    {
+      "key": "starter.usage.digest",
+      "label": "Usage digest prompt",
+      "description": "Summary prompt for tenant usage and threshold snapshots.",
+      "template": "Summarize {tenantName}'s current usage by metric, threshold, and enforcement state. Highlight the next concrete action when a limit is close.",
+      "ai": {
+        "profile": "default",
+        "params": {
+          "temperature": 0.2
+        }
+      },
+      "editable": {
+        "template": true,
+        "profile": true,
+        "model": true,
+        "params": true
+      }
+    }
+  ],
+  "promptOverrides": [
+    {
+      "id": "00000000-0000-4000-8000-000000000401",
+      "slug": "demo-assistant-system",
+      "key": "starter.assistant.system",
+      "template": "You are Demo Tenant's workspace assistant. Keep answers tenant-scoped and prefer subscription, usage, prompt, language, and MCP context before suggesting implementation work.",
+      "profile": "default",
+      "model": null,
+      "params": {
+        "temperature": 0.2
+      }
+    }
+  ],
+  "languageStrings": [
+    {
+      "key": "starter.settings.heading",
+      "locale": "en",
+      "label": "Settings heading",
+      "description": "Primary heading for tenant configuration.",
+      "template": "Tenant configuration"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "en",
+      "label": "Assistant greeting",
+      "description": "Short text used near assistant entry points.",
+      "template": "Ask about {tenantName}'s subscription, usage, prompts, or MCP tools."
+    },
+    {
+      "key": "starter.billing.currentPlan",
+      "locale": "en",
+      "label": "Current plan label",
+      "description": "Billing label rendered with the active plan.",
+      "template": "Current plan: {planName}"
+    }
+  ],
+  "languageSettings": [
+    {
+      "key": "starter.settings.heading",
+      "locale": "en"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "en"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "fr-CA"
+    }
+  ],
+  "languageOverrides": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "slug": "demo-assistant-greeting-fr-ca",
+      "key": "starter.assistant.greeting",
+      "locale": "fr-CA",
+      "template": "Demandez des nouvelles de {tenantName} sur l'abonnement, l'utilisation, les invites ou les outils MCP."
+    }
   ]
 }

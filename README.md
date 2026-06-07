@@ -39,7 +39,8 @@ The local service stack starts with a Docker Compose Postgres service named
 `postgres`; later dependencies should be added to the same compose file and
 made available through the `services:*` scripts.
 `pnpm db:seed` idempotently creates the demo tenant, owner membership,
-subscription plans, active Growth subscription, and starter usage metrics.
+subscription plans, active Growth subscription, starter usage metrics, and
+demo prompt/language overrides.
 `pnpm check` includes `pnpm db:smoke`, so keep Postgres running before local
 full-repo validation. The smoke path runs migration and seed first, then proves
 the seeded tenant resolves through `@happyvertical/smrt-subscriptions`.

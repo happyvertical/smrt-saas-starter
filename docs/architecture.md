@@ -43,3 +43,18 @@ The starter tracks two sources:
 - tenant-aware generic usage records from SMRT signal metrics and app MCP calls
 
 `@happyvertical/smrt-subscriptions` provides the tenant usage metric models, rollups, AI usage summaries, and threshold evaluators used by this starter.
+
+## Prompts And Languages
+
+Starter prompt and language defaults live in `apps/web/src/lib/server/starter-data.json`.
+`apps/web/src/lib/server/experience.ts` registers those defaults with
+`definePrompt()` and `defineLanguageString()`, then resolves effective tenant
+values through SMRT prompt and language override tables. The settings page uses
+the same service as the runtime MCP `tenant.prompt.preview` tool.
+`apps/web/smrt.config.mjs` defines the default prompt AI profile and language
+package options because SMRT package config is loaded from JavaScript config
+files at runtime.
+
+The seeded demo tenant includes one prompt override and one `fr-CA` language
+override so local smoke checks prove the stored tenant override layers, not only
+code defaults.

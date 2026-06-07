@@ -1,3 +1,4 @@
+import type { PromptAIInput, PromptEditableConfig } from "@happyvertical/smrt-prompts";
 import type {
   BillingInterval,
   PlanFeatureGrant,
@@ -23,6 +24,46 @@ export interface StarterPlanSeed {
   stripePriceEnvKey: string;
   features: StarterFeatureGrant[];
   thresholds: PlanThreshold[];
+}
+
+export interface StarterPromptSeed {
+  key: string;
+  label: string;
+  description: string;
+  template: string;
+  ai: PromptAIInput;
+  editable: Partial<PromptEditableConfig>;
+}
+
+export interface StarterPromptOverrideSeed {
+  id: string;
+  slug: string;
+  key: string;
+  template: string;
+  profile?: string | null;
+  model?: string | null;
+  params?: Record<string, unknown> | null;
+}
+
+export interface StarterLanguageStringSeed {
+  key: string;
+  locale: string;
+  label: string;
+  description: string;
+  template: string;
+}
+
+export interface StarterLanguageSettingSeed {
+  key: string;
+  locale: string;
+}
+
+export interface StarterLanguageOverrideSeed {
+  id: string;
+  slug: string;
+  key: string;
+  locale: string;
+  template: string;
 }
 
 export interface StarterData {
@@ -61,6 +102,11 @@ export interface StarterData {
     quantity: number;
     source: string;
   }>;
+  prompts: StarterPromptSeed[];
+  promptOverrides: StarterPromptOverrideSeed[];
+  languageStrings: StarterLanguageStringSeed[];
+  languageSettings: StarterLanguageSettingSeed[];
+  languageOverrides: StarterLanguageOverrideSeed[];
 }
 
 export const starterData = starterDataJson as StarterData;

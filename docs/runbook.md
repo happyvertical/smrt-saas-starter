@@ -40,7 +40,8 @@ pnpm check
 ```
 
 `pnpm db:seed` idempotently creates the demo tenant, owner membership,
-subscription plans, active Growth subscription, and starter usage metrics.
+subscription plans, active Growth subscription, starter usage metrics, and
+demo prompt/language overrides.
 `pnpm check` runs the Postgres migration, seed, and smoke path. Start local
 services first with `pnpm services:up`; CI workflows provide an isolated
 Postgres service.

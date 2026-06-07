@@ -1,3 +1,4 @@
+import { resolveStarterPromptPreview } from "$lib/server/experience";
 import { getUsageSummaries } from "$lib/server/usage";
 
 export interface RuntimeTool {
@@ -51,10 +52,36 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
     };
   }
 
+  if (name === "tenant.prompt.preview") {
+    const prompt = await resolveStarterPromptPreview(context.tenantId, readPromptKey(input));
+
+    return {
+      content: [{ type: "text", text: "Tenant prompt preview loaded." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        prompt: {
+          key: prompt.key,
+          template: prompt.template,
+          text: prompt.text,
+          ai: prompt.ai,
+        },
+      },
+    };
+  }
+
   return {
     content: [
       { type: "text", text: `Tool ${name} is registered but requires its upstream handler.` },
     ],
     structuredContent: { input },
   };
+}
+
+function readPromptKey(input: unknown): string | undefined {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return undefined;
+  }
+
+  const key = (input as { key?: unknown }).key;
+  return typeof key === "string" && key.trim().length > 0 ? key : undefined;
 }

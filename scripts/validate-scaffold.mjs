@@ -12,6 +12,7 @@ const requiredFiles = [
   ".env.example",
   "docker-compose.yml",
   "apps/web/package.json",
+  "apps/web/smrt.config.mjs",
   "apps/web/src/routes/+page.svelte",
   "apps/web/src/routes/app/+layout.svelte",
   "apps/worker/package.json",

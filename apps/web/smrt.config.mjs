@@ -37,5 +37,22 @@ export default {
         },
       },
     },
+    prompts: {
+      profiles: {
+        default: {
+          provider: process.env.AI_PROVIDER ?? "openai",
+          model: process.env.AI_MODEL ?? "gpt-4o-mini",
+          params: {
+            temperature: 0.2,
+          },
+        },
+      },
+      allowedProfileNames: ["default"],
+    },
+    languages: {
+      defaultLocale: "en",
+      supportedLocales: ["en", "fr-CA"],
+      translationBudgetPerTenantPerDay: 100,
+    },
   },
 };

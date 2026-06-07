@@ -29,6 +29,21 @@ describe("starter scaffold", () => {
     assert.ok(pkg.dependencies["@happyvertical/smrt-chat"]);
   });
 
+  it("seeds prompt and language management defaults", async () => {
+    const seed = JSON.parse(
+      await readFile(join(root, "apps/web/src/lib/server/starter-data.json"), "utf8"),
+    );
+
+    assert.ok(seed.prompts.some((prompt) => prompt.key === "starter.assistant.system"));
+    assert.ok(seed.promptOverrides.some((override) => override.key === "starter.assistant.system"));
+    assert.ok(seed.languageStrings.some((string) => string.key === "starter.assistant.greeting"));
+    assert.ok(
+      seed.languageOverrides.some(
+        (override) => override.key === "starter.assistant.greeting" && override.locale === "fr-CA",
+      ),
+    );
+  });
+
   it("keeps the SMRT runtime package surface shared across config and migrations", async () => {
     const expected = [
       "@happyvertical/smrt-agents",

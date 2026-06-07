@@ -1,4 +1,8 @@
+import { fileURLToPath } from "node:url";
+import { loadConfig } from "@happyvertical/smrt-config";
 import { resolveDatabase } from "@happyvertical/smrt-core";
+import { defineLanguageString, resolveLanguageString } from "@happyvertical/smrt-languages";
+import { definePrompt, resolvePrompt } from "@happyvertical/smrt-prompts";
 import {
   SubscriptionPlanCollection,
   SubscriptionResolver,
@@ -13,6 +17,10 @@ import "@happyvertical/smrt-saas-objects";
 import starterData from "../src/lib/server/starter-data.json" with { type: "json" };
 
 await registerSmrtRuntimePackages();
+await loadConfig({
+  configPath: fileURLToPath(new URL("../smrt.config.mjs", import.meta.url)),
+});
+registerStarterExperienceDefinitions();
 
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas";
@@ -186,6 +194,51 @@ try {
     throw new Error("Seeded MCP usage was not included in threshold evaluation");
   }
 
+  const promptOverrideResult = await db.query(
+    `
+      SELECT COUNT(*)::int AS override_count
+      FROM _smrt_prompt_overrides
+      WHERE tenant_id = ?
+    `,
+    demoTenant.id,
+  );
+  const promptOverrides = Number(promptOverrideResult.rows[0]?.override_count ?? 0);
+  if (promptOverrides < starterData.promptOverrides.length) {
+    throw new Error("Seeded tenant prompt overrides were not found");
+  }
+
+  const promptPreview = await resolvePrompt("starter.assistant.system", {
+    db,
+    tenantId: demoTenant.id,
+    variables: { tenantName: demoTenant.name },
+  });
+  if (!promptPreview.text.includes("Demo Tenant's workspace assistant")) {
+    throw new Error("Tenant prompt override was not used for the assistant preview");
+  }
+
+  const languageOverrideResult = await db.query(
+    `
+      SELECT COUNT(*)::int AS override_count
+      FROM _smrt_language_overrides
+      WHERE tenant_id = ?
+    `,
+    demoTenant.id,
+  );
+  const languageOverrides = Number(languageOverrideResult.rows[0]?.override_count ?? 0);
+  if (languageOverrides < starterData.languageOverrides.length) {
+    throw new Error("Seeded tenant language overrides were not found");
+  }
+
+  const languagePreview = await resolveLanguageString("starter.assistant.greeting", {
+    db,
+    tenantId: demoTenant.id,
+    locale: "fr-CA",
+    vars: { tenantName: demoTenant.name },
+  });
+  if (languagePreview.source !== "tenant" || !languagePreview.text.includes(demoTenant.name)) {
+    throw new Error("Tenant language override was not used for the assistant greeting");
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -197,6 +250,8 @@ try {
         planKey: entitlements.planKey,
         enabledFeatures: entitlements.featureKeys.length,
         mcpUsage: mcpEvaluation.usage.quantity,
+        promptOverrides,
+        languageOverrides,
       },
       null,
       2,
@@ -204,4 +259,23 @@ try {
   );
 } finally {
   await db.close?.();
+}
+
+function registerStarterExperienceDefinitions() {
+  for (const prompt of starterData.prompts) {
+    definePrompt({
+      key: prompt.key,
+      template: prompt.template,
+      ai: prompt.ai,
+      editable: prompt.editable,
+    });
+  }
+
+  for (const languageString of starterData.languageStrings) {
+    defineLanguageString({
+      key: languageString.key,
+      locale: languageString.locale,
+      template: languageString.template,
+    });
+  }
 }
