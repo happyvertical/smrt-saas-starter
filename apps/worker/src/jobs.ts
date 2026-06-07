@@ -1,4 +1,4 @@
-import { summarizeUsage, type UsageEvent } from "@happyvertical/smrt-saas-objects";
+import type { UsageMetricRecord } from "@happyvertical/smrt-subscriptions";
 
 export interface WorkerJobResult {
   job: string;
@@ -12,10 +12,20 @@ export async function reconcileSubscriptions(): Promise<WorkerJobResult> {
   };
 }
 
-export async function rollupUsage(events: UsageEvent[]): Promise<WorkerJobResult> {
-  const summaries = summarizeUsage(events, "month");
+export async function rollupUsage(events: UsageMetricRecord[]): Promise<WorkerJobResult> {
+  const summaryKeys = new Set(
+    events.map((event) =>
+      [
+        event.tenantId,
+        event.metricKey,
+        event.windowStart.toISOString(),
+        event.windowEnd.toISOString(),
+      ].join(":"),
+    ),
+  );
+
   return {
     job: "usage.rollup",
-    processed: summaries.length,
+    processed: summaryKeys.size,
   };
 }

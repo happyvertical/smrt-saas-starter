@@ -13,7 +13,7 @@
 
 The starter consumes SMRT packages for tenancy, users, features, prompts, languages, secrets, jobs, chat, runtime MCP, commerce, ledgers, analytics, assets, content, messages, projects, sites, tags, and Svelte UI.
 
-`packages/app-objects` exists because subscriptions and tenant-aware metering are not yet first-class SMRT packages. The code there is deliberately generic and should be upstreamed after the reference app proves the interfaces.
+Subscriptions and tenant-aware metering come from `@happyvertical/smrt-subscriptions`. `packages/app-objects` stays thin: it re-exports the upstream subscription surface and holds starter-specific glue such as the SDK Stripe billing adapter.
 
 ## SDK Surface
 
@@ -40,4 +40,4 @@ The starter tracks two sources:
 - persisted SMRT AI usage from `_smrt_ai_usage`
 - tenant-aware generic usage records from SMRT signal metrics and app MCP calls
 
-The current scaffold includes pure usage rollup logic. Production wiring belongs in the upstream SMRT metering work.
+`@happyvertical/smrt-subscriptions` provides the tenant usage metric models, rollups, AI usage summaries, and threshold evaluators used by this starter.

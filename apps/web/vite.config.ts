@@ -15,6 +15,7 @@ export default defineConfig({
         "@happyvertical/smrt-languages",
         "@happyvertical/smrt-chat",
         "@happyvertical/smrt-app-mcp",
+        "@happyvertical/smrt-subscriptions",
         "@happyvertical/smrt-commerce",
         "@happyvertical/smrt-ledgers",
         "@happyvertical/smrt-analytics",

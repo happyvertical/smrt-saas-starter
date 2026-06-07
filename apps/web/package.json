@@ -58,6 +58,7 @@
     "@happyvertical/smrt-scanner": "catalog:",
     "@happyvertical/smrt-secrets": "catalog:",
     "@happyvertical/smrt-sites": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-svelte": "catalog:",
     "@happyvertical/smrt-tags": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:",

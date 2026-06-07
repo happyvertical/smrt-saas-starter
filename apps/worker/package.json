@@ -19,6 +19,7 @@
     "@happyvertical/smrt-jobs": "catalog:",
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-core": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:"
   },
   "devDependencies": {

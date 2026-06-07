@@ -1,79 +1,123 @@
-import type { EntitlementSnapshot, PlanLike } from "@happyvertical/smrt-saas-objects";
-import { resolveEntitlements } from "@happyvertical/smrt-saas-objects";
+import {
+  type BillingInterval,
+  type EntitlementResolution,
+  evaluateThresholds,
+  type PlanFeatureGrant,
+  type PlanThreshold,
+} from "@happyvertical/smrt-subscriptions";
+import { getUsageSummaries } from "$lib/server/usage";
 
-export const starterPlans: PlanLike[] = [
+export interface StarterFeatureGrant extends PlanFeatureGrant {
+  label: string;
+}
+
+export interface StarterPlan {
+  id: string;
+  planKey: string;
+  name: string;
+  description: string;
+  priceAmount: number;
+  currency: string;
+  billingInterval: BillingInterval;
+  features: StarterFeatureGrant[];
+  thresholds: PlanThreshold[];
+}
+
+export const starterPlans: StarterPlan[] = [
   {
     id: "plan-starter",
-    slug: "starter",
+    planKey: "starter",
     name: "Starter",
+    description: "Tenant basics, hosted agents, and read-only tools.",
+    priceAmount: 49,
+    currency: "USD",
+    billingInterval: "month",
     features: [
-      { key: "chat.agent", enabled: true, label: "Agent chat" },
-      { key: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { key: "exports.bulk", enabled: false, label: "Bulk exports" },
+      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
+      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
+      { featureKey: "exports.bulk", enabled: false, label: "Bulk exports" },
     ],
     thresholds: [
       {
-        metricKey: "ai.tokens",
+        metricKey: "ai.tokens.total",
         limit: 100_000,
         window: "month",
-        action: "warn",
+        enforcement: "warn",
         label: "AI tokens",
       },
-      { metricKey: "mcp.calls", limit: 500, window: "month", action: "block", label: "MCP calls" },
+      {
+        metricKey: "mcp.calls",
+        limit: 500,
+        window: "month",
+        enforcement: "block",
+        label: "MCP calls",
+      },
     ],
   },
   {
     id: "plan-growth",
-    slug: "growth",
+    planKey: "growth",
     name: "Growth",
+    description: "Team-scale workflows with write tools and bulk exports.",
+    priceAmount: 149,
+    currency: "USD",
+    billingInterval: "month",
     features: [
-      { key: "chat.agent", enabled: true, label: "Agent chat" },
-      { key: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { key: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
-      { key: "exports.bulk", enabled: true, label: "Bulk exports" },
+      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
+      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
+      { featureKey: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
+      { featureKey: "exports.bulk", enabled: true, label: "Bulk exports" },
     ],
     thresholds: [
       {
-        metricKey: "ai.tokens",
+        metricKey: "ai.tokens.total",
         limit: 1_000_000,
         window: "month",
-        action: "warn",
+        enforcement: "warn",
         label: "AI tokens",
       },
       {
         metricKey: "mcp.calls",
         limit: 5_000,
         window: "month",
-        action: "block",
+        enforcement: "block",
         label: "MCP calls",
       },
     ],
   },
   {
     id: "plan-scale",
-    slug: "scale",
+    planKey: "scale",
     name: "Scale",
+    description: "High-volume AI usage, translations, and custom prompt control.",
+    priceAmount: 499,
+    currency: "USD",
+    billingInterval: "month",
     features: [
-      { key: "chat.agent", enabled: true, label: "Agent chat" },
-      { key: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { key: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
-      { key: "exports.bulk", enabled: true, label: "Bulk exports" },
-      { key: "languages.ai_translate", enabled: true, label: "AI translations" },
-      { key: "prompts.tenant_overrides", enabled: true, label: "Tenant prompt overrides" },
+      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
+      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
+      { featureKey: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
+      { featureKey: "exports.bulk", enabled: true, label: "Bulk exports" },
+      { featureKey: "languages.ai_translate", enabled: true, label: "AI translations" },
+      {
+        featureKey: "prompts.tenant_overrides",
+        enabled: true,
+        label: "Tenant prompt overrides",
+      },
     ],
     thresholds: [
       {
-        metricKey: "ai.tokens",
+        metricKey: "ai.tokens.total",
         limit: 5_000_000,
         window: "month",
-        action: "observe",
+        enforcement: "observe",
         label: "AI tokens",
       },
       {
         metricKey: "mcp.calls",
         limit: 50_000,
         window: "month",
-        action: "warn",
+        enforcement: "warn",
         label: "MCP calls",
       },
     ],
@@ -82,17 +126,10 @@ export const starterPlans: PlanLike[] = [
 
 export interface BillingOverview {
   tenantId: string;
-  currentPlan: PlanLike;
-  snapshot: EntitlementSnapshot;
+  currentPlan: StarterPlan;
+  snapshot: EntitlementResolution;
   periodEnd: string;
 }
-
-const usageByTenant: Record<string, Record<string, number>> = {
-  demo: {
-    "ai.tokens": 42_500,
-    "mcp.calls": 128,
-  },
-};
 
 export function getBillingOverview(tenantId = "demo"): BillingOverview {
   const fallbackPlan = starterPlans[0];
@@ -101,55 +138,44 @@ export function getBillingOverview(tenantId = "demo"): BillingOverview {
   }
 
   const currentPlan = starterPlans[1] ?? fallbackPlan;
-  const usage = Object.entries(usageByTenant[tenantId] ?? usageByTenant.demo ?? {}).map(
-    ([metricKey, value]) => ({
-      metricKey,
-      value,
-      window: "month",
-    }),
-  );
+  const usage = getUsageSummaries(tenantId);
+  const thresholdEvaluations = evaluateThresholds(currentPlan.thresholds, usage);
 
   return {
     tenantId,
     currentPlan,
     periodEnd: "2026-07-06T00:00:00.000Z",
-    snapshot: resolveEntitlements({
-      plan: currentPlan,
-      subscription: {
-        planId: currentPlan.id,
-        status: "active",
-        currentPeriodEnd: "2026-07-06T00:00:00.000Z",
-      },
-      usage,
-      now: new Date("2026-06-06T00:00:00.000Z"),
-    }),
+    snapshot: {
+      tenantId,
+      planId: currentPlan.id,
+      planKey: currentPlan.planKey,
+      subscriptionId: "sub_demo",
+      status: "active",
+      featureKeys: currentPlan.features
+        .filter((feature) => feature.enabled !== false)
+        .map((feature) => feature.featureKey),
+      thresholds: currentPlan.thresholds,
+      thresholdEvaluations,
+      allowed: thresholdEvaluations.every((evaluation) => evaluation.allowed),
+    },
   };
 }
 
 export function getPlanCards(currentPlanId: string) {
-  const priceBySlug: Record<string, number> = {
-    starter: 49,
-    growth: 149,
-    scale: 499,
-  };
-
   return starterPlans.map((plan) => ({
     id: plan.id,
-    slug: plan.slug,
+    slug: plan.planKey,
     name: plan.name,
-    description:
-      plan.slug === "starter"
-        ? "Tenant basics, hosted agents, and read-only tools."
-        : plan.slug === "growth"
-          ? "Team-scale workflows with write tools and bulk exports."
-          : "High-volume AI usage, translations, and custom prompt control.",
-    monthlyPrice: priceBySlug[plan.slug] ?? 0,
-    currency: "USD",
+    description: plan.description,
+    monthlyPrice: plan.priceAmount,
+    currency: plan.currency,
     current: plan.id === currentPlanId,
-    features: plan.features
-      .filter((feature) => feature.enabled)
-      .map((feature) => feature.label ?? feature.key),
+    features: plan.features.filter((feature) => feature.enabled).map((feature) => feature.label),
   }));
+}
+
+export function getEnabledFeatureMap(snapshot: EntitlementResolution): Record<string, boolean> {
+  return Object.fromEntries(snapshot.featureKeys.map((featureKey) => [featureKey, true]));
 }
 
 export function getStripePriceId(planId: string): string | null {
@@ -158,6 +184,6 @@ export function getStripePriceId(planId: string): string | null {
     return null;
   }
 
-  const envKey = `STRIPE_PRICE_${plan.slug.toUpperCase()}`;
+  const envKey = `STRIPE_PRICE_${plan.planKey.toUpperCase()}`;
   return process.env[envKey] ?? null;
 }

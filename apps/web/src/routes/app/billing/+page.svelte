@@ -39,10 +39,13 @@
     planName={data.currentPlan.name}
     status={data.snapshot.status}
     periodEnd={data.periodEnd}
-    thresholds={data.snapshot.thresholds.map((threshold) => ({
-      ...threshold,
-      label: threshold.metricKey,
-      unit: threshold.metricKey.includes("tokens") ? "tokens" : "calls",
+    thresholds={data.snapshot.thresholdEvaluations.map((evaluation) => ({
+      metricKey: evaluation.threshold.metricKey,
+      label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
+      used: evaluation.usage.quantity,
+      limit: evaluation.threshold.limit,
+      unit: evaluation.threshold.metricKey.includes("tokens") ? "tokens" : "calls",
+      action: evaluation.threshold.enforcement,
     }))}
     onportal={openPortal}
   />

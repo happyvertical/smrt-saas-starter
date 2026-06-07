@@ -1,5 +1,6 @@
 import type { LogLevel } from "@happyvertical/logger";
 import { ObjectRegistry, type SmrtClassOptions, type SmrtObject } from "@happyvertical/smrt-core";
+import "@happyvertical/smrt-subscriptions";
 import { getRequestScopedDatabase as getUsersRequestScopedDatabase } from "@happyvertical/smrt-users";
 import "@happyvertical/smrt-saas-objects";
 

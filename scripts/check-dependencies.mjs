@@ -28,6 +28,7 @@ const requiredSmrt = [
   "@happyvertical/smrt-messages",
   "@happyvertical/smrt-projects",
   "@happyvertical/smrt-sites",
+  "@happyvertical/smrt-subscriptions",
   "@happyvertical/smrt-tags",
   "@happyvertical/smrt-svelte",
 ];

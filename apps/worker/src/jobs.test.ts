@@ -7,9 +7,10 @@ describe("worker jobs", () => {
       rollupUsage([
         {
           tenantId: "demo",
-          metricKey: "ai.tokens",
-          value: 100,
-          timestamp: "2026-06-06T00:00:00.000Z",
+          metricKey: "ai.tokens.total",
+          quantity: 100,
+          windowStart: new Date("2026-06-01T00:00:00.000Z"),
+          windowEnd: new Date("2026-07-01T00:00:00.000Z"),
         },
       ]),
     ).resolves.toEqual({

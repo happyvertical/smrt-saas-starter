@@ -26,8 +26,9 @@ export const runtimeTools: RuntimeTool[] = [
   },
 ];
 
-export function listRuntimeTools(enabledFeatures: Record<string, boolean>) {
-  return runtimeTools.filter((tool) => enabledFeatures[tool.requiredFeature] === true);
+export function listRuntimeTools(enabledFeatureKeys: Iterable<string>) {
+  const enabledFeatures = new Set(enabledFeatureKeys);
+  return runtimeTools.filter((tool) => enabledFeatures.has(tool.requiredFeature));
 }
 
 export async function callRuntimeTool(name: string, input: unknown) {

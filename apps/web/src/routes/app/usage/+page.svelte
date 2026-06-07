@@ -21,8 +21,8 @@
     {#each data.summaries as summary}
       <div class="row">
         <span>{summary.metricKey}</span>
-        <span>{summary.windowStart}</span>
-        <strong>{summary.value.toLocaleString()}</strong>
+        <span>{new Date(summary.windowStart).toLocaleDateString()}</span>
+        <strong>{summary.quantity.toLocaleString()}</strong>
       </div>
     {/each}
   </div>

@@ -17,11 +17,11 @@ Feature keys should align with `smrt-features`:
 
 Thresholds reference tenant usage metrics:
 
-- `ai.tokens`
+- `ai.tokens.total`
 - `mcp.calls`
 - future app metrics such as `files.storage_bytes`, `messages.sent`, or `jobs.executions`
 
-Threshold actions:
+Threshold enforcement modes:
 
 - `observe`: show usage only
 - `warn`: show warnings but allow the action

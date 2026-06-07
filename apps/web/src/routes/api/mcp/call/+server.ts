@@ -9,7 +9,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   const overview = getBillingOverview(locals.tenantId ?? "demo");
-  const allowed = listRuntimeTools(overview.snapshot.features);
+  const allowed = listRuntimeTools(overview.snapshot.featureKeys);
   if (!allowed.some((tool) => tool.name === body.name)) {
     throw error(403, "Tool is not available for the current tenant");
   }
