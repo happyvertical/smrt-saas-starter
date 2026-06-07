@@ -11,6 +11,10 @@ pnpm db:smoke
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
 
+`pnpm db:migrate` loads the canonical SMRT runtime package list from
+`apps/web/smrt-packages.mjs` before schema generation, so local Postgres is
+prepared for the same SMRT surface used by the web app.
+
 ## Local Services
 
 The starter uses Docker Compose for local dependencies. The initial service is

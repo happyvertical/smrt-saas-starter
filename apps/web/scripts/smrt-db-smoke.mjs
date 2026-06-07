@@ -6,21 +6,40 @@ import {
   TenantUsageMetricCollection,
 } from "@happyvertical/smrt-subscriptions";
 import { enableTenancy, withSystemContext, withTenant } from "@happyvertical/smrt-tenancy";
+import { registerSmrtRuntimePackages } from "../smrt-packages.mjs";
 
 import "@happyvertical/smrt-saas-objects";
-import "@happyvertical/smrt-subscriptions";
-import "@happyvertical/smrt-users";
 
 import starterData from "../src/lib/server/starter-data.json" with { type: "json" };
+
+await registerSmrtRuntimePackages();
 
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas";
 
 const requiredTables = [
   "_smrt_schema_migrations",
+  "_smrt_jobs",
   "_smrt_subscription_plans",
   "_smrt_tenant_subscriptions",
   "_smrt_tenant_usage_metrics",
+  "agents",
+  "analytics_events",
+  "asset_associations",
+  "chat_messages",
+  "contents",
+  "contracts",
+  "_smrt_feature_definitions",
+  "_smrt_language_overrides",
+  "accounts",
+  "messages",
+  "profiles",
+  "projects",
+  "_smrt_prompt_overrides",
+  "secrets",
+  "sites",
+  "tags",
+  "tenants",
 ];
 
 const tenantScopedTables = ["_smrt_tenant_subscriptions", "_smrt_tenant_usage_metrics"];
