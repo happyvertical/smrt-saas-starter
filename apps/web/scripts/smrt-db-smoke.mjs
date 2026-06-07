@@ -136,6 +136,19 @@ try {
   const entitlements = await withTenant({ tenantId: demoTenant.id }, () =>
     resolver.resolveTenantEntitlements(demoTenant.id),
   );
+  const subscriptionResult = await db.query(
+    `
+      SELECT stripe_customer_id
+      FROM _smrt_tenant_subscriptions
+      WHERE tenant_id = ?
+      LIMIT 1
+    `,
+    demoTenant.id,
+  );
+  const seededStripeCustomerId = subscriptionResult.rows[0]?.stripe_customer_id ?? "";
+  if (seededStripeCustomerId !== starterData.demoSubscription.stripeCustomerId) {
+    throw new Error("Seeded demo subscription has an unexpected Stripe customer id");
+  }
 
   if (entitlements.planKey !== starterData.demoSubscription.planKey) {
     throw new Error(

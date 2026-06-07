@@ -41,6 +41,10 @@ subscription plans, active Growth subscription, and starter usage metrics.
 services first with `pnpm services:up`; CI workflows provide an isolated
 Postgres service.
 
+The seeded demo subscription does not include a Stripe customer id. The billing
+portal action appears only after checkout/webhook handling stores a real Stripe
+customer for the tenant.
+
 ## Branch Flow
 
 1. Feature branches target `dev`.

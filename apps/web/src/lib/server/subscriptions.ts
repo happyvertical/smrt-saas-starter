@@ -35,6 +35,7 @@ export interface BillingOverview {
   currentPlan: StarterPlan;
   snapshot: EntitlementResolution;
   periodEnd: string;
+  billingPortalAvailable: boolean;
 }
 
 export async function getBillingOverview(tenantId?: string | null): Promise<BillingOverview> {
@@ -51,6 +52,7 @@ export async function getBillingOverview(tenantId?: string | null): Promise<Bill
     });
     const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
     const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+    const stripeCustomerId = readOptionalString(subscription?.stripeCustomerId);
     const plan = snapshot.planId
       ? await withSystemContext(() => plans.get({ id: snapshot.planId }))
       : null;
@@ -62,6 +64,7 @@ export async function getBillingOverview(tenantId?: string | null): Promise<Bill
       periodEnd:
         subscription?.currentPeriodEnd?.toISOString() ?? getCurrentMonthWindow().end.toISOString(),
       snapshot,
+      billingPortalAvailable: Boolean(stripeCustomerId),
     };
   });
 }
@@ -92,14 +95,14 @@ export async function getStripePriceId(planId: string): Promise<string | null> {
   }
 
   const envKey = `STRIPE_PRICE_${plan.planKey.toUpperCase()}`;
-  return plan.stripePriceId || process.env[envKey] || null;
+  return readOptionalString(plan.stripePriceId) ?? readOptionalString(process.env[envKey]);
 }
 
 export async function getStripeCustomerId(tenantId?: string | null): Promise<string | null> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
     const { subscriptions } = await createSubscriptionCollections();
     const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
-    return subscription?.stripeCustomerId || null;
+    return readOptionalString(subscription?.stripeCustomerId);
   });
 }
 
@@ -154,4 +157,9 @@ function toStarterPlan(plan: SubscriptionPlan): StarterPlan {
     })),
     thresholds: plan.getThresholds(),
   };
+}
+
+function readOptionalString(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 }

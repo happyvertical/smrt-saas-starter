@@ -39,6 +39,7 @@
     planName={data.currentPlan.name}
     status={data.snapshot.status}
     periodEnd={data.periodEnd}
+    portalAvailable={data.billingPortalAvailable}
     thresholds={data.snapshot.thresholdEvaluations.map((evaluation) => ({
       metricKey: evaluation.threshold.metricKey,
       label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
