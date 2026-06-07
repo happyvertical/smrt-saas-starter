@@ -18,7 +18,7 @@ for (const file of required) {
 const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
-  if (!text.includes("uses: actions/checkout@v4")) {
+  if (!text.includes("uses: actions/checkout@v6")) {
     throw new Error(`${file} must checkout the repository`);
   }
   if (!text.includes("setup-environment")) {
@@ -34,6 +34,16 @@ for (const file of workflowFiles) {
         throw new Error(`${file} must configure CI Postgres for pnpm check: ${phrase}`);
       }
     }
+  }
+}
+
+const setupEnvironmentAction = await readFile(
+  join(root, ".github/actions/setup-environment/action.yml"),
+  "utf8",
+);
+for (const phrase of ["uses: actions/setup-node@v6", 'node-version: "24"']) {
+  if (!setupEnvironmentAction.includes(phrase)) {
+    throw new Error(`setup-environment action must include: ${phrase}`);
   }
 }
 

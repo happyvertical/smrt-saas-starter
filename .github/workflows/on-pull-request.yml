@@ -34,7 +34,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-environment
       - name: Validate
         run: pnpm check
