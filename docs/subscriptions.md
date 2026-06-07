@@ -21,6 +21,10 @@ Thresholds reference tenant usage metrics:
 - `mcp.calls`
 - future app metrics such as `files.storage_bytes`, `messages.sent`, or `jobs.executions`
 
+The starter records right-dock/runtime MCP tool calls as `mcp.calls` usage
+records with `source: "smrt-app-mcp"`. Those records are summarized by tenant
+and compared against plan thresholds before each allowed tool invocation.
+
 Threshold enforcement modes:
 
 - `observe`: show usage only

@@ -1,3 +1,5 @@
+import { getUsageSummaries } from "$lib/server/usage";
+
 export interface RuntimeTool {
   name: string;
   description: string;
@@ -31,11 +33,21 @@ export function listRuntimeTools(enabledFeatureKeys: Iterable<string>) {
   return runtimeTools.filter((tool) => enabledFeatures.has(tool.requiredFeature));
 }
 
-export async function callRuntimeTool(name: string, input: unknown) {
+export interface RuntimeToolContext {
+  tenantId: string;
+}
+
+export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {
   if (name === "tenant.usage.summary") {
+    const summaries = getUsageSummaries(context.tenantId).map((summary) => ({
+      ...summary,
+      windowStart: summary.windowStart.toISOString(),
+      windowEnd: summary.windowEnd.toISOString(),
+    }));
+
     return {
-      content: [{ type: "text", text: "Usage summary is available in the Usage page." }],
-      structuredContent: { input },
+      content: [{ type: "text", text: "Tenant usage summary loaded." }],
+      structuredContent: { tenantId: context.tenantId, summaries, input },
     };
   }
 
