@@ -45,6 +45,12 @@ The seeded demo subscription does not include a Stripe customer id. The billing
 portal action appears only after checkout/webhook handling stores a real Stripe
 customer for the tenant.
 
+For local Stripe testing, set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and
+the plan price ids such as `STRIPE_PRICE_GROWTH`. Forward Stripe webhook events
+to `/api/billing/webhook`; `checkout.session.completed` and
+`customer.subscription.*` events update `_smrt_tenant_subscriptions`
+idempotently.
+
 ## Branch Flow
 
 1. Feature branches target `dev`.

@@ -14,6 +14,10 @@ export function setStripeBillingProvider(nextProvider: StripeBillingProvider | n
   providerPromise = null;
 }
 
+export function isStripeBillingConfigured(): boolean {
+  return Boolean(provider || process.env.STRIPE_SECRET_KEY?.trim());
+}
+
 export async function createCheckoutSession(request: CheckoutSessionRequest) {
   return await (await getStripeBillingProvider()).createCheckoutSession(request);
 }

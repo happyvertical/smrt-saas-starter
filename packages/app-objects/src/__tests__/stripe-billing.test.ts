@@ -128,6 +128,25 @@ describe("createStripeBillingProvider", () => {
     expect(verify).toHaveBeenCalledWith(payload, "sig_test", "whsec_test");
     expect(parse).toHaveBeenCalledWith(payload);
   });
+
+  it("rejects failed Stripe webhook verification", async () => {
+    const provider = fakeStripeProvider({
+      webhooks: {
+        verify: vi.fn(() => false),
+        parse: vi.fn(() => {
+          throw new Error("parse should not be called");
+        }),
+      },
+    });
+
+    const billing = createStripeBillingProvider(provider, {
+      webhookSecret: "whsec_test",
+    });
+
+    await expect(billing.verifyWebhook("{}", "sig_bad")).rejects.toThrow(
+      "Stripe webhook signature verification failed",
+    );
+  });
 });
 
 function fakeStripeProvider(

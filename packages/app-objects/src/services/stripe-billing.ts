@@ -105,7 +105,11 @@ export function createStripeBillingProvider(
         throw new Error("Stripe webhook secret is not configured.");
       }
 
-      provider.webhooks.verify(payload, signature, options.webhookSecret);
+      const verified = provider.webhooks.verify(payload, signature, options.webhookSecret);
+      if (!verified) {
+        throw new Error("Stripe webhook signature verification failed.");
+      }
+
       const event = provider.webhooks.parse(payload);
 
       return {
