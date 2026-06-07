@@ -1,5 +1,6 @@
 import { resolveStarterPromptPreview } from "$lib/server/experience";
-import { getUsageSummaries } from "$lib/server/usage";
+import { getBillingOverview } from "$lib/server/subscriptions";
+import { getUsageSummaries, getUsageWindow, recordUsageMetric } from "$lib/server/usage";
 
 export interface RuntimeTool {
   name: string;
@@ -12,6 +13,12 @@ export const runtimeTools: RuntimeTool[] = [
   {
     name: "tenant.usage.summary",
     description: "Summarize tenant usage meters and thresholds.",
+    readOnly: true,
+    requiredFeature: "mcp.read_tools",
+  },
+  {
+    name: "tenant.subscription.summary",
+    description: "Summarize the tenant subscription, feature grants, and billing period.",
     readOnly: true,
     requiredFeature: "mcp.read_tools",
   },
@@ -38,6 +45,59 @@ export interface RuntimeToolContext {
   tenantId: string;
 }
 
+export interface RuntimeToolExecution {
+  tool: RuntimeTool;
+  response: Awaited<ReturnType<typeof callRuntimeTool>>;
+}
+
+export class RuntimeToolExecutionError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "RuntimeToolExecutionError";
+    this.status = status;
+  }
+}
+
+export async function executeRuntimeToolForTenant(
+  name: string,
+  input: unknown,
+  tenantId: string,
+): Promise<RuntimeToolExecution> {
+  const overview = await getBillingOverview(tenantId);
+  const allowed = listRuntimeTools(overview.snapshot.featureKeys);
+  const tool = allowed.find((candidate) => candidate.name === name);
+  if (!tool) {
+    throw new RuntimeToolExecutionError(403, "Tool is not available for the current tenant");
+  }
+
+  const blockedMetric = overview.snapshot.thresholdEvaluations.find(
+    (evaluation) => evaluation.threshold.metricKey === "mcp.calls" && !evaluation.allowed,
+  );
+  if (blockedMetric) {
+    throw new RuntimeToolExecutionError(429, "Tenant exceeded the MCP calls threshold");
+  }
+
+  const response = await callRuntimeTool(name, input, { tenantId });
+  const window = getUsageWindow("month");
+  await recordUsageMetric({
+    tenantId,
+    metricKey: "mcp.calls",
+    quantity: 1,
+    windowStart: window.start,
+    windowEnd: window.end,
+    source: "smrt-app-mcp",
+    sourceId: name,
+    dimensions: {
+      toolName: tool.name,
+      readOnly: tool.readOnly,
+    },
+  });
+
+  return { tool, response };
+}
+
 export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {
   if (name === "tenant.usage.summary") {
     const summaries = (await getUsageSummaries(context.tenantId)).map((summary) => ({
@@ -49,6 +109,36 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
     return {
       content: [{ type: "text", text: "Tenant usage summary loaded." }],
       structuredContent: { tenantId: context.tenantId, summaries, input },
+    };
+  }
+
+  if (name === "tenant.subscription.summary") {
+    const overview = await getBillingOverview(context.tenantId);
+
+    return {
+      content: [{ type: "text", text: "Tenant subscription summary loaded." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        subscription: {
+          planName: overview.currentPlan.name,
+          planKey: overview.currentPlan.planKey,
+          status: overview.snapshot.status,
+          periodEnd: overview.periodEnd,
+          billingPortalAvailable: overview.billingPortalAvailable,
+          featureKeys: overview.snapshot.featureKeys,
+          thresholds: overview.snapshot.thresholdEvaluations.map((evaluation) => ({
+            metricKey: evaluation.threshold.metricKey,
+            label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
+            enforcement: evaluation.threshold.enforcement,
+            limit: evaluation.threshold.limit,
+            used: evaluation.usage.quantity,
+            remaining: evaluation.remaining,
+            state: evaluation.state,
+            allowed: evaluation.allowed,
+          })),
+        },
+        input,
+      },
     };
   }
 

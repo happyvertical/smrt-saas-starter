@@ -31,6 +31,16 @@ The starter records right-dock/runtime MCP tool calls as `mcp.calls` usage
 records with `source: "smrt-app-mcp"`. Those records are summarized by tenant
 and compared against plan thresholds before each allowed tool invocation.
 
+The admin right dock uses `/api/chat` to create a tenant-scoped `smrt-chat`
+agent session. The chat service allowlists runtime tools from the tenant's
+feature snapshot, then routes common usage, billing, prompt, and subscription
+questions through the shared MCP executor:
+
+- `tenant.usage.summary`
+- `tenant.subscription.summary`
+- `tenant.prompt.preview`
+- `tenant.subscription.update`
+
 Threshold enforcement modes:
 
 - `observe`: show usage only

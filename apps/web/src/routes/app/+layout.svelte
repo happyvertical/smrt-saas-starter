@@ -39,15 +39,22 @@
     {@render children()}
   </RoleShell>
 
-  <AssistantDock tenantId={data.tenantId} activePath={data.activePath} />
+  <AssistantDock tenantId={data.tenantId} activePath={data.activePath} chatEndpoint="/api/chat" />
 </div>
 
 <style>
   .workspace {
+    width: 100vw;
+    max-width: 100%;
     min-height: 100vh;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    align-items: stretch;
     background: var(--smrt-color-background, #f7f8fa);
+  }
+
+  .workspace :global(.smrt-workspace-shell) {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .tenant-pill {

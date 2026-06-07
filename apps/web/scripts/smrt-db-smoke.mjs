@@ -190,7 +190,10 @@ try {
   const mcpEvaluation = entitlements.thresholdEvaluations.find(
     (evaluation) => evaluation.threshold.metricKey === "mcp.calls",
   );
-  if (mcpEvaluation?.usage.quantity !== 128) {
+  const seededMcpUsage = starterData.usageSeeds
+    .filter((metric) => metric.metricKey === "mcp.calls")
+    .reduce((total, metric) => total + metric.quantity, 0);
+  if (!mcpEvaluation || mcpEvaluation.usage.quantity < seededMcpUsage) {
     throw new Error("Seeded MCP usage was not included in threshold evaluation");
   }
 
@@ -250,6 +253,7 @@ try {
         planKey: entitlements.planKey,
         enabledFeatures: entitlements.featureKeys.length,
         mcpUsage: mcpEvaluation.usage.quantity,
+        seededMcpUsage,
         promptOverrides,
         languageOverrides,
       },
