@@ -42,7 +42,15 @@ export const actions: Actions = {
       return fail(400, { kind: "prompt", message: "Missing prompt key." });
     }
 
-    const result = await saveTenantPromptOverride(locals.tenantId, { key, template });
+    let result: Awaited<ReturnType<typeof saveTenantPromptOverride>>;
+    try {
+      result = await saveTenantPromptOverride(locals.tenantId, { key, template });
+    } catch (error) {
+      if (isUnknownStarterExperienceError(error)) {
+        return fail(400, { kind: "prompt", message: error.message });
+      }
+      throw error;
+    }
     return { kind: "prompt", message: messageForResult("Prompt override", result.action) };
   },
   language: async ({ locals, request }) => {
@@ -62,11 +70,19 @@ export const actions: Actions = {
       return fail(400, { kind: "language", message: "Missing language key or locale." });
     }
 
-    const result = await saveTenantLanguageOverride(locals.tenantId, {
-      key,
-      locale,
-      template,
-    });
+    let result: Awaited<ReturnType<typeof saveTenantLanguageOverride>>;
+    try {
+      result = await saveTenantLanguageOverride(locals.tenantId, {
+        key,
+        locale,
+        template,
+      });
+    } catch (error) {
+      if (isUnknownStarterExperienceError(error)) {
+        return fail(400, { kind: "language", message: error.message });
+      }
+      throw error;
+    }
     return { kind: "language", message: messageForResult("Language override", result.action) };
   },
 };
@@ -84,4 +100,8 @@ function messageForResult(label: string, action: "saved" | "deleted" | "unchange
     return `${label} unchanged.`;
   }
   return `${label} saved.`;
+}
+
+function isUnknownStarterExperienceError(error: unknown): error is Error {
+  return error instanceof Error && error.message.startsWith("Unknown starter ");
 }

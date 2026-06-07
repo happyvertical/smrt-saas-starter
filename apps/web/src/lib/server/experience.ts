@@ -1,12 +1,14 @@
 import { type SmrtConfig, setConfig } from "@happyvertical/smrt-config";
 import {
   defineLanguageString,
+  invalidateLanguageCache,
   LanguageOverrideCollection,
   normalizeLocale,
   type ResolvedLanguageString,
   resolveLanguageString,
 } from "@happyvertical/smrt-languages";
 import {
+  clearPromptCache,
   definePrompt,
   PromptOverrideCollection,
   type PromptParams,
@@ -212,6 +214,7 @@ export async function saveTenantPromptOverride(
     if (!template) {
       if (existing) {
         await existing.delete();
+        clearPromptCache();
         return { action: "deleted", key: prompt.key };
       }
       return { action: "unchanged", key: prompt.key };
@@ -220,6 +223,7 @@ export async function saveTenantPromptOverride(
     if (existing) {
       existing.template = template;
       await existing.save();
+      clearPromptCache();
       return { action: "saved", key: prompt.key };
     }
 
@@ -233,6 +237,7 @@ export async function saveTenantPromptOverride(
       params: null,
     });
 
+    clearPromptCache();
     return { action: "saved", key: prompt.key };
   });
 }
@@ -258,6 +263,7 @@ export async function saveTenantLanguageOverride(
     if (!template) {
       if (existing) {
         await existing.delete();
+        invalidateLanguageCache(definition.key, locale, activeTenantId, collection.db);
         return { action: "deleted", key: definition.key };
       }
       return { action: "unchanged", key: definition.key };
@@ -269,6 +275,7 @@ export async function saveTenantLanguageOverride(
       existing.source_hash = null;
       existing.ai_model = null;
       await existing.save();
+      invalidateLanguageCache(definition.key, locale, activeTenantId, collection.db);
       return { action: "saved", key: definition.key };
     }
 
@@ -285,6 +292,7 @@ export async function saveTenantLanguageOverride(
       reviewed_by: null,
     });
 
+    invalidateLanguageCache(definition.key, locale, activeTenantId, collection.db);
     return { action: "saved", key: definition.key };
   });
 }
@@ -312,17 +320,26 @@ function findPrompt(key: string) {
 }
 
 function getLanguageDefinition(key: string, locale: string): StarterLanguageStringSeed {
+  const normalizedKey = key.trim();
   const normalizedLocale = normalizeLocale(locale);
+  const isManagedSetting = starterData.languageSettings.some(
+    (setting) =>
+      setting.key === normalizedKey && normalizeLocale(setting.locale) === normalizedLocale,
+  );
+  if (!isManagedSetting) {
+    throw new Error(`Unknown starter language setting "${key}" for locale "${normalizedLocale}"`);
+  }
+
   const exact = starterData.languageStrings.find(
     (definition) =>
-      definition.key === key && normalizeLocale(definition.locale) === normalizedLocale,
+      definition.key === normalizedKey && normalizeLocale(definition.locale) === normalizedLocale,
   );
   if (exact) {
     return exact;
   }
 
   const fallback = starterData.languageStrings.find(
-    (definition) => definition.key === key && normalizeLocale(definition.locale) === "en",
+    (definition) => definition.key === normalizedKey && normalizeLocale(definition.locale) === "en",
   );
   if (fallback) {
     return {
