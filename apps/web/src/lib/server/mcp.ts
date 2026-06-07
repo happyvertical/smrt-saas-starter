@@ -39,7 +39,7 @@ export interface RuntimeToolContext {
 
 export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {
   if (name === "tenant.usage.summary") {
-    const summaries = getUsageSummaries(context.tenantId).map((summary) => ({
+    const summaries = (await getUsageSummaries(context.tenantId)).map((summary) => ({
       ...summary,
       windowStart: summary.windowStart.toISOString(),
       windowEnd: summary.windowEnd.toISOString(),

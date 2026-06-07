@@ -1,8 +1,15 @@
 import { error, type RequestHandler, redirect } from "@sveltejs/kit";
 import { createCustomerPortalSession } from "$lib/server/billing";
+import { getActiveTenantId } from "$lib/server/starter-data";
+import { getStripeCustomerId } from "$lib/server/subscriptions";
 
-export const GET: RequestHandler = async ({ url }) => {
-  const stripeCustomerId = "cus_demo_replace_with_subscription_row";
+export const GET: RequestHandler = async ({ locals, url }) => {
+  const tenantId = getActiveTenantId(locals.tenantId);
+  const stripeCustomerId = await getStripeCustomerId(tenantId);
+  if (!stripeCustomerId) {
+    throw error(503, "Stripe customer id is not configured for this tenant");
+  }
+
   const session = await createCustomerPortalSession({
     stripeCustomerId,
     returnUrl: `${url.origin}/app/billing`,

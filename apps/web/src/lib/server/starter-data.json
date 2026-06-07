@@ -1,0 +1,223 @@
+{
+  "demoTenant": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "slug": "demo",
+    "name": "Demo Tenant",
+    "description": "Reference tenant for the SMRT SaaS starter.",
+    "ownerUser": {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "slug": "demo-owner",
+      "email": "demo-owner@example.com"
+    },
+    "ownerMembership": {
+      "id": "00000000-0000-4000-8000-000000000031",
+      "slug": "demo-owner"
+    }
+  },
+  "roles": [
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "slug": "owner",
+      "name": "Owner",
+      "description": "Full tenant administration."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000022",
+      "slug": "admin",
+      "name": "Admin",
+      "description": "Tenant administration without ownership transfer."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000023",
+      "slug": "member",
+      "name": "Member",
+      "description": "Standard tenant workspace access."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "slug": "viewer",
+      "name": "Viewer",
+      "description": "Read-only tenant workspace access."
+    }
+  ],
+  "plans": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "planKey": "starter",
+      "name": "Starter",
+      "description": "Tenant basics, hosted agents, and read-only tools.",
+      "priceAmount": 49,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_STARTER",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": false,
+          "metadata": { "label": "Bulk exports" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 100000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 500,
+          "window": "month",
+          "enforcement": "block",
+          "label": "MCP calls"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "planKey": "growth",
+      "name": "Growth",
+      "description": "Team-scale workflows with write tools and bulk exports.",
+      "priceAmount": 149,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_GROWTH",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "mcp.write_tools",
+          "enabled": true,
+          "metadata": { "label": "Confirmed write tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": true,
+          "metadata": { "label": "Bulk exports" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 1000000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 5000,
+          "window": "month",
+          "enforcement": "block",
+          "label": "MCP calls"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "planKey": "scale",
+      "name": "Scale",
+      "description": "High-volume AI usage, translations, and custom prompt control.",
+      "priceAmount": 499,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_SCALE",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "mcp.write_tools",
+          "enabled": true,
+          "metadata": { "label": "Confirmed write tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": true,
+          "metadata": { "label": "Bulk exports" }
+        },
+        {
+          "featureKey": "languages.ai_translate",
+          "enabled": true,
+          "metadata": { "label": "AI translations" }
+        },
+        {
+          "featureKey": "prompts.tenant_overrides",
+          "enabled": true,
+          "metadata": { "label": "Tenant prompt overrides" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 5000000,
+          "window": "month",
+          "enforcement": "observe",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 50000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "MCP calls"
+        }
+      ]
+    }
+  ],
+  "demoSubscription": {
+    "id": "00000000-0000-4000-8000-000000000201",
+    "slug": "demo-growth",
+    "planKey": "growth",
+    "stripeCustomerId": "cus_demo_reference"
+  },
+  "usageSeeds": [
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "slug": "demo-ai-tokens-total-seed-a",
+      "metricKey": "ai.tokens.total",
+      "quantity": 18000,
+      "source": "smrt-ai-usage"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "slug": "demo-ai-tokens-total-seed-b",
+      "metricKey": "ai.tokens.total",
+      "quantity": 24500,
+      "source": "smrt-ai-usage"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "slug": "demo-mcp-calls-seed",
+      "metricKey": "mcp.calls",
+      "quantity": 128,
+      "source": "smrt-app-mcp"
+    }
+  ]
+}

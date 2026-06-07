@@ -1,11 +1,22 @@
 import {
   type BillingInterval,
   type EntitlementResolution,
-  evaluateThresholds,
   type PlanFeatureGrant,
   type PlanThreshold,
+  type SubscriptionPlan,
+  SubscriptionPlanCollection,
+  SubscriptionResolver,
+  TenantSubscriptionCollection,
 } from "@happyvertical/smrt-subscriptions";
-import { getUsageSummaries } from "$lib/server/usage";
+import { getSmrtConfig } from "$lib/server/smrt";
+import {
+  DEMO_TENANT_ID,
+  getActiveTenantId,
+  getCurrentMonthWindow,
+  isUuid,
+  readFeatureLabel,
+} from "$lib/server/starter-data";
+import { summarizeUsageMetric } from "$lib/server/usage";
 
 export interface StarterFeatureGrant extends PlanFeatureGrant {
   label: string;
@@ -23,107 +34,6 @@ export interface StarterPlan {
   thresholds: PlanThreshold[];
 }
 
-export const starterPlans: StarterPlan[] = [
-  {
-    id: "plan-starter",
-    planKey: "starter",
-    name: "Starter",
-    description: "Tenant basics, hosted agents, and read-only tools.",
-    priceAmount: 49,
-    currency: "USD",
-    billingInterval: "month",
-    features: [
-      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
-      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { featureKey: "exports.bulk", enabled: false, label: "Bulk exports" },
-    ],
-    thresholds: [
-      {
-        metricKey: "ai.tokens.total",
-        limit: 100_000,
-        window: "month",
-        enforcement: "warn",
-        label: "AI tokens",
-      },
-      {
-        metricKey: "mcp.calls",
-        limit: 500,
-        window: "month",
-        enforcement: "block",
-        label: "MCP calls",
-      },
-    ],
-  },
-  {
-    id: "plan-growth",
-    planKey: "growth",
-    name: "Growth",
-    description: "Team-scale workflows with write tools and bulk exports.",
-    priceAmount: 149,
-    currency: "USD",
-    billingInterval: "month",
-    features: [
-      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
-      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { featureKey: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
-      { featureKey: "exports.bulk", enabled: true, label: "Bulk exports" },
-    ],
-    thresholds: [
-      {
-        metricKey: "ai.tokens.total",
-        limit: 1_000_000,
-        window: "month",
-        enforcement: "warn",
-        label: "AI tokens",
-      },
-      {
-        metricKey: "mcp.calls",
-        limit: 5_000,
-        window: "month",
-        enforcement: "block",
-        label: "MCP calls",
-      },
-    ],
-  },
-  {
-    id: "plan-scale",
-    planKey: "scale",
-    name: "Scale",
-    description: "High-volume AI usage, translations, and custom prompt control.",
-    priceAmount: 499,
-    currency: "USD",
-    billingInterval: "month",
-    features: [
-      { featureKey: "chat.agent", enabled: true, label: "Agent chat" },
-      { featureKey: "mcp.read_tools", enabled: true, label: "Read-only MCP tools" },
-      { featureKey: "mcp.write_tools", enabled: true, label: "Confirmed write tools" },
-      { featureKey: "exports.bulk", enabled: true, label: "Bulk exports" },
-      { featureKey: "languages.ai_translate", enabled: true, label: "AI translations" },
-      {
-        featureKey: "prompts.tenant_overrides",
-        enabled: true,
-        label: "Tenant prompt overrides",
-      },
-    ],
-    thresholds: [
-      {
-        metricKey: "ai.tokens.total",
-        limit: 5_000_000,
-        window: "month",
-        enforcement: "observe",
-        label: "AI tokens",
-      },
-      {
-        metricKey: "mcp.calls",
-        limit: 50_000,
-        window: "month",
-        enforcement: "warn",
-        label: "MCP calls",
-      },
-    ],
-  },
-];
-
 export interface BillingOverview {
   tenantId: string;
   currentPlan: StarterPlan;
@@ -131,38 +41,35 @@ export interface BillingOverview {
   periodEnd: string;
 }
 
-export function getBillingOverview(tenantId = "demo"): BillingOverview {
-  const fallbackPlan = starterPlans[0];
-  if (!fallbackPlan) {
-    throw new Error("Starter plan seed data is empty");
-  }
-
-  const currentPlan = starterPlans[1] ?? fallbackPlan;
-  const usage = getUsageSummaries(tenantId);
-  const thresholdEvaluations = evaluateThresholds(currentPlan.thresholds, usage);
+export async function getBillingOverview(
+  tenantId: string | null | undefined = DEMO_TENANT_ID,
+): Promise<BillingOverview> {
+  const activeTenantId = getActiveTenantId(tenantId);
+  const { plans, subscriptions } = await createSubscriptionCollections();
+  const resolver = new SubscriptionResolver({
+    plans,
+    subscriptions,
+    usage: {
+      summarize: summarizeUsageMetric,
+    },
+  });
+  const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
+  const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+  const plan = snapshot.planId ? await plans.get({ id: snapshot.planId }) : null;
+  const currentPlan = await resolveDisplayPlan(plans, plan);
 
   return {
-    tenantId,
+    tenantId: activeTenantId,
     currentPlan,
-    periodEnd: "2026-07-06T00:00:00.000Z",
-    snapshot: {
-      tenantId,
-      planId: currentPlan.id,
-      planKey: currentPlan.planKey,
-      subscriptionId: "sub_demo",
-      status: "active",
-      featureKeys: currentPlan.features
-        .filter((feature) => feature.enabled !== false)
-        .map((feature) => feature.featureKey),
-      thresholds: currentPlan.thresholds,
-      thresholdEvaluations,
-      allowed: thresholdEvaluations.every((evaluation) => evaluation.allowed),
-    },
+    periodEnd:
+      subscription?.currentPeriodEnd?.toISOString() ?? getCurrentMonthWindow().end.toISOString(),
+    snapshot,
   };
 }
 
-export function getPlanCards(currentPlanId: string) {
-  return starterPlans.map((plan) => ({
+export async function getPlanCards(currentPlanId: string) {
+  const plans = await getActivePlans();
+  return plans.map((plan) => ({
     id: plan.id,
     slug: plan.planKey,
     name: plan.name,
@@ -178,12 +85,72 @@ export function getEnabledFeatureMap(snapshot: EntitlementResolution): Record<st
   return Object.fromEntries(snapshot.featureKeys.map((featureKey) => [featureKey, true]));
 }
 
-export function getStripePriceId(planId: string): string | null {
-  const plan = starterPlans.find((candidate) => candidate.id === planId);
+export async function getStripePriceId(planId: string): Promise<string | null> {
+  const { plans } = await createSubscriptionCollections();
+  const plan = await findPlan(plans, planId);
   if (!plan) {
     return null;
   }
 
   const envKey = `STRIPE_PRICE_${plan.planKey.toUpperCase()}`;
-  return process.env[envKey] ?? null;
+  return plan.stripePriceId || process.env[envKey] || null;
+}
+
+export async function getStripeCustomerId(
+  tenantId: string | null | undefined = DEMO_TENANT_ID,
+): Promise<string | null> {
+  const { subscriptions } = await createSubscriptionCollections();
+  const subscription = await subscriptions.findCurrentForTenant(getActiveTenantId(tenantId));
+  return subscription?.stripeCustomerId || null;
+}
+
+async function createSubscriptionCollections() {
+  const config = getSmrtConfig("SubscriptionPlan");
+  return {
+    plans: await SubscriptionPlanCollection.create(config),
+    subscriptions: await TenantSubscriptionCollection.create(config),
+  };
+}
+
+async function getActivePlans(): Promise<StarterPlan[]> {
+  const { plans } = await createSubscriptionCollections();
+  return (await plans.findActive()).map(toStarterPlan);
+}
+
+async function resolveDisplayPlan(
+  plans: SubscriptionPlanCollection,
+  plan: SubscriptionPlan | null,
+): Promise<StarterPlan> {
+  const displayPlan = plan ?? (await plans.findActive())[0];
+  if (!displayPlan) {
+    throw new Error("No active subscription plans are seeded");
+  }
+
+  return toStarterPlan(displayPlan);
+}
+
+async function findPlan(
+  plans: SubscriptionPlanCollection,
+  planId: string,
+): Promise<SubscriptionPlan | null> {
+  return isUuid(planId)
+    ? ((await plans.get({ id: planId })) ?? null)
+    : await plans.findByPlanKey(planId);
+}
+
+function toStarterPlan(plan: SubscriptionPlan): StarterPlan {
+  return {
+    id: plan.id ?? plan.planKey,
+    planKey: plan.planKey,
+    name: plan.name,
+    description: plan.description,
+    priceAmount: plan.priceAmount,
+    currency: plan.currency,
+    billingInterval: plan.billingInterval,
+    features: plan.getFeatureGrants().map((feature) => ({
+      ...feature,
+      label: readFeatureLabel(feature),
+    })),
+    thresholds: plan.getThresholds(),
+  };
 }

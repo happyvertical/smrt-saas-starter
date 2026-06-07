@@ -1,4 +1,16 @@
 import { resolveDatabase } from "@happyvertical/smrt-core";
+import {
+  SubscriptionPlanCollection,
+  SubscriptionResolver,
+  TenantSubscriptionCollection,
+  TenantUsageMetricCollection,
+} from "@happyvertical/smrt-subscriptions";
+
+import "@happyvertical/smrt-saas-objects";
+import "@happyvertical/smrt-subscriptions";
+import "@happyvertical/smrt-users";
+
+import starterData from "../src/lib/server/starter-data.json" with { type: "json" };
 
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas";
@@ -72,12 +84,74 @@ try {
     throw new Error("No completed SMRT schema migrations found");
   }
 
+  const demoTenant = starterData.demoTenant;
+  const tenantResult = await db.query(
+    `
+      SELECT id, slug, status
+      FROM tenants
+      WHERE id = ? AND slug = ? AND status = 'active'
+    `,
+    demoTenant.id,
+    demoTenant.slug,
+  );
+
+  if (tenantResult.rows.length !== 1) {
+    throw new Error(`Seeded demo tenant ${demoTenant.id} was not found`);
+  }
+
+  const activePlansResult = await db.query(`
+    SELECT COUNT(*)::int AS active_count
+    FROM _smrt_subscription_plans
+    WHERE status = 'active'
+  `);
+  const activePlans = Number(activePlansResult.rows[0]?.active_count ?? 0);
+
+  if (activePlans < starterData.plans.length) {
+    throw new Error(
+      `Expected at least ${starterData.plans.length} active subscription plans, found ${activePlans}`,
+    );
+  }
+
+  const plans = await SubscriptionPlanCollection.create({ db });
+  const subscriptions = await TenantSubscriptionCollection.create({ db });
+  const usageMetrics = await TenantUsageMetricCollection.create({ db });
+  const resolver = new SubscriptionResolver({
+    plans,
+    subscriptions,
+    usage: {
+      summarize: (options) => usageMetrics.summarizeUsage(options),
+    },
+  });
+  const entitlements = await resolver.resolveTenantEntitlements(demoTenant.id);
+
+  if (entitlements.planKey !== starterData.demoSubscription.planKey) {
+    throw new Error(
+      `Expected demo subscription plan ${starterData.demoSubscription.planKey}, found ${entitlements.planKey ?? "none"}`,
+    );
+  }
+
+  if (!entitlements.featureKeys.includes("mcp.write_tools")) {
+    throw new Error("Demo tenant entitlements are missing mcp.write_tools");
+  }
+
+  const mcpEvaluation = entitlements.thresholdEvaluations.find(
+    (evaluation) => evaluation.threshold.metricKey === "mcp.calls",
+  );
+  if (mcpEvaluation?.usage.quantity !== 128) {
+    throw new Error("Seeded MCP usage was not included in threshold evaluation");
+  }
+
   console.log(
     JSON.stringify(
       {
         completedMigrations,
         requiredTables: requiredTables.length,
         tenantIdColumns: tenantScopedTables.length,
+        seedTenant: demoTenant.id,
+        activePlans,
+        planKey: entitlements.planKey,
+        enabledFeatures: entitlements.featureKeys.length,
+        mcpUsage: mcpEvaluation.usage.quantity,
       },
       null,
       2,

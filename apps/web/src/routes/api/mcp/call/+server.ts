@@ -1,5 +1,6 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { callRuntimeTool, listRuntimeTools } from "$lib/server/mcp";
+import { getActiveTenantId } from "$lib/server/starter-data";
 import { getBillingOverview } from "$lib/server/subscriptions";
 import { getUsageWindow, recordUsageMetric } from "$lib/server/usage";
 
@@ -9,8 +10,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     throw error(400, "Missing tool name");
   }
 
-  const tenantId = locals.tenantId ?? "demo";
-  const overview = getBillingOverview(tenantId);
+  const tenantId = getActiveTenantId(locals.tenantId);
+  const overview = await getBillingOverview(tenantId);
   const allowed = listRuntimeTools(overview.snapshot.featureKeys);
   const tool = allowed.find((candidate) => candidate.name === body.name);
   if (!tool) {
@@ -26,7 +27,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
   const response = await callRuntimeTool(body.name, body.input, { tenantId });
   const window = getUsageWindow("month");
-  recordUsageMetric({
+  await recordUsageMetric({
     tenantId,
     metricKey: "mcp.calls",
     quantity: 1,

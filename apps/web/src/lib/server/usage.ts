@@ -2,46 +2,56 @@ import { createLogger, type LogLevel } from "@happyvertical/logger";
 import {
   getWindowForThreshold,
   type RecordUsageOptions,
+  TenantUsageMetricCollection,
   type ThresholdWindow,
   type UsageMetricRecord,
   type UsageSummary,
 } from "@happyvertical/smrt-subscriptions";
+import { getAppDatabase } from "$lib/server/db";
+import { getSmrtConfig } from "$lib/server/smrt";
+import { DEMO_TENANT_ID, getActiveTenantId, getCurrentMonthWindow } from "$lib/server/starter-data";
 
 const logger = createLogger(process.env.NODE_ENV === "test" ? false : { level: resolveLogLevel() });
 
-const seedUsage: UsageMetricRecord[] = [
-  {
-    tenantId: "demo",
-    metricKey: "ai.tokens.total",
-    quantity: 18_000,
-    windowStart: new Date("2026-06-01T00:00:00.000Z"),
-    windowEnd: new Date("2026-07-01T00:00:00.000Z"),
-    source: "smrt-ai-usage",
-  },
-  {
-    tenantId: "demo",
-    metricKey: "ai.tokens.total",
-    quantity: 24_500,
-    windowStart: new Date("2026-06-01T00:00:00.000Z"),
-    windowEnd: new Date("2026-07-01T00:00:00.000Z"),
-    source: "smrt-ai-usage",
-  },
-  {
-    tenantId: "demo",
-    metricKey: "mcp.calls",
-    quantity: 128,
-    windowStart: new Date("2026-06-01T00:00:00.000Z"),
-    windowEnd: new Date("2026-07-01T00:00:00.000Z"),
-    source: "smrt-app-mcp",
-  },
-];
+export async function getUsageSummaries(
+  tenantId: string | null | undefined = DEMO_TENANT_ID,
+): Promise<UsageSummary[]> {
+  const activeTenantId = getActiveTenantId(tenantId);
+  const db = await getAppDatabase();
+  const result = await db.query(
+    `
+      SELECT
+        tenant_id,
+        metric_key,
+        SUM(quantity)::float AS quantity,
+        window_start,
+        window_end
+      FROM _smrt_tenant_usage_metrics
+      WHERE tenant_id = ?
+      GROUP BY tenant_id, metric_key, window_start, window_end
+      ORDER BY window_start DESC, metric_key ASC
+    `,
+    activeTenantId,
+  );
+  const persisted = result.rows.map((row) => ({
+    tenantId: String(row.tenant_id),
+    metricKey: String(row.metric_key),
+    quantity: numberFromRow(row.quantity),
+    windowStart: dateFromRow(row.window_start),
+    windowEnd: dateFromRow(row.window_end),
+  }));
+  const aiUsage = await getAiUsageSummaries(activeTenantId);
 
-const usageRecords = seedUsage.map(cloneUsageRecord);
+  return mergeUsageSummaries([...persisted, ...aiUsage]);
+}
 
-export function getUsageSummaries(tenantId = "demo"): UsageSummary[] {
+export function summarizeUsageRecords(
+  records: UsageMetricRecord[],
+  tenantId = DEMO_TENANT_ID,
+): UsageSummary[] {
   const summaries = new Map<string, UsageSummary>();
 
-  for (const record of usageRecords.filter((event) => event.tenantId === tenantId)) {
+  for (const record of records.filter((event) => event.tenantId === tenantId)) {
     const key = [
       record.tenantId,
       record.metricKey,
@@ -67,9 +77,12 @@ export function getUsageSummaries(tenantId = "demo"): UsageSummary[] {
   return [...summaries.values()];
 }
 
-export function recordUsageMetric(options: RecordUsageOptions): UsageMetricRecord {
-  const record = cloneUsageRecord(options);
-  usageRecords.push(record);
+export async function recordUsageMetric(options: RecordUsageOptions): Promise<UsageMetricRecord> {
+  const usageMetrics = await TenantUsageMetricCollection.create(getSmrtConfig("TenantUsageMetric"));
+  const record = await usageMetrics.recordUsage({
+    ...options,
+    tenantId: getActiveTenantId(options.tenantId),
+  });
 
   logger.info("Tenant usage metric recorded", {
     tenantId: record.tenantId,
@@ -82,24 +95,139 @@ export function recordUsageMetric(options: RecordUsageOptions): UsageMetricRecor
     dimensions: record.dimensions,
   });
 
-  return record;
+  return {
+    tenantId: record.tenantId ?? getActiveTenantId(options.tenantId),
+    metricKey: record.metricKey,
+    quantity: record.quantity,
+    windowStart: record.windowStart,
+    windowEnd: record.windowEnd,
+    source: record.source,
+    sourceId: record.sourceId,
+    dimensions: record.getDimensions(),
+  };
 }
 
 export function getUsageWindow(thresholdWindow: ThresholdWindow = "month", now = new Date()) {
   return getWindowForThreshold(thresholdWindow, now);
 }
 
-export function resetUsageMetricsForTest(records: UsageMetricRecord[] = seedUsage): void {
-  usageRecords.splice(0, usageRecords.length, ...records.map(cloneUsageRecord));
+export async function summarizeUsageMetric(options: {
+  tenantId: string;
+  metricKey: string;
+  window: { start: Date; end: Date };
+}): Promise<UsageSummary> {
+  const usageMetrics = await TenantUsageMetricCollection.create(getSmrtConfig("TenantUsageMetric"));
+  const tenantUsage = await usageMetrics.summarizeUsage(options);
+  if (!options.metricKey.startsWith("ai.")) {
+    return tenantUsage;
+  }
+
+  const aiSummary = await safeSummarizeTenantAiUsage(options.tenantId, options.window);
+  if (!aiSummary) {
+    return tenantUsage;
+  }
+
+  return {
+    ...tenantUsage,
+    quantity: tenantUsage.quantity + readAiMetricQuantity(options.metricKey, aiSummary),
+  };
 }
 
-function cloneUsageRecord(record: UsageMetricRecord): UsageMetricRecord {
+async function getAiUsageSummaries(tenantId: string): Promise<UsageSummary[]> {
+  const window = getCurrentMonthWindow();
+  const aiSummary = await safeSummarizeTenantAiUsage(tenantId, window);
+  if (!aiSummary) {
+    return [];
+  }
+
+  return [
+    usageSummaryFromQuantity(tenantId, "ai.tokens.prompt", aiSummary.promptTokens, window),
+    usageSummaryFromQuantity(tenantId, "ai.tokens.completion", aiSummary.completionTokens, window),
+    usageSummaryFromQuantity(tenantId, "ai.tokens.total", aiSummary.totalTokens, window),
+    usageSummaryFromQuantity(tenantId, "ai.cost.estimated", aiSummary.estimatedCost, window),
+    usageSummaryFromQuantity(tenantId, "ai.requests", aiSummary.requestCount, window),
+  ].filter((summary) => summary.quantity > 0);
+}
+
+async function safeSummarizeTenantAiUsage(tenantId: string, window: { start: Date; end: Date }) {
+  try {
+    const usageMetrics = await TenantUsageMetricCollection.create(
+      getSmrtConfig("TenantUsageMetric"),
+    );
+    return await usageMetrics.summarizeTenantAiUsage({ tenantId, window });
+  } catch (error) {
+    if (isMissingAiUsageTableError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function usageSummaryFromQuantity(
+  tenantId: string,
+  metricKey: string,
+  quantity: number,
+  window: { start: Date; end: Date },
+): UsageSummary {
   return {
-    ...record,
-    windowStart: new Date(record.windowStart),
-    windowEnd: new Date(record.windowEnd),
-    dimensions: record.dimensions ? { ...record.dimensions } : undefined,
+    tenantId,
+    metricKey,
+    quantity,
+    windowStart: window.start,
+    windowEnd: window.end,
   };
+}
+
+function mergeUsageSummaries(summaries: UsageSummary[]): UsageSummary[] {
+  const records = summaries.map((summary) => ({
+    tenantId: summary.tenantId,
+    metricKey: summary.metricKey,
+    quantity: summary.quantity,
+    windowStart: summary.windowStart,
+    windowEnd: summary.windowEnd,
+  }));
+  return summarizeUsageRecords(records);
+}
+
+function readAiMetricQuantity(
+  metricKey: string,
+  summary: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    estimatedCost: number;
+    requestCount: number;
+  },
+) {
+  const quantities: Record<string, number> = {
+    "ai.tokens.prompt": summary.promptTokens,
+    "ai.tokens.completion": summary.completionTokens,
+    "ai.tokens.total": summary.totalTokens,
+    "ai.cost.estimated": summary.estimatedCost,
+    "ai.requests": summary.requestCount,
+  };
+  return quantities[metricKey] ?? 0;
+}
+
+function dateFromRow(value: unknown): Date {
+  return value instanceof Date ? value : new Date(String(value));
+}
+
+function numberFromRow(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+  if (typeof value === "string") {
+    return Number.parseFloat(value) || 0;
+  }
+  return 0;
+}
+
+function isMissingAiUsageTableError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("_smrt_ai_usage");
 }
 
 function resolveLogLevel(): LogLevel {

@@ -1,7 +1,6 @@
 <script lang="ts">
-  
   import { AssistantDock } from "@happyvertical/smrt-saas-ui";
-import { RoleShell } from "@happyvertical/smrt-svelte/workspace";
+  import { RoleShell } from "@happyvertical/smrt-svelte/workspace";
   import NavIcon from "$lib/components/NavIcon.svelte";
 
   let { data, children } = $props();
@@ -33,7 +32,7 @@ import { RoleShell } from "@happyvertical/smrt-svelte/workspace";
     {#snippet sidebarFooter()}
       <div class="tenant-pill">
         <span>Tenant</span>
-        <strong>{data.tenantId}</strong>
+        <strong>{data.tenantLabel}</strong>
       </div>
     {/snippet}
 

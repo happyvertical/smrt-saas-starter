@@ -10,6 +10,7 @@ import "@happyvertical/smrt-ledgers";
 import "@happyvertical/smrt-profiles";
 import "@happyvertical/smrt-prompts";
 import "@happyvertical/smrt-saas-objects";
+import "@happyvertical/smrt-subscriptions";
 import "@happyvertical/smrt-users";
 
 const databaseUrl =

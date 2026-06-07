@@ -3,10 +3,10 @@ import { getBillingOverview, getPlanCards } from "$lib/server/subscriptions";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const overview = getBillingOverview(locals.tenantId ?? "demo");
+  const overview = await getBillingOverview(locals.tenantId);
   return {
     ...overview,
-    plans: getPlanCards(overview.currentPlan.id),
+    plans: await getPlanCards(overview.currentPlan.id),
   };
 };
 

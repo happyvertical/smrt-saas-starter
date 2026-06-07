@@ -6,6 +6,7 @@
 pnpm install
 pnpm services:up
 pnpm db:migrate
+pnpm db:seed
 pnpm db:smoke
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
@@ -34,8 +35,11 @@ pnpm validate
 pnpm check
 ```
 
-`pnpm check` runs the Postgres migration smoke path. Start local services first
-with `pnpm services:up`; CI workflows provide an isolated Postgres service.
+`pnpm db:seed` idempotently creates the demo tenant, owner membership,
+subscription plans, active Growth subscription, and starter usage metrics.
+`pnpm check` runs the Postgres migration, seed, and smoke path. Start local
+services first with `pnpm services:up`; CI workflows provide an isolated
+Postgres service.
 
 ## Branch Flow
 
