@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { StripeWebhookEvent } from "@happyvertical/smrt-saas-objects";
 import type { SubscriptionStatus } from "@happyvertical/smrt-subscriptions";
 import { getAppDatabase } from "$lib/server/db";
-import { getCurrentMonthWindow, isUuid } from "$lib/server/starter-data";
+import { getCurrentMonthWindow, isUuid, starterData } from "$lib/server/starter-data";
 
 const STRIPE_SUBSCRIPTION_EVENTS = new Set([
   "customer.subscription.created",
@@ -82,7 +82,17 @@ export async function syncStripeBillingEvent(
   }
 
   const existing = await findExistingSubscription(update, syncStore);
-  const tenantId = validTenantId(update.tenantId) ?? existing?.tenantId;
+  const eventTenantId = validTenantId(update.tenantId);
+  if (existing && eventTenantId && existing.tenantId !== eventTenantId) {
+    return {
+      action: "ignored",
+      reason: "tenant-mismatch",
+      tenantId: eventTenantId,
+      subscriptionId: existing.id,
+    };
+  }
+
+  const tenantId = eventTenantId ?? existing?.tenantId;
   if (!tenantId) {
     return { action: "ignored", reason: "tenant-not-resolved" };
   }
@@ -197,6 +207,28 @@ export function normalizeStripeSubscriptionUpdate(
 
 async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore> {
   const db = await getAppDatabase();
+  const findPlanByIdOrKey = async (planIdOrKey: string): Promise<SubscriptionSyncPlan | null> => {
+    const result = isUuid(planIdOrKey)
+      ? await db.query(
+          `
+            SELECT id, plan_key
+            FROM _smrt_subscription_plans
+            WHERE id = ?
+            LIMIT 1
+          `,
+          planIdOrKey,
+        )
+      : await db.query(
+          `
+            SELECT id, plan_key
+            FROM _smrt_subscription_plans
+            WHERE plan_key = ?
+            LIMIT 1
+          `,
+          planIdOrKey,
+        );
+    return rowToPlan(result.rows[0]);
+  };
 
   return {
     async findCurrentByTenant(tenantId) {
@@ -241,28 +273,7 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
       return rowToSubscription(result.rows[0]);
     },
 
-    async findPlanByIdOrKey(planIdOrKey) {
-      const result = isUuid(planIdOrKey)
-        ? await db.query(
-            `
-              SELECT id, plan_key
-              FROM _smrt_subscription_plans
-              WHERE id = ?
-              LIMIT 1
-            `,
-            planIdOrKey,
-          )
-        : await db.query(
-            `
-              SELECT id, plan_key
-              FROM _smrt_subscription_plans
-              WHERE plan_key = ?
-              LIMIT 1
-            `,
-            planIdOrKey,
-          );
-      return rowToPlan(result.rows[0]);
-    },
+    findPlanByIdOrKey,
 
     async findPlanByStripePriceId(stripePriceId) {
       const result = await db.query(
@@ -274,7 +285,13 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
         `,
         stripePriceId,
       );
-      return rowToPlan(result.rows[0]);
+      const plan = rowToPlan(result.rows[0]);
+      if (plan) {
+        return plan;
+      }
+
+      const seedPlan = findSeedPlanByStripePriceId(stripePriceId);
+      return seedPlan ? await findPlanByIdOrKey(seedPlan.id) : null;
     },
 
     async upsertTenantSubscription(record) {
@@ -359,17 +376,27 @@ function mergeSubscriptionMetadata(
   update: StripeSubscriptionUpdate,
   plan: SubscriptionSyncPlan,
 ): Record<string, unknown> {
+  const existingStripe = readRecord(existing?.stripe);
+
   return {
     ...(existing ?? {}),
     planKey: plan.planKey,
     stripe: {
-      ...readRecord(existing?.stripe),
+      ...existingStripe,
       lastEventId: update.eventId,
       lastEventType: update.eventType,
       lastEventAt: update.eventCreatedAt.toISOString(),
-      priceId: update.stripePriceId,
+      priceId: update.stripePriceId ?? readString(existingStripe?.priceId),
     },
   };
+}
+
+function findSeedPlanByStripePriceId(stripePriceId: string) {
+  return (
+    starterData.plans.find(
+      (plan) => readString(process.env[plan.stripePriceEnvKey]) === stripePriceId,
+    ) ?? null
+  );
 }
 
 function readStripeEventObject(event: StripeWebhookEvent): Record<string, unknown> | null {

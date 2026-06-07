@@ -9,6 +9,7 @@ import {
 } from "$lib/server/subscription-sync";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
+const otherTenantId = "44444444-4444-4444-8444-444444444444";
 const growthPlan: SubscriptionSyncPlan = {
   id: "22222222-2222-4222-8222-222222222222",
   planKey: "growth",
@@ -44,6 +45,39 @@ describe("Stripe subscription sync", () => {
       stripeCustomerId: "cus_test",
       stripeSubscriptionId: "sub_test",
       stripeCheckoutSessionId: "cs_test",
+    });
+  });
+
+  it("creates a tenant subscription from subscription metadata and price id", async () => {
+    const store = new MemorySubscriptionStore([growthPlan]);
+    const event = stripeEvent("customer.subscription.created", {
+      id: "sub_test",
+      object: "subscription",
+      customer: "cus_test",
+      status: "trialing",
+      metadata: {
+        tenantId,
+      },
+      current_period_start: 1_780_272_000,
+      current_period_end: 1_782_864_000,
+      items: {
+        data: [{ price: { id: "price_growth" } }],
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "created",
+      tenantId,
+      planId: growthPlan.id,
+    });
+
+    expect(store.subscriptions).toHaveLength(1);
+    expect(store.subscriptions[0]).toMatchObject({
+      tenantId,
+      planId: growthPlan.id,
+      status: "trialing",
+      stripeCustomerId: "cus_test",
+      stripeSubscriptionId: "sub_test",
     });
   });
 
@@ -91,6 +125,12 @@ describe("Stripe subscription sync", () => {
     expect(store.subscriptions[0]?.currentPeriodEnd?.toISOString()).toBe(
       "2026-07-01T00:00:00.000Z",
     );
+    expect(store.subscriptions[0]?.metadata).toMatchObject({
+      planKey: "growth",
+      stripe: {
+        priceId: "price_growth",
+      },
+    });
   });
 
   it("marks matching subscriptions canceled when Stripe deletes them", async () => {
@@ -122,6 +162,90 @@ describe("Stripe subscription sync", () => {
     expect(store.subscriptions).toHaveLength(1);
     expect(store.subscriptions[0]?.status).toBe("canceled");
     expect(store.subscriptions[0]?.canceledAt?.toISOString()).toBe("2026-06-01T00:00:00.000Z");
+  });
+
+  it("does not rewrite an existing subscription when event tenant metadata conflicts", async () => {
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_test",
+          status: "active",
+        }),
+      ],
+    );
+    const event = stripeEvent("customer.subscription.updated", {
+      id: "sub_test",
+      object: "subscription",
+      customer: "cus_test",
+      status: "past_due",
+      metadata: {
+        tenantId: otherTenantId,
+      },
+      items: {
+        data: [{ price: { id: "price_growth" } }],
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "ignored",
+      reason: "tenant-mismatch",
+      tenantId: otherTenantId,
+    });
+
+    expect(store.subscriptions).toHaveLength(1);
+    expect(store.subscriptions[0]).toMatchObject({
+      tenantId,
+      status: "active",
+      stripeSubscriptionId: "sub_test",
+    });
+  });
+
+  it("preserves existing Stripe price metadata when later events omit price data", async () => {
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_test",
+          metadata: {
+            stripe: {
+              priceId: "price_growth",
+            },
+          },
+        }),
+      ],
+    );
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_test",
+      object: "checkout.session",
+      mode: "subscription",
+      customer: "cus_test",
+      subscription: "sub_test",
+      client_reference_id: tenantId,
+      metadata: {
+        tenantId,
+        planId: growthPlan.id,
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "updated",
+      tenantId,
+      planId: growthPlan.id,
+    });
+
+    expect(store.subscriptions[0]?.metadata).toMatchObject({
+      stripe: {
+        priceId: "price_growth",
+        lastEventType: "checkout.session.completed",
+      },
+    });
   });
 
   it("ignores unrelated Stripe events", () => {
