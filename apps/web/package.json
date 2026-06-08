@@ -4,6 +4,15 @@
   "private": true,
   "description": "SvelteKit web app for the SMRT SaaS starter.",
   "type": "module",
+  "files": [
+    ".smrt/",
+    "build/",
+    "scripts/smrt-db-migrate.mjs",
+    "scripts/smrt-db-seed.mjs",
+    "scripts/smrt-db-smoke.mjs",
+    "smrt-packages.mjs",
+    "smrt.config.mjs"
+  ],
   "exports": {
     ".": {
       "types": "./src/index.ts",

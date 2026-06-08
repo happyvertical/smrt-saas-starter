@@ -8,6 +8,9 @@
 - `apps/worker`: scheduled and queued jobs for subscription reconciliation and usage rollups.
 - `apps/mobile`: KMP shared code with Android and iOS shells.
 - Postgres is the runtime database. SQLite is reserved for isolated package tests.
+- `.runtime/web` and `.runtime/worker` are generated production trees from
+  `pnpm deploy --prod --legacy`. Dockerfiles copy only those generated trees,
+  so CI proves the same artifacts that are pushed to GHCR.
 
 ## Tenancy And Access
 

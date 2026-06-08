@@ -5,6 +5,9 @@
   "description": "Background worker for SMRT SaaS starter jobs.",
   "type": "module",
   "main": "./dist/index.js",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",

@@ -34,9 +34,11 @@ pnpm services:down
 pnpm deps:check
 pnpm workflows:check
 pnpm manifests:check
+pnpm manifests:render
 pnpm sops:check
 pnpm validate
 pnpm check
+pnpm runtime:check
 ```
 
 `pnpm db:seed` idempotently creates the demo tenant, owner membership,
@@ -45,6 +47,11 @@ metrics, and demo prompt/language overrides.
 `pnpm check` runs the Postgres migration, seed, and smoke path. Start local
 services first with `pnpm services:up`; CI workflows provide an isolated
 Postgres service.
+
+`pnpm runtime:check` runs `pnpm build`, creates `.runtime/web` and
+`.runtime/worker` with `pnpm deploy --prod --legacy`, builds local Docker
+images, smoke-tests web and worker startup imports, and renders every kustomize
+overlay with `kubectl kustomize`.
 
 ## Local Auth
 
@@ -102,11 +109,22 @@ idempotently.
 ## Branch Flow
 
 1. Feature branches target `dev`.
-2. `dev` deploys to the dev environment.
-3. `promote-dev.yml` opens a `dev -> staging` PR.
-4. `staging` deploys to staging and opens a `staging -> main` PR.
-5. `main` deploys production and opens a `main -> dev` sync PR.
+2. Pull requests run `pnpm check`, native mobile shell validation, local Docker
+   image smoke checks, and manifest rendering.
+3. `dev` builds and pushes web/worker images, writes dev image digests to the
+   dev overlay, and leaves the overlay ready for the dev GitOps controller.
+4. `promote-dev.yml` opens a `dev -> staging` PR after rendering manifests.
+5. `staging` builds and pushes staging images, writes staging image digests,
+   leaves staging manifests GitOps-ready, and opens a `staging -> main` PR.
+6. `main` builds and pushes production images, writes production image digests,
+   leaves production manifests GitOps-ready, and opens a `main -> dev` sync PR.
+
+The committed overlay digests start as bootstrap placeholders. The first deploy
+for each branch replaces them with the immutable digest returned by GHCR.
 
 ## Deployment Secrets
 
-Before applying manifests, replace placeholder values in `manifests/base/app.secret.yaml` with real values and encrypt them with SOPS.
+Before applying manifests, replace placeholder values in
+`manifests/base/app.secret.yaml` with real values and encrypt them with SOPS.
+Do not commit decrypted secret values. Use Warden for human-readable source
+secrets and SOPS only for encrypted deploy material.

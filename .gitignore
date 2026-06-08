@@ -4,6 +4,7 @@ dist/
 build/
 .svelte-kit/
 .smrt/
+.runtime/
 coverage/
 test-results/
 playwright-report/

@@ -5,6 +5,9 @@
   "description": "Generic SaaS UI components for the SMRT SaaS starter.",
   "type": "module",
   "svelte": "./src/index.ts",
+  "files": [
+    "src/"
+  ],
   "exports": {
     ".": {
       "svelte": "./src/index.ts",

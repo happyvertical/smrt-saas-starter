@@ -50,6 +50,9 @@ for (const phrase of ["uses: actions/setup-node@v6", 'node-version: "24"']) {
 
 const pullRequestWorkflow = await readFile(join(workflowsDir, "on-pull-request.yml"), "utf8");
 for (const phrase of [
+  "runtime:",
+  "uses: Azure/setup-kubectl@v5.1.0",
+  "pnpm runtime:check",
   "mobile-android:",
   "uses: gradle/actions/wrapper-validation@v6",
   "uses: actions/setup-java@v5",
@@ -65,6 +68,29 @@ for (const phrase of [
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
   }
+}
+
+for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {
+  const text = await readFile(join(workflowsDir, file), "utf8");
+  for (const phrase of [
+    "paths-ignore:",
+    "pnpm runtime:prepare",
+    "uses: docker/login-action@v4.2.0",
+    "uses: docker/setup-buildx-action@v4.1.0",
+    "uses: docker/build-push-action@v7.2.0",
+    "node scripts/update-manifest-digests.mjs",
+    "pnpm manifests:render",
+    'git commit -m "chore(deploy): update',
+  ]) {
+    if (!text.includes(phrase)) {
+      throw new Error(`${file} must include deploy runtime hardening: ${phrase}`);
+    }
+  }
+}
+
+const promoteWorkflow = await readFile(join(workflowsDir, "promote-dev.yml"), "utf8");
+if (!promoteWorkflow.includes("pnpm manifests:render")) {
+  throw new Error("promote-dev.yml must render deploy manifests before opening a promotion PR");
 }
 
 console.log(`Validated ${workflowFiles.length} GitHub workflow files.`);
