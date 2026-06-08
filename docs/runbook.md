@@ -51,7 +51,9 @@ starts `ScheduleRunner`, and idempotently ensures global
 `WORKER_JOB` accepts `all`, `subscriptions.reconcile`, and `usage.audit`.
 `WORKER_JOB_LIMIT` limits batch size. The default deployment config sets
 `WORKER_MODE=runner`, `WORKER_RUN_SCHEDULER=true`, and
-`WORKER_ENSURE_MAINTENANCE_SCHEDULES=true`.
+`WORKER_ENSURE_MAINTENANCE_SCHEDULES=true`. Scheduler-enabled workers always
+listen on SMRT's `agents` queue because `ScheduleRunner` emits scheduled jobs
+there.
 
 `subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
 Postgres and asks `@happyvertical/accounting` for current subscription status.

@@ -6,6 +6,7 @@ import {
   parseWorkerMode,
   resolveMaintenanceJobRequests,
   resolveStarterMaintenanceScheduleDefinitions,
+  resolveTaskRunnerQueues,
 } from "./smrt-jobs.js";
 
 describe("SMRT worker job adapter", () => {
@@ -30,6 +31,30 @@ describe("SMRT worker job adapter", () => {
         args: { limit: 25 },
       },
     ]);
+  });
+
+  it("includes the SMRT agents queue whenever the schedule runner is enabled", () => {
+    expect(
+      resolveTaskRunnerQueues({
+        queue: "starter-maintenance",
+        includeAgentQueue: false,
+        startScheduleRunner: true,
+      }),
+    ).toEqual(["starter-maintenance", "agents"]);
+    expect(
+      resolveTaskRunnerQueues({
+        queue: "starter-maintenance",
+        includeAgentQueue: false,
+        startScheduleRunner: false,
+      }),
+    ).toEqual(["starter-maintenance"]);
+    expect(
+      resolveTaskRunnerQueues({
+        queue: "agents",
+        includeAgentQueue: true,
+        startScheduleRunner: true,
+      }),
+    ).toEqual(["agents"]);
   });
 
   it("enqueues starter maintenance jobs into SMRT jobs", async () => {

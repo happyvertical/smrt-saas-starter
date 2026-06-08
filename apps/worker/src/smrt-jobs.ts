@@ -124,7 +124,14 @@ export interface SmrtWorkerRuntime {
   stop(): Promise<void>;
 }
 
-export interface RunQueuedMaintenanceJobsOnceOptions extends EnqueueMaintenanceJobsOptions {
+export interface ResolveTaskRunnerQueuesOptions {
+  queue?: string;
+  includeAgentQueue?: boolean;
+  startScheduleRunner?: boolean;
+}
+
+export interface RunQueuedMaintenanceJobsOnceOptions
+  extends Omit<EnqueueMaintenanceJobsOptions, "collection"> {
   timeoutMs?: number;
   pollIntervalMs?: number;
 }
@@ -183,6 +190,17 @@ export function resolveStarterMaintenanceScheduleDefinitions(
       timeout: timeout ?? DEFAULT_JOB_TIMEOUT_MS,
     },
   ];
+}
+
+export function resolveTaskRunnerQueues(options: ResolveTaskRunnerQueuesOptions = {}): string[] {
+  const queue = options.queue ?? process.env.WORKER_QUEUE ?? STARTER_MAINTENANCE_QUEUE;
+  const queues = [queue];
+
+  if (options.includeAgentQueue !== false || options.startScheduleRunner !== false) {
+    queues.push(SMRT_AGENT_QUEUE);
+  }
+
+  return [...new Set(queues)];
 }
 
 export async function enqueueMaintenanceJobs(
@@ -299,62 +317,97 @@ export async function startSmrtWorkerRuntime(
   ensureWorkerTenancy();
   ensureStarterMaintenanceJobRegistered();
 
+  const ownsDatabase = !options.database;
   const database = options.database ?? (await getWorkerDatabase());
-  if (options.ensureMaintenanceSchedules !== false) {
-    await ensureStarterMaintenanceSchedules({
-      limit: readPositiveInteger(process.env.WORKER_JOB_LIMIT),
-      database,
-      logger: options.logger,
-    });
-  }
+  let taskRunner: TaskRunner | null = null;
+  let scheduleRunner: ScheduleRunner | null = null;
+  let stopped = false;
 
-  const queue = options.queue ?? process.env.WORKER_QUEUE ?? STARTER_MAINTENANCE_QUEUE;
-  const queues = options.includeAgentQueue === false ? [queue] : [queue, SMRT_AGENT_QUEUE];
-  const taskRunner = createTaskRunner({
-    queues,
-    concurrency: options.concurrency ?? readPositiveInteger(process.env.WORKER_CONCURRENCY) ?? 2,
-    pollInterval: options.taskPollIntervalMs ?? DEFAULT_TASK_POLL_INTERVAL_MS,
-    heartbeatInterval: options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
-    staleJobThresholdMs: options.staleJobThresholdMs ?? DEFAULT_STALE_JOB_THRESHOLD_MS,
-  });
-  const scheduleRunner =
-    options.startScheduleRunner === false
-      ? null
-      : createScheduleRunner({
+  try {
+    if (options.ensureMaintenanceSchedules !== false) {
+      await ensureStarterMaintenanceSchedules({
+        limit: readPositiveInteger(process.env.WORKER_JOB_LIMIT),
+        database,
+        logger: options.logger,
+      });
+    }
+
+    const queue = options.queue ?? process.env.WORKER_QUEUE ?? STARTER_MAINTENANCE_QUEUE;
+    const shouldStartScheduleRunner = options.startScheduleRunner !== false;
+    const queues = resolveTaskRunnerQueues({
+      queue,
+      includeAgentQueue: options.includeAgentQueue,
+      startScheduleRunner: shouldStartScheduleRunner,
+    });
+    taskRunner = createTaskRunner({
+      queues,
+      concurrency: options.concurrency ?? readPositiveInteger(process.env.WORKER_CONCURRENCY) ?? 2,
+      pollInterval: options.taskPollIntervalMs ?? DEFAULT_TASK_POLL_INTERVAL_MS,
+      heartbeatInterval: options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
+      staleJobThresholdMs: options.staleJobThresholdMs ?? DEFAULT_STALE_JOB_THRESHOLD_MS,
+    });
+    scheduleRunner = shouldStartScheduleRunner
+      ? createScheduleRunner({
           pollInterval: options.schedulePollIntervalMs ?? DEFAULT_SCHEDULE_POLL_INTERVAL_MS,
           taskHeartbeatInterval: options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
           staleJobThresholdMs: options.staleJobThresholdMs ?? DEFAULT_STALE_JOB_THRESHOLD_MS,
+        })
+      : null;
+
+    await taskRunner.initialize(database as Parameters<TaskRunner["initialize"]>[0]);
+    if (scheduleRunner) {
+      await scheduleRunner.initialize(database as Parameters<ScheduleRunner["initialize"]>[0]);
+    }
+
+    wireTaskRunner(taskRunner, scheduleRunner, options);
+    wireScheduleRunner(scheduleRunner, options.logger);
+
+    if (scheduleRunner) {
+      await scheduleRunner.start();
+    }
+    await taskRunner.start();
+
+    options.logger?.info("SMRT worker runtime started", {
+      queue,
+      queues,
+      scheduler: Boolean(scheduleRunner),
+      taskRunnerId: taskRunner.id,
+      scheduleRunnerId: scheduleRunner?.id ?? null,
+    });
+
+    return {
+      taskRunner,
+      scheduleRunner,
+      async stop() {
+        if (stopped) {
+          return;
+        }
+        stopped = true;
+        await stopSmrtWorkerRuntimeComponents({
+          taskRunner,
+          scheduleRunner,
+          database,
+          closeDatabase: ownsDatabase,
+          logger: options.logger,
         });
-
-  await taskRunner.initialize(database as Parameters<TaskRunner["initialize"]>[0]);
-  if (scheduleRunner) {
-    await scheduleRunner.initialize(database as Parameters<ScheduleRunner["initialize"]>[0]);
+      },
+    };
+  } catch (error) {
+    try {
+      await stopSmrtWorkerRuntimeComponents({
+        taskRunner,
+        scheduleRunner,
+        database,
+        closeDatabase: ownsDatabase,
+        logger: options.logger,
+      });
+    } catch (cleanupError) {
+      options.logger?.error("Failed to clean up SMRT worker runtime after startup failure", {
+        message: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      });
+    }
+    throw error;
   }
-
-  wireTaskRunner(taskRunner, scheduleRunner, options);
-  wireScheduleRunner(scheduleRunner, options.logger);
-
-  if (scheduleRunner) {
-    await scheduleRunner.start();
-  }
-  await taskRunner.start();
-
-  options.logger?.info("SMRT worker runtime started", {
-    queue,
-    queues,
-    scheduler: Boolean(scheduleRunner),
-    taskRunnerId: taskRunner.id,
-    scheduleRunnerId: scheduleRunner?.id ?? null,
-  });
-
-  return {
-    taskRunner,
-    scheduleRunner,
-    async stop() {
-      await scheduleRunner?.stop();
-      await taskRunner.stop();
-    },
-  };
 }
 
 export async function runQueuedMaintenanceJobsOnce(
@@ -449,6 +502,42 @@ async function closeWorkerDatabase(database: WorkerDatabase, logger?: WorkerLogg
     logger?.warn("Failed to close worker database", {
       message: error instanceof Error ? error.message : String(error),
     });
+  }
+}
+
+async function stopSmrtWorkerRuntimeComponents(options: {
+  taskRunner: TaskRunner | null;
+  scheduleRunner: ScheduleRunner | null;
+  database: WorkerDatabase;
+  closeDatabase: boolean;
+  logger?: WorkerLogger;
+}): Promise<void> {
+  const errors: unknown[] = [];
+
+  try {
+    await options.scheduleRunner?.stop();
+  } catch (error) {
+    errors.push(error);
+    options.logger?.error("Failed to stop SMRT ScheduleRunner", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  try {
+    await options.taskRunner?.stop();
+  } catch (error) {
+    errors.push(error);
+    options.logger?.error("Failed to stop SMRT TaskRunner", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  if (options.closeDatabase) {
+    await closeWorkerDatabase(options.database, options.logger);
+  }
+
+  if (errors.length > 0) {
+    throw errors[0];
   }
 }
 
