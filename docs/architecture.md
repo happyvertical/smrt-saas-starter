@@ -5,7 +5,7 @@
 ## Runtime
 
 - `apps/web`: SvelteKit app with SMRT tenant/session hooks.
-- `apps/worker`: scheduled and queued jobs for subscription reconciliation and usage threshold audits.
+- `apps/worker`: SMRT `TaskRunner` and `ScheduleRunner` runtime for subscription reconciliation and usage threshold audits.
 - `apps/mobile`: KMP shared code with Android and iOS shells.
 - Postgres is the runtime database. SQLite is reserved for isolated package tests.
 - `.runtime/web` and `.runtime/worker` are generated production trees from
@@ -72,10 +72,18 @@ SDK packages provide provider and infrastructure adapters beneath the SMRT app s
 5. Thresholds compare plan limits to tenant usage summaries.
 6. Runtime MCP and UI actions check features and thresholds before execution.
 
-The worker also reconciles persisted Stripe subscription rows against
-`@happyvertical/accounting` subscription status summaries. This catches missed
-webhooks and keeps local status, billing periods, cancellation flags, and Stripe
-customer ids aligned with the provider.
+The worker exposes a starter-local `StarterMaintenanceJob` SMRT object as the
+queue target. Local one-shot runs enqueue selected maintenance work into
+`_smrt_jobs` and execute it with `TaskRunner`. Deployed workers run `TaskRunner`
+for `starter-maintenance` plus SMRT's `agents` queue and run `ScheduleRunner`
+against idempotently seeded global `AgentSchedule` rows. The scheduler table is
+currently agent-named in SMRT, but it can invoke this app maintenance target
+without a persisted target row.
+
+The subscription reconciliation job checks persisted Stripe subscription rows
+against `@happyvertical/accounting` subscription status summaries. This catches
+missed webhooks and keeps local status, billing periods, cancellation flags, and
+Stripe customer ids aligned with the provider.
 
 ## Usage Metrics
 
@@ -86,9 +94,9 @@ The starter tracks two sources:
 
 `@happyvertical/smrt-subscriptions` provides the tenant usage metric models, rollups, AI usage summaries, and threshold evaluators used by this starter.
 
-The worker audits subscribed tenants through the same
+The usage audit job checks subscribed tenants through the same
 `SubscriptionResolver`. It logs counts for ok, warning, blocked, and observed
-thresholds so operations can wire those signals into scheduled jobs or external
+thresholds so operations can route those signals into scheduled jobs or external
 alerting without duplicating entitlement logic.
 
 ## Prompts And Languages

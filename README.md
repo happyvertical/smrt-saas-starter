@@ -15,6 +15,7 @@ This repo is intended to be used as:
 - `smrt-svelte` workspace shell and tools dock
 - right-dock chat through `smrt-chat` and runtime MCP routes
 - Stripe-backed subscription seams through SDK `@happyvertical/accounting`
+- SMRT `TaskRunner` and `ScheduleRunner` worker for maintenance jobs
 - KMP mobile shell following the Amaru strategy
 - Kubernetes manifests with digest-pinned dev, staging, and production overlays
 - SOPS-managed deploy secrets
@@ -53,7 +54,7 @@ startup smoke checks, and rendered Kubernetes manifests.
 | Path | Purpose |
 | --- | --- |
 | `apps/web` | SvelteKit app, public site, admin UI, billing UI, MCP routes |
-| `apps/worker` | Background jobs for subscription reconciliation and usage threshold audits |
+| `apps/worker` | SMRT queued and scheduled jobs for subscription reconciliation and usage threshold audits |
 | `apps/mobile` | Kotlin Multiplatform shared shell plus Android/iOS clients |
 | `packages/app-objects` | Starter SMRT objects and pure subscription/usage services |
 | `packages/app-ui` | Generic SaaS UI components built on SMRT Svelte primitives |

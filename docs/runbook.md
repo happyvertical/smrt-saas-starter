@@ -30,14 +30,28 @@ pnpm services:down
 
 ## Local Worker
 
-The worker runs one cycle per process start. Use `WORKER_JOB` to select the
-operational slice:
+The worker runs starter maintenance through `@happyvertical/smrt-jobs`.
+`WORKER_MODE` controls how it interacts with the queue:
 
 ```sh
-WORKER_JOB=all pnpm --filter @happyvertical/smrt-saas-worker dev
-WORKER_JOB=subscriptions.reconcile pnpm --filter @happyvertical/smrt-saas-worker dev
-WORKER_JOB=usage.audit pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_MODE=smrt-once WORKER_JOB=all pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_MODE=enqueue WORKER_JOB=subscriptions.reconcile pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_MODE=runner pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_MODE=direct WORKER_JOB=usage.audit pnpm --filter @happyvertical/smrt-saas-worker dev
 ```
+
+`smrt-once` is the local default: it enqueues the selected job into
+`_smrt_jobs`, starts a `TaskRunner`, waits for those jobs to finish, and exits.
+`enqueue` only creates pending `_smrt_jobs` rows. `runner` is the deployment
+mode: it runs `TaskRunner` for the `starter-maintenance` and `agents` queues,
+starts `ScheduleRunner`, and idempotently ensures global
+`_smrt_agent_schedules` rows for subscription reconciliation and usage audits.
+`direct` keeps the old in-process path available for focused debugging.
+
+`WORKER_JOB` accepts `all`, `subscriptions.reconcile`, and `usage.audit`.
+`WORKER_JOB_LIMIT` limits batch size. The default deployment config sets
+`WORKER_MODE=runner`, `WORKER_RUN_SCHEDULER=true`, and
+`WORKER_ENSURE_MAINTENANCE_SCHEDULES=true`.
 
 `subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
 Postgres and asks `@happyvertical/accounting` for current subscription status.
@@ -46,6 +60,12 @@ number of local Stripe subscriptions it did not process. `usage.audit` resolves
 subscribed tenant entitlements through `@happyvertical/smrt-subscriptions`,
 including tenant metrics and AI usage summaries, then logs ok, warning,
 blocked, and observed threshold counts.
+
+The recurring starter schedules use `AgentSchedule` because the current SMRT
+schedule runner stores cron schedules in `_smrt_agent_schedules`, but the target
+object is the starter worker's `StarterMaintenanceJob`. A future upstream SMRT
+improvement can rename or generalize that scheduler surface without changing the
+queued job methods in this app.
 
 ## Validation
 

@@ -12,6 +12,7 @@ let tenancyEnabled = false;
 
 export interface WorkerDatabase {
   query(sql: string, ...params: unknown[]): Promise<{ rows: unknown[] }>;
+  close?(): Promise<void> | void;
 }
 
 export function getWorkerSmrtConfig(): SmrtClassOptions {

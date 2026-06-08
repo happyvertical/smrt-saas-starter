@@ -431,7 +431,7 @@ export async function createSmrtSubscriptionResolver(): Promise<TenantUsageAudit
   });
 }
 
-function parseWorkerJob(value: string | undefined): WorkerCycleJob {
+export function parseWorkerJob(value: string | undefined): WorkerCycleJob {
   if (value === "subscriptions.reconcile" || value === "usage.audit" || value === "all") {
     return value;
   }
