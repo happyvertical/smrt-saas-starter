@@ -7,6 +7,9 @@ Background worker for recurring subscription and usage jobs.
 - Jobs must be idempotent.
 - Tenant context is required before tenant-scoped reads or writes.
 - Do not log secret values or webhook payloads.
+- `WORKER_JOB` accepts `all`, `subscriptions.reconcile`, and `usage.audit`.
+- `subscriptions.reconcile` must tolerate missing Stripe configuration by
+  reporting skipped work instead of failing local development.
 
 ## Validation
 

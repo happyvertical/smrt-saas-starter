@@ -28,6 +28,25 @@ pnpm services:logs
 pnpm services:down
 ```
 
+## Local Worker
+
+The worker runs one cycle per process start. Use `WORKER_JOB` to select the
+operational slice:
+
+```sh
+WORKER_JOB=all pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_JOB=subscriptions.reconcile pnpm --filter @happyvertical/smrt-saas-worker dev
+WORKER_JOB=usage.audit pnpm --filter @happyvertical/smrt-saas-worker dev
+```
+
+`subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
+Postgres and asks `@happyvertical/accounting` for current subscription status.
+When `STRIPE_SECRET_KEY` is unset, the job skips reconciliation and reports the
+number of local Stripe subscriptions it did not process. `usage.audit` resolves
+subscribed tenant entitlements through `@happyvertical/smrt-subscriptions`,
+including tenant metrics and AI usage summaries, then logs ok, warning,
+blocked, and observed threshold counts.
+
 ## Validation
 
 ```sh

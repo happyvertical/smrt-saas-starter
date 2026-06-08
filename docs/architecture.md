@@ -5,7 +5,7 @@
 ## Runtime
 
 - `apps/web`: SvelteKit app with SMRT tenant/session hooks.
-- `apps/worker`: scheduled and queued jobs for subscription reconciliation and usage rollups.
+- `apps/worker`: scheduled and queued jobs for subscription reconciliation and usage threshold audits.
 - `apps/mobile`: KMP shared code with Android and iOS shells.
 - Postgres is the runtime database. SQLite is reserved for isolated package tests.
 - `.runtime/web` and `.runtime/worker` are generated production trees from
@@ -72,6 +72,11 @@ SDK packages provide provider and infrastructure adapters beneath the SMRT app s
 5. Thresholds compare plan limits to tenant usage summaries.
 6. Runtime MCP and UI actions check features and thresholds before execution.
 
+The worker also reconciles persisted Stripe subscription rows against
+`@happyvertical/accounting` subscription status summaries. This catches missed
+webhooks and keeps local status, billing periods, cancellation flags, and Stripe
+customer ids aligned with the provider.
+
 ## Usage Metrics
 
 The starter tracks two sources:
@@ -80,6 +85,11 @@ The starter tracks two sources:
 - tenant-aware generic usage records from SMRT signal metrics, right-dock chat sends, and app MCP calls
 
 `@happyvertical/smrt-subscriptions` provides the tenant usage metric models, rollups, AI usage summaries, and threshold evaluators used by this starter.
+
+The worker audits subscribed tenants through the same
+`SubscriptionResolver`. It logs counts for ok, warning, blocked, and observed
+thresholds so operations can wire those signals into scheduled jobs or external
+alerting without duplicating entitlement logic.
 
 ## Prompts And Languages
 

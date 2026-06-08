@@ -1,5 +1,5 @@
 import { createLogger } from "@happyvertical/logger";
-import { reconcileSubscriptions } from "./jobs.js";
+import { runWorkerCycle } from "./jobs.js";
 
 const logLevel =
   process.env.LOG_LEVEL === "debug"
@@ -10,8 +10,10 @@ const logLevel =
 const logger = createLogger({ level: logLevel });
 
 export async function main(): Promise<void> {
-  const result = await reconcileSubscriptions();
-  logger.info("Worker cycle complete", { ...result });
+  const results = await runWorkerCycle({ logger });
+  for (const result of results) {
+    logger.info("Worker job complete", { ...result });
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

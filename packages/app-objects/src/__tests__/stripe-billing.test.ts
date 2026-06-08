@@ -87,6 +87,45 @@ describe("createStripeBillingProvider", () => {
     });
   });
 
+  it("retrieves and lists Stripe subscription statuses through the SDK provider", async () => {
+    const provider = fakeStripeProvider({
+      billing: {
+        retrieveSubscriptionStatus: async (externalId) => ({
+          externalId,
+          status: "active",
+          customerExternalId: "cus_test",
+          currentPeriodStart: new Date("2026-06-01T00:00:00.000Z"),
+          currentPeriodEnd: new Date("2026-07-01T00:00:00.000Z"),
+          cancelAtPeriodEnd: false,
+        }),
+        listCustomerSubscriptions: async (customerExternalId) => [
+          {
+            externalId: "sub_test",
+            status: "trialing",
+            customerExternalId,
+            cancelAtPeriodEnd: false,
+          },
+        ],
+      },
+    });
+
+    const billing = createStripeBillingProvider(provider);
+
+    await expect(billing.retrieveSubscriptionStatus("sub_test")).resolves.toMatchObject({
+      externalId: "sub_test",
+      status: "active",
+      customerExternalId: "cus_test",
+    });
+    await expect(billing.listCustomerSubscriptions("cus_test")).resolves.toEqual([
+      {
+        externalId: "sub_test",
+        status: "trialing",
+        customerExternalId: "cus_test",
+        cancelAtPeriodEnd: false,
+      },
+    ]);
+  });
+
   it("verifies and normalizes Stripe webhook events", async () => {
     const payload = JSON.stringify({
       id: "evt_test",

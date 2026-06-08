@@ -3,6 +3,7 @@ import {
   getAccountingProvider,
   type StripeAccountingProvider,
   type StripeOptions,
+  type StripeSubscriptionStatusResult,
   type WebhookEvent,
 } from "@happyvertical/accounting";
 
@@ -33,8 +34,12 @@ export interface CustomerPortalResult {
 export interface StripeBillingProvider {
   createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResult>;
   createCustomerPortalSession(request: CustomerPortalRequest): Promise<CustomerPortalResult>;
+  retrieveSubscriptionStatus(stripeSubscriptionId: string): Promise<StripeSubscriptionStatusResult>;
+  listCustomerSubscriptions(stripeCustomerId: string): Promise<StripeSubscriptionStatusResult[]>;
   verifyWebhook(payload: string, signature: string): Promise<StripeWebhookEvent>;
 }
+
+export type StripeSubscriptionStatusSummary = StripeSubscriptionStatusResult;
 
 export interface StripeWebhookEvent {
   id: string;
@@ -98,6 +103,14 @@ export function createStripeBillingProvider(
       return {
         url: session.url,
       };
+    },
+
+    async retrieveSubscriptionStatus(stripeSubscriptionId) {
+      return await provider.billing.retrieveSubscriptionStatus(stripeSubscriptionId);
+    },
+
+    async listCustomerSubscriptions(stripeCustomerId) {
+      return await provider.billing.listCustomerSubscriptions(stripeCustomerId);
     },
 
     async verifyWebhook(payload, signature) {

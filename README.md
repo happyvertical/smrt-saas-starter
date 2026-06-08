@@ -53,7 +53,7 @@ startup smoke checks, and rendered Kubernetes manifests.
 | Path | Purpose |
 | --- | --- |
 | `apps/web` | SvelteKit app, public site, admin UI, billing UI, MCP routes |
-| `apps/worker` | Background jobs for usage rollups and subscription reconciliation |
+| `apps/worker` | Background jobs for subscription reconciliation and usage threshold audits |
 | `apps/mobile` | Kotlin Multiplatform shared shell plus Android/iOS clients |
 | `packages/app-objects` | Starter SMRT objects and pure subscription/usage services |
 | `packages/app-ui` | Generic SaaS UI components built on SMRT Svelte primitives |
