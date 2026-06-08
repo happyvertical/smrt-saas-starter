@@ -77,7 +77,7 @@ SDK packages provide provider and infrastructure adapters beneath the SMRT app s
 The starter tracks two sources:
 
 - persisted SMRT AI usage from `_smrt_ai_usage`
-- tenant-aware generic usage records from SMRT signal metrics and app MCP calls
+- tenant-aware generic usage records from SMRT signal metrics, right-dock chat sends, and app MCP calls
 
 `@happyvertical/smrt-subscriptions` provides the tenant usage metric models, rollups, AI usage summaries, and threshold evaluators used by this starter.
 

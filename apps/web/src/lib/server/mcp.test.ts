@@ -4,8 +4,7 @@ const mocks = vi.hoisted(() => ({
   getBillingOverview: vi.fn(),
   resolveStarterPromptPreview: vi.fn(),
   getUsageSummaries: vi.fn(),
-  getUsageWindow: vi.fn(),
-  recordUsageMetric: vi.fn(),
+  recordTenantUsageSignal: vi.fn(),
 }));
 
 vi.mock("$lib/server/subscriptions", () => ({
@@ -18,8 +17,7 @@ vi.mock("$lib/server/experience", () => ({
 
 vi.mock("$lib/server/usage", () => ({
   getUsageSummaries: mocks.getUsageSummaries,
-  getUsageWindow: mocks.getUsageWindow,
-  recordUsageMetric: mocks.recordUsageMetric,
+  recordTenantUsageSignal: mocks.recordTenantUsageSignal,
 }));
 
 import {
@@ -29,13 +27,10 @@ import {
 } from "$lib/server/mcp";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
-const windowStart = new Date("2026-06-01T00:00:00.000Z");
-const windowEnd = new Date("2026-07-01T00:00:00.000Z");
 
 describe("tenant MCP runtime tools", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getUsageWindow.mockReturnValue({ start: windowStart, end: windowEnd });
     mocks.getUsageSummaries.mockResolvedValue([]);
     mocks.resolveStarterPromptPreview.mockResolvedValue({
       key: "starter.assistant.system",
@@ -74,12 +69,10 @@ describe("tenant MCP runtime tools", () => {
       },
     });
 
-    expect(mocks.recordUsageMetric).toHaveBeenCalledWith({
+    expect(mocks.recordTenantUsageSignal).toHaveBeenCalledWith({
       tenantId,
       metricKey: "mcp.calls",
       quantity: 1,
-      windowStart,
-      windowEnd,
       source: "smrt-app-mcp",
       sourceId: "tenant.subscription.summary",
       dimensions: {
@@ -117,7 +110,7 @@ describe("tenant MCP runtime tools", () => {
       },
     });
 
-    expect(mocks.recordUsageMetric).toHaveBeenCalledWith(
+    expect(mocks.recordTenantUsageSignal).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId,
         metricKey: "mcp.calls",
@@ -143,7 +136,7 @@ describe("tenant MCP runtime tools", () => {
       status: 403,
       message: "Tool is not available for the current tenant",
     });
-    expect(mocks.recordUsageMetric).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 
   it("blocks MCP calls when the tenant threshold denies the request", async () => {
@@ -157,7 +150,7 @@ describe("tenant MCP runtime tools", () => {
     await expect(
       executeRuntimeToolForTenant("tenant.usage.summary", { message: "usage?" }, tenantId),
     ).rejects.toBeInstanceOf(RuntimeToolExecutionError);
-    expect(mocks.recordUsageMetric).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 });
 

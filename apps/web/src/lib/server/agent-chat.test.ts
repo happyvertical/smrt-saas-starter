@@ -60,6 +60,7 @@ const chatMocks = vi.hoisted(() => {
     resolveStarterPromptPreview: vi.fn(),
     executeRuntimeToolForTenant: vi.fn(),
     listRuntimeTools: vi.fn(),
+    recordTenantUsageSignal: vi.fn(),
   };
 });
 
@@ -88,6 +89,10 @@ vi.mock("$lib/server/smrt", () => ({
   getSmrtConfig: () => ({}),
 }));
 
+vi.mock("$lib/server/usage", () => ({
+  recordTenantUsageSignal: chatMocks.recordTenantUsageSignal,
+}));
+
 vi.mock("$lib/server/tenant-context", () => ({
   withActiveTenant: async (
     tenantId: string | null | undefined,
@@ -106,6 +111,7 @@ describe("tenant agent chat", () => {
     chatMocks.getBillingOverview.mockResolvedValue({
       snapshot: {
         featureKeys: ["chat.agent", "mcp.read_tools"],
+        thresholdEvaluations: [],
       },
     });
     chatMocks.listRuntimeTools.mockReturnValue(chatMocks.runtimeTools.slice(0, 2));
@@ -190,6 +196,15 @@ describe("tenant agent chat", () => {
       { message: "show usage this month" },
       tenantId,
     );
+    expect(chatMocks.recordTenantUsageSignal).toHaveBeenCalledWith({
+      tenantId,
+      metricKey: "chat.messages",
+      source: "smrt-chat",
+      sourceId: "tenant.chat.message",
+      dimensions: {
+        messageLength: "show usage this month".length,
+      },
+    });
   });
 
   it("returns an assistant message when the selected MCP tool is denied", async () => {
@@ -248,9 +263,47 @@ describe("tenant agent chat", () => {
     chatMocks.getBillingOverview.mockResolvedValueOnce({
       snapshot: {
         featureKeys: ["mcp.read_tools"],
+        thresholdEvaluations: [],
       },
     });
 
     await expect(getTenantChatState(tenantId)).rejects.toBeInstanceOf(TenantChatError);
+  });
+
+  it("blocks chat sends when the tenant chat threshold denies the request", async () => {
+    chatMocks.getBillingOverview.mockResolvedValueOnce({
+      snapshot: {
+        featureKeys: ["chat.agent", "mcp.read_tools"],
+        thresholdEvaluations: [
+          {
+            threshold: {
+              metricKey: "chat.messages",
+              limit: 1000,
+              window: "month",
+              enforcement: "block",
+              label: "Chat messages",
+            },
+            usage: {
+              tenantId,
+              metricKey: "chat.messages",
+              quantity: 1000,
+              windowStart: new Date("2026-06-01T00:00:00.000Z"),
+              windowEnd: new Date("2026-07-01T00:00:00.000Z"),
+            },
+            ratio: 1,
+            remaining: 0,
+            state: "blocked",
+            allowed: false,
+          },
+        ],
+      },
+    });
+
+    await expect(sendTenantChatMessage(tenantId, "hello")).rejects.toMatchObject({
+      status: 429,
+      message: "Tenant exceeded the chat messages threshold",
+    });
+    expect(chatMocks.sendAgentMessage).not.toHaveBeenCalled();
+    expect(chatMocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 });

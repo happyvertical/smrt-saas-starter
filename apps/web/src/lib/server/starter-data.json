@@ -76,6 +76,13 @@
           "label": "AI tokens"
         },
         {
+          "metricKey": "chat.messages",
+          "limit": 1000,
+          "window": "month",
+          "enforcement": "block",
+          "label": "Chat messages"
+        },
+        {
           "metricKey": "mcp.calls",
           "limit": 500,
           "window": "month",
@@ -122,6 +129,13 @@
           "window": "month",
           "enforcement": "warn",
           "label": "AI tokens"
+        },
+        {
+          "metricKey": "chat.messages",
+          "limit": 10000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "Chat messages"
         },
         {
           "metricKey": "mcp.calls",
@@ -180,6 +194,13 @@
           "window": "month",
           "enforcement": "observe",
           "label": "AI tokens"
+        },
+        {
+          "metricKey": "chat.messages",
+          "limit": 50000,
+          "window": "month",
+          "enforcement": "observe",
+          "label": "Chat messages"
         },
         {
           "metricKey": "mcp.calls",

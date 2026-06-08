@@ -14,6 +14,16 @@ import { withActiveTenant } from "$lib/server/tenant-context";
 
 const logger = createLogger(process.env.NODE_ENV === "test" ? false : { level: resolveLogLevel() });
 
+export interface RecordTenantUsageSignalOptions {
+  tenantId: string;
+  metricKey: string;
+  quantity?: number;
+  source: string;
+  sourceId?: string;
+  dimensions?: Record<string, unknown>;
+  window?: ThresholdWindow;
+}
+
 export async function getUsageSummaries(tenantId?: string | null): Promise<UsageSummary[]> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
     const db = await getAppDatabase();
@@ -108,6 +118,22 @@ export async function recordUsageMetric(options: RecordUsageOptions): Promise<Us
       sourceId: record.sourceId,
       dimensions: record.getDimensions(),
     };
+  });
+}
+
+export async function recordTenantUsageSignal(
+  options: RecordTenantUsageSignalOptions,
+): Promise<UsageMetricRecord> {
+  const window = getUsageWindow(options.window ?? "month");
+  return await recordUsageMetric({
+    tenantId: options.tenantId,
+    metricKey: options.metricKey,
+    quantity: options.quantity ?? 1,
+    windowStart: window.start,
+    windowEnd: window.end,
+    source: options.source,
+    sourceId: options.sourceId,
+    dimensions: options.dimensions,
   });
 }
 

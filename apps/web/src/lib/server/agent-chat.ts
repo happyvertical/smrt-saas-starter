@@ -12,6 +12,8 @@ import { getSmrtConfig } from "$lib/server/smrt";
 import { getActiveTenantId, starterData } from "$lib/server/starter-data";
 import { getBillingOverview } from "$lib/server/subscriptions";
 import { withActiveTenant } from "$lib/server/tenant-context";
+import { assertMetricAllowed, TenantQuotaError } from "$lib/server/thresholds";
+import { recordTenantUsageSignal } from "$lib/server/usage";
 
 const starterAgentIdPrefix = "smrt-saas-starter-agent";
 
@@ -62,6 +64,19 @@ export async function sendTenantChatMessage(
   const message = normalizeUserMessage(content);
   return await withActiveTenant(tenantId, async (activeTenantId) => {
     const session = await ensureTenantAgentSession(activeTenantId);
+    let chatThreshold: ReturnType<typeof assertMetricAllowed> = null;
+    try {
+      chatThreshold = assertMetricAllowed(
+        session.billing.snapshot.thresholdEvaluations,
+        "chat.messages",
+      );
+    } catch (error) {
+      if (!(error instanceof TenantQuotaError)) {
+        throw error;
+      }
+      throw new TenantChatError(429, "Tenant exceeded the chat messages threshold");
+    }
+
     const service = session.service;
     await service.sendAgentMessage({
       tenantId: activeTenantId,
@@ -69,6 +84,16 @@ export async function sendTenantChatMessage(
       senderProfileId: starterData.demoTenant.ownerUser.id,
       content: message,
       role: "user",
+    });
+    await recordTenantUsageSignal({
+      tenantId: activeTenantId,
+      metricKey: "chat.messages",
+      source: "smrt-chat",
+      sourceId: "tenant.chat.message",
+      ...(chatThreshold ? { window: chatThreshold.threshold.window } : {}),
+      dimensions: {
+        messageLength: message.length,
+      },
     });
 
     const selectedTool = selectToolForMessage(message);
@@ -127,6 +152,7 @@ async function ensureTenantAgentSession(tenantId: string) {
     sessionId: requireStringId(session.id, "Agent session id"),
     roomId: requireStringId(room.id, "Agent chat room id"),
     tools,
+    billing,
   };
 }
 

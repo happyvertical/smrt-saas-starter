@@ -24,12 +24,15 @@ the tenant moves to Scale.
 Thresholds reference tenant usage metrics:
 
 - `ai.tokens.total`
+- `chat.messages`
 - `mcp.calls`
 - future app metrics such as `files.storage_bytes`, `messages.sent`, or `jobs.executions`
 
 The starter records right-dock/runtime MCP tool calls as `mcp.calls` usage
 records with `source: "smrt-app-mcp"`. Those records are summarized by tenant
 and compared against plan thresholds before each allowed tool invocation.
+Right-dock chat sends are recorded as `chat.messages` with
+`source: "smrt-chat"` and are checked before the user message is persisted.
 
 The admin right dock uses `/api/chat` to create a tenant-scoped `smrt-chat`
 agent session. The chat service allowlists runtime tools from the tenant's

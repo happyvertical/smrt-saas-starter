@@ -1,5 +1,6 @@
 <script lang="ts">
   import { BillingSummary, PlanPicker } from "@happyvertical/smrt-saas-ui";
+  import { usageMetricUnit } from "$lib/usage-metrics";
 
   let { data } = $props();
 
@@ -45,7 +46,7 @@
       label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
       used: evaluation.usage.quantity,
       limit: evaluation.threshold.limit,
-      unit: evaluation.threshold.metricKey.includes("tokens") ? "tokens" : "calls",
+      unit: usageMetricUnit(evaluation.threshold.metricKey),
       action: evaluation.threshold.enforcement,
     }))}
     onportal={openPortal}

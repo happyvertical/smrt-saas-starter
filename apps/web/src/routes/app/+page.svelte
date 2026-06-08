@@ -1,5 +1,6 @@
 <script lang="ts">
   import { BillingSummary } from "@happyvertical/smrt-saas-ui";
+  import { usageMetricUnit } from "$lib/usage-metrics";
 
   let { data } = $props();
 </script>
@@ -23,7 +24,7 @@
       label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
       used: evaluation.usage.quantity,
       limit: evaluation.threshold.limit,
-      unit: evaluation.threshold.metricKey.includes("tokens") ? "tokens" : "calls",
+      unit: usageMetricUnit(evaluation.threshold.metricKey),
       action: evaluation.threshold.enforcement,
     }))}
   />
