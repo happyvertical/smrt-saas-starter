@@ -11,6 +11,7 @@ const required = [
   "androidApp/src/main/AndroidManifest.xml",
   "androidApp/src/main/res/values/styles.xml",
   "androidApp/src/main/kotlin/com/happyvertical/starter/AndroidDeviceCapabilityAdapter.kt",
+  "shared/src/commonMain/kotlin/generated/Contract.kt",
   "shared/src/commonMain/kotlin/com/happyvertical/starter/DeviceCapabilities.kt",
   "shared/src/commonMain/kotlin/com/happyvertical/starter/StarterClient.kt",
   "iosApp/project.yml",
@@ -38,6 +39,18 @@ const sharedCapabilities = await readFile(
 );
 if (!sharedCapabilities.includes("DeviceCapabilityAdapter")) {
   throw new Error("Shared mobile code must define the device capability adapter boundary");
+}
+
+const sharedContract = await readFile(
+  join(root, "shared/src/commonMain/kotlin/generated/Contract.kt"),
+  "utf8",
+);
+if (
+  !sharedContract.includes('MobileContractVersion = "2026-06-08.v4"') ||
+  !sharedContract.includes("data class MobileDeviceCapabilities") ||
+  !sharedContract.includes("checkedAtEpochMillis")
+) {
+  throw new Error("Mobile app must include the generated Kotlin contract DTOs");
 }
 
 const androidManifest = await readFile(
@@ -69,6 +82,17 @@ if (
   throw new Error(
     "Android shell must expose permission-aware camera and microphone capability checks",
   );
+}
+
+const androidBuild = await readFile(join(root, "androidApp/build.gradle.kts"), "utf8");
+const sharedBuild = await readFile(join(root, "shared/build.gradle.kts"), "utf8");
+if (
+  !androidBuild.includes("JavaVersion.VERSION_21") ||
+  !androidBuild.includes("JvmTarget.JVM_21") ||
+  !sharedBuild.includes("JavaVersion.VERSION_21") ||
+  !sharedBuild.includes("JvmTarget.JVM_21")
+) {
+  throw new Error("Android Gradle modules must align Java and Kotlin JVM targets");
 }
 
 const iosProject = await readFile(join(root, "iosApp/project.yml"), "utf8");

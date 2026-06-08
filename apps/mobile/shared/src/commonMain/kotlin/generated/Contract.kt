@@ -1,21 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const repoRoot = dirname(dirname(packageRoot));
-const generatedRoot = join(packageRoot, "generated");
-const kotlinOut = join(generatedRoot, "kotlin/com/happyvertical/starter/Contract.kt");
-const appKotlinOut = join(
-  repoRoot,
-  "apps/mobile/shared/src/commonMain/kotlin/generated/Contract.kt",
-);
-const jsonOut = join(generatedRoot, "mobile-contract.json");
-
-await mkdir(dirname(kotlinOut), { recursive: true });
-await mkdir(dirname(appKotlinOut), { recursive: true });
-
-const kotlinContract = `package com.happyvertical.starter
+package com.happyvertical.starter
 
 const val MobileContractVersion = "2026-06-08.v4"
 
@@ -126,37 +109,3 @@ data class MobileDeviceCapabilities(
   val microphone: MobileDeviceCapability,
   val checkedAtEpochMillis: Long? = null,
 )
-`;
-
-await writeFile(kotlinOut, kotlinContract);
-await writeFile(appKotlinOut, kotlinContract);
-
-await writeFile(
-  jsonOut,
-  JSON.stringify(
-    {
-      version: "2026-06-08.v4",
-      generatedAt: new Date(0).toISOString(),
-      models: [
-        "MobileTenantSummary",
-        "MobileTenantOption",
-        "MobileUsageThreshold",
-        "MobileDashboardPayload",
-        "MobileAuthProviderSummary",
-        "MobileAuthStartRequest",
-        "MobileAuthStartResponse",
-        "MobileAuthCompleteRequest",
-        "MobileUserSummary",
-        "MobileAuthSession",
-        "MobileSessionBootstrap",
-        "MobileDevicePermissionState",
-        "MobileDeviceCapability",
-        "MobileDeviceCapabilities",
-      ],
-    },
-    null,
-    2,
-  ),
-);
-
-console.log(`Generated mobile contract in ${generatedRoot} and ${appKotlinOut}`);

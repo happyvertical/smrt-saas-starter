@@ -19,4 +19,13 @@ describe("mobile contract", () => {
       assert.match(text, /checkedAtEpochMillis\?: number/);
     });
   });
+
+  it("generates Kotlin into the mobile app source tree", () => {
+    const source = readFile(join(packageRoot, "scripts/generate-mobile-contract.mjs"), "utf8");
+    return source.then((text) => {
+      assert.match(text, /apps\/mobile\/shared\/src\/commonMain\/kotlin\/generated\/Contract\.kt/);
+      assert.match(text, /MobileContractVersion = "2026-06-08\.v4"/);
+      assert.match(text, /checkedAtEpochMillis: Long\?/);
+    });
+  });
 });
