@@ -1,6 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
 import { MagicLinkError, MagicLinkService } from "@happyvertical/smrt-users";
 import { getAppDatabase } from "$lib/server/db";
+import {
+  redeemTenantOwnerInvitationToken,
+  toAccountFlowMessage,
+  validateTenantOwnerInvitationToken,
+} from "$lib/server/invitations";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getCurrentMonthWindow, starterData } from "$lib/server/starter-data";
 
@@ -139,9 +144,11 @@ export async function signInWithEmail(emailInput: string): Promise<AccountSessio
 export async function onboardTenant(input: {
   email: string;
   tenantName: string;
+  invitationToken?: string | null;
 }): Promise<AccountSessionTarget> {
   const email = normalizeEmail(input.email);
   const tenantName = normalizeTenantName(input.tenantName);
+  const invitationToken = input.invitationToken?.trim() || null;
   const db = (await getAppDatabase()) as DbLike;
 
   const now = new Date().toISOString();
@@ -151,6 +158,10 @@ export async function onboardTenant(input: {
   const window = getCurrentMonthWindow();
 
   return await withDbTransaction(db, async (tx) => {
+    if (invitationToken) {
+      await validateAccountInvitation(invitationToken, email, tx);
+    }
+
     const existingUser = await findUserByEmail(tx, email);
     if (existingUser) {
       throw new AccountFlowError(409, "That email already has an account. Sign in instead.");
@@ -222,6 +233,10 @@ export async function onboardTenant(input: {
       }),
     });
 
+    if (invitationToken) {
+      await redeemAccountInvitation(invitationToken, email, userId, tx);
+    }
+
     return {
       userId,
       userEmail: email,
@@ -230,6 +245,35 @@ export async function onboardTenant(input: {
       tenantLabel: tenantName,
     };
   });
+}
+
+async function validateAccountInvitation(token: string, email: string, db: DbLike): Promise<void> {
+  try {
+    await validateTenantOwnerInvitationToken(token, { email, db });
+  } catch (error) {
+    const message = toAccountFlowMessage(error);
+    if (message) {
+      throw new AccountFlowError(400, message);
+    }
+    throw error;
+  }
+}
+
+async function redeemAccountInvitation(
+  token: string,
+  email: string,
+  acceptedByUserId: string,
+  db: DbLike,
+): Promise<void> {
+  try {
+    await redeemTenantOwnerInvitationToken(token, { email, acceptedByUserId, db });
+  } catch (error) {
+    const message = toAccountFlowMessage(error);
+    if (message) {
+      throw new AccountFlowError(400, message);
+    }
+    throw error;
+  }
 }
 
 export async function listTenantMembers(tenantId: string): Promise<TenantMemberSummary[]> {

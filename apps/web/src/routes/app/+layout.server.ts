@@ -1,5 +1,6 @@
 import { isHttpError, redirect } from "@sveltejs/kit";
 import { requirePermission, starterPermissions } from "$lib/server/authz";
+import { resolveSuperUserContext } from "$lib/server/super-users";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
@@ -19,6 +20,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     roleLabel: membership.roleLabel,
     currentRole: membership.roleSlug,
     permissions: membership.permissions,
+    isSuperUser: Boolean(resolveSuperUserContext({ ...locals, membership })),
     tenants: membership.availableTenants,
     activePath: url.pathname,
   };

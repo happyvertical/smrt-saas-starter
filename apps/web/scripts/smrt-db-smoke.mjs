@@ -46,6 +46,8 @@ const requiredTables = [
   "_smrt_prompt_overrides",
   "secrets",
   "sites",
+  "starter_app_settings",
+  "starter_invitations",
   "tags",
   "memberships",
   "roles",
@@ -200,6 +202,18 @@ try {
   const seededStripeCustomerId = subscriptionResult.rows[0]?.stripe_customer_id ?? "";
   if (seededStripeCustomerId !== starterData.demoSubscription.stripeCustomerId) {
     throw new Error("Seeded demo subscription has an unexpected Stripe customer id");
+  }
+
+  const signupSettingResult = await db.query(
+    `
+      SELECT value
+      FROM starter_app_settings
+      WHERE key = 'signup.access_mode'
+      LIMIT 1
+    `,
+  );
+  if (signupSettingResult.rows[0]?.value !== "public") {
+    throw new Error("Seeded signup access setting was not found");
   }
 
   if (entitlements.planKey !== starterData.demoSubscription.planKey) {

@@ -23,6 +23,7 @@
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
     "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-core": "catalog:",
     "@happyvertical/smrt-subscriptions": "catalog:"
   },
   "devDependencies": {

@@ -11,7 +11,8 @@
       { href: "/app/billing", label: "Billing", icon: "credit-card", permission: "tenant.billing.read" },
       { href: "/app/usage", label: "Usage", icon: "gauge", permission: "tenant.usage.read" },
       { href: "/app/settings", label: "Settings", icon: "settings", permission: "tenant.settings.read" },
-    ].filter((item) => data.permissions.includes(item.permission)),
+      { href: "/app/admin", label: "Admin", icon: "settings", permission: "super-user" },
+    ].filter((item) => item.permission === "super-user" ? data.isSuperUser : data.permissions.includes(item.permission)),
   );
 
   const roles = $derived([

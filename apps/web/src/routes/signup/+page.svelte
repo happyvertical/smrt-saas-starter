@@ -1,5 +1,8 @@
 <script lang="ts">
-  let { form } = $props();
+  let { data, form } = $props();
+
+  const invitationEmail = $derived(data.invitationEmail || "");
+  const emailValue = $derived(form?.email ?? invitationEmail);
 </script>
 
 <svelte:head>
@@ -14,18 +17,36 @@
       <h1>Create a tenant workspace</h1>
     </header>
 
+    {#if data.signupMode === "invite-only" && !data.canSignup}
+      <p class="notice">
+        Signup is invite-only. Use an invitation link from a starter super user to create a
+        workspace.
+      </p>
+    {/if}
+
+    {#if data.invitationError}
+      <p class="notice">{data.invitationError}</p>
+    {:else if data.invitationValid}
+      <p class="success">Invitation ready for {data.invitationEmail || "this workspace"}.</p>
+    {/if}
+
     {#if form?.message}
       <p class="notice">{form.message}</p>
     {/if}
 
+    {#if data.canSignup}
     <form method="POST">
+      {#if data.invitationToken}
+        <input type="hidden" name="invitationToken" value={data.invitationToken} />
+      {/if}
       <label>
         <span>Work email</span>
         <input
           name="email"
           type="email"
           autocomplete="email"
-          value={form?.email ?? ""}
+          value={emailValue}
+          readonly={Boolean(invitationEmail)}
           placeholder="you@example.com"
           required
         />
@@ -42,6 +63,7 @@
       </label>
       <button type="submit">Create workspace</button>
     </form>
+    {/if}
 
     <p class="alternate">Already have a workspace? <a href="/login">Sign in</a></p>
   </section>
@@ -128,6 +150,15 @@
     border-radius: 6px;
     background: #fff4f2;
     color: #7a271a;
+    padding: 0.75rem;
+  }
+
+  .success {
+    margin: 0;
+    border: 1px solid #12b76a;
+    border-radius: 6px;
+    background: #ecfdf3;
+    color: #067647;
     padding: 0.75rem;
   }
 </style>

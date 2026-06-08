@@ -40,8 +40,8 @@ pnpm check
 ```
 
 `pnpm db:seed` idempotently creates the demo tenant, owner membership,
-subscription plans, active Growth subscription, starter usage metrics, and
-demo prompt/language overrides.
+subscription plans, active Growth subscription, starter app settings, usage
+metrics, and demo prompt/language overrides.
 `pnpm check` runs the Postgres migration, seed, and smoke path. Start local
 services first with `pnpm services:up`; CI workflows provide an isolated
 Postgres service.
@@ -64,6 +64,14 @@ single-use link inline when `SMRT_STARTER_AUTH_INLINE_LINKS` is not `false`.
 Production does not expose inline links and should use HappyVertical IDP or a
 configured email delivery adapter before enabling magic-link login. `/logout`
 destroys the SMRT session and clears the local tenant switch cookie.
+
+Super users are configured with `SMRT_STARTER_SUPERUSER_EMAILS`. In
+non-production, the seeded demo owner is also treated as a super user when the
+dev auth fallback is enabled. `/app/admin` lets super users switch signup
+between public and invite-only mode and create tenant-owner invitation links.
+Invitation tokens are stored only as hashes; the plain link is shown when the
+invite is created and should be delivered by email once a transactional mail
+adapter is added.
 
 The settings page includes a starter invite flow for tenant admins. It creates
 or reactivates an active membership immediately, which is useful for the

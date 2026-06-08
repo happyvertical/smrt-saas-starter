@@ -95,6 +95,12 @@ export interface StarterData {
     planKey: string;
     stripeCustomerId: string;
   };
+  appSettings: Array<{
+    id: string;
+    slug: string;
+    key: string;
+    value: string;
+  }>;
   usageSeeds: Array<{
     id: string;
     slug: string;

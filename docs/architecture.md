@@ -21,11 +21,18 @@ scaffolding. Production requests require a real SMRT session identity and an
 active membership for the selected tenant.
 
 Signup creates the tenant, owner user, owner membership, and Starter
-subscription in one transaction-backed onboarding service. Login uses
-`smrt-users` magic-link tokens for single-use verification before creating the
-SMRT session. Tenant-member management lives on the settings page and grants
-active memberships through starter roles; it is deliberately small until SMRT
-ships a richer invitation workflow.
+subscription in one transaction-backed onboarding service. A starter app
+setting controls whether signup is public or invite-only. Super users, resolved
+from `SMRT_STARTER_SUPERUSER_EMAILS` plus the local demo-owner fallback, manage
+that setting and create tenant-owner invitations from `/app/admin`.
+
+Tenant-owner invitation records live in `packages/app-objects` as
+starter-local SMRT objects. They store hashed tokens, purpose, target email,
+expiry, status, and use counts. `/invite/[token]` redirects to signup with the
+token, and signup redeems the invite after the tenant owner account is created.
+Tenant-member management lives on the settings page and grants active
+memberships through starter roles; it is deliberately small until SMRT ships a
+richer invitation workflow.
 
 ## SMRT Surface
 
@@ -33,7 +40,7 @@ The starter consumes SMRT packages for tenancy, users, features, prompts, langua
 
 `apps/web/smrt-packages.mjs` is the canonical runtime SMRT package list. Vite uses it for consumer registration, and database migration/smoke scripts use it before resolving schemas so local and CI Postgres include the declared SMRT surface.
 
-Subscriptions and tenant-aware metering come from `@happyvertical/smrt-subscriptions`. `packages/app-objects` stays thin: it re-exports the upstream subscription surface and holds starter-specific glue such as the SDK Stripe billing adapter.
+Subscriptions and tenant-aware metering come from `@happyvertical/smrt-subscriptions`. `packages/app-objects` stays thin: it re-exports the upstream subscription surface and holds starter-specific glue such as the SDK Stripe billing adapter, starter app settings, and tenant-owner invitation lifecycle.
 
 ## SDK Surface
 

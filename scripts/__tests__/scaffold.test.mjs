@@ -44,6 +44,18 @@ describe("starter scaffold", () => {
     );
   });
 
+  it("seeds starter app settings", async () => {
+    const seed = JSON.parse(
+      await readFile(join(root, "apps/web/src/lib/server/starter-data.json"), "utf8"),
+    );
+
+    assert.ok(
+      seed.appSettings.some(
+        (setting) => setting.key === "signup.access_mode" && setting.value === "public",
+      ),
+    );
+  });
+
   it("keeps the SMRT runtime package surface shared across config and migrations", async () => {
     const expected = [
       "@happyvertical/smrt-agents",

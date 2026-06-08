@@ -197,6 +197,14 @@
     "planKey": "growth",
     "stripeCustomerId": ""
   },
+  "appSettings": [
+    {
+      "id": "00000000-0000-4000-8000-000000000251",
+      "slug": "signup.access_mode",
+      "key": "signup.access_mode",
+      "value": "public"
+    }
+  ],
   "usageSeeds": [
     {
       "id": "00000000-0000-4000-8000-000000000301",

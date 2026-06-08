@@ -1,4 +1,6 @@
 export {
+  StarterAppSetting,
+  StarterInvitation,
   SubscriptionPlan,
   TenantSubscription,
   TenantUsageMetric,

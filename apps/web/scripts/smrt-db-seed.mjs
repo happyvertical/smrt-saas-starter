@@ -135,6 +135,21 @@ try {
     }),
   });
 
+  for (const setting of starterData.appSettings) {
+    await db.upsert("starter_app_settings", ["key"], {
+      id: setting.id,
+      slug: setting.slug,
+      context: "",
+      updated_at: now.toISOString(),
+      key: setting.key,
+      value: setting.value,
+      updated_by_user_id: demoTenant.ownerUser.id,
+      metadata: JSON.stringify({
+        seededBy: "smrt-saas-starter",
+      }),
+    });
+  }
+
   for (const metric of starterData.usageSeeds) {
     await db.upsert("_smrt_tenant_usage_metrics", ["slug", "context"], {
       id: metric.id,
@@ -195,6 +210,7 @@ try {
         tenantSlug: demoTenant.slug,
         roles: starterData.roles.length,
         plans: starterData.plans.length,
+        appSettings: starterData.appSettings.length,
         subscriptionPlan: demoPlan.planKey,
         usageMetrics: starterData.usageSeeds.length,
         promptOverrides: starterData.promptOverrides.length,
