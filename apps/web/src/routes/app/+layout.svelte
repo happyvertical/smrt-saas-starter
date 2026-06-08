@@ -55,6 +55,9 @@
         </div>
         <button type="submit">Switch</button>
       </form>
+      <form class="logout" method="POST" action="/logout">
+        <button type="submit">Sign out</button>
+      </form>
     {/snippet}
 
     {@render children()}
@@ -119,6 +122,18 @@
     border-radius: 6px;
     background: var(--smrt-color-primary, #155eef);
     color: var(--smrt-color-on-primary, #fff);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .logout button {
+    width: 100%;
+    min-height: 2.2rem;
+    border: 1px solid var(--smrt-color-outline, #d7dce2);
+    border-radius: 6px;
+    background: var(--smrt-color-surface, #fff);
+    color: inherit;
     font: inherit;
     font-weight: 700;
     cursor: pointer;

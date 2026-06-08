@@ -12,6 +12,7 @@
     <h1>{data.languages[0]?.previewText ?? "Tenant configuration"}</h1>
     <div class="plan-state">
       <span>{data.planName}</span>
+      <span class:enabled={data.canManageMembers}>Members</span>
       <span class:enabled={data.canManagePrompts}>Prompts</span>
       <span class:enabled={data.canManageLanguages}>Languages</span>
     </div>
@@ -20,6 +21,49 @@
   {#if form?.message}
     <p class="notice" data-kind={form.kind}>{form.message}</p>
   {/if}
+
+  <section class="section">
+    <header>
+      <p>Members</p>
+      <h2>Tenant access</h2>
+    </header>
+
+    <article>
+      <form method="POST" action="?/invite">
+        <label>
+          <span>Email</span>
+          <input
+            name="email"
+            type="email"
+            autocomplete="email"
+            value={form?.kind === "invite" ? (form.email ?? "") : ""}
+            disabled={!data.canManageMembers}
+            placeholder="teammate@example.com"
+            required
+          />
+        </label>
+        <label>
+          <span>Role</span>
+          <select name="roleSlug" disabled={!data.canManageMembers}>
+            <option value="member" selected={form?.kind !== "invite" || form.roleSlug === "member"}>Member</option>
+            <option value="admin" selected={form?.kind === "invite" && form.roleSlug === "admin"}>Admin</option>
+            <option value="viewer" selected={form?.kind === "invite" && form.roleSlug === "viewer"}>Viewer</option>
+          </select>
+        </label>
+        <button type="submit" disabled={!data.canManageMembers}>Add member</button>
+      </form>
+
+      <div class="member-list" aria-label="Tenant members">
+        {#each data.members as member (member.membershipId)}
+          <div class="member-row">
+            <strong>{member.email}</strong>
+            <span>{member.roleLabel}</span>
+            <span>{member.status}</span>
+          </div>
+        {/each}
+      </div>
+    </article>
+  </section>
 
   <section class="section">
     <header>
@@ -261,6 +305,15 @@
     line-height: 1.45;
   }
 
+  input,
+  select {
+    min-height: 2.4rem;
+    border: 1px solid var(--smrt-color-outline, #d7dce2);
+    border-radius: 6px;
+    padding: 0 0.75rem;
+    font: inherit;
+  }
+
   textarea:disabled {
     color: var(--smrt-color-on-surface-variant, #5e6470);
     background: var(--smrt-color-surface-container, #f3f5f7);
@@ -285,9 +338,37 @@
     cursor: default;
   }
 
+  .member-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .member-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    border-top: 1px solid var(--smrt-color-outline-variant, #edf0f3);
+    padding-top: 0.65rem;
+  }
+
+  .member-row strong {
+    overflow-wrap: anywhere;
+  }
+
+  .member-row span {
+    color: var(--smrt-color-on-surface-variant, #5e6470);
+    font-size: 0.84rem;
+  }
+
   @media (max-width: 720px) {
     .item-heading {
       display: grid;
+    }
+
+    .member-row {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
     }
   }
 </style>

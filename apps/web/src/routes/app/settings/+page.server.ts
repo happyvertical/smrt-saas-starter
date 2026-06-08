@@ -1,4 +1,5 @@
 import { type Actions, fail } from "@sveltejs/kit";
+import { AccountFlowError, inviteTenantMember, listTenantMembers } from "$lib/server/accounts";
 import { requirePermission, starterPermissions } from "$lib/server/authz";
 import {
   getTenantCustomizationOverview,
@@ -18,16 +19,42 @@ export const load: PageServerLoad = async ({ locals }) => {
     getTenantCustomizationOverview(membership.tenantId),
   ]);
   const features = new Set(billing.snapshot.featureKeys);
+  const canManageMembers = membership.permissions.includes(starterPermissions.membershipManage);
 
   return {
     ...customization,
     planName: billing.currentPlan.name,
     canManagePrompts: features.has(promptFeatureKey),
     canManageLanguages: features.has(languageFeatureKey),
+    canManageMembers,
+    members: await listTenantMembers(membership.tenantId),
   };
 };
 
 export const actions: Actions = {
+  invite: async ({ locals, request }) => {
+    const membership = await requirePermission(locals, starterPermissions.membershipManage);
+    const form = await request.formData();
+    const email = readFormString(form, "email");
+    const roleSlug = readFormString(form, "roleSlug");
+
+    try {
+      const result = await inviteTenantMember({
+        tenantId: membership.tenantId,
+        email,
+        roleSlug,
+      });
+      return {
+        kind: "invite",
+        message: messageForInvite(result.action, result.member.email, result.member.roleLabel),
+      };
+    } catch (error) {
+      if (error instanceof AccountFlowError) {
+        return fail(error.status, { kind: "invite", message: error.message, email, roleSlug });
+      }
+      throw error;
+    }
+  },
   prompt: async ({ locals, request }) => {
     const membership = await requirePermission(locals, starterPermissions.settingsManage);
     const billing = await getBillingOverview(membership.tenantId);
@@ -104,6 +131,20 @@ function messageForResult(label: string, action: "saved" | "deleted" | "unchange
     return `${label} unchanged.`;
   }
   return `${label} saved.`;
+}
+
+function messageForInvite(
+  action: "created" | "already-member" | "updated",
+  email: string,
+  roleLabel: string,
+): string {
+  if (action === "already-member") {
+    return `${email} already has ${roleLabel} access.`;
+  }
+  if (action === "updated") {
+    return `${email} now has ${roleLabel} access.`;
+  }
+  return `${email} was added with ${roleLabel} access.`;
 }
 
 function isUnknownStarterExperienceError(error: unknown): error is Error {

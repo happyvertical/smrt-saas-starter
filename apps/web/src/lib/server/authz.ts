@@ -10,6 +10,7 @@ export const starterPermissions = {
   usageRead: "tenant.usage.read",
   settingsRead: "tenant.settings.read",
   settingsManage: "tenant.settings.manage",
+  membershipManage: "tenant.members.manage",
   mcpRead: "tenant.mcp.read",
   mcpCall: "tenant.mcp.call",
   chatUse: "tenant.chat.use",

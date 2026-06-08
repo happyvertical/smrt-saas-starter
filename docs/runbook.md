@@ -57,6 +57,19 @@ session identity locally. Tenant switching writes the
 `smrt_starter_tenant_id` cookie and updates the SMRT session tenant when a
 session exists.
 
+`/signup` creates a tenant, owner user, owner membership, and active Starter
+subscription, then starts a SMRT session for that owner. `/login` uses
+`MagicLinkService` from `smrt-users`; local development shows the generated
+single-use link inline when `SMRT_STARTER_AUTH_INLINE_LINKS` is not `false`.
+Production does not expose inline links and should use HappyVertical IDP or a
+configured email delivery adapter before enabling magic-link login. `/logout`
+destroys the SMRT session and clears the local tenant switch cookie.
+
+The settings page includes a starter invite flow for tenant admins. It creates
+or reactivates an active membership immediately, which is useful for the
+reference app but should be replaced with email acceptance if a downstream
+product needs invitation approval semantics.
+
 The seeded demo subscription does not include a Stripe customer id. The billing
 portal action appears only after checkout/webhook handling stores a real Stripe
 customer for the tenant.

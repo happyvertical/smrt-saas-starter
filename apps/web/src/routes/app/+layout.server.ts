@@ -1,8 +1,16 @@
+import { isHttpError, redirect } from "@sveltejs/kit";
 import { requirePermission, starterPermissions } from "$lib/server/authz";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
-  const membership = await requirePermission(locals, starterPermissions.appAccess);
+  const membership = await requirePermission(locals, starterPermissions.appAccess).catch(
+    (authError: unknown) => {
+      if (isHttpError(authError) && authError.status === 401) {
+        throw redirect(303, `/login?returnTo=${encodeURIComponent(url.pathname)}`);
+      }
+      throw authError;
+    },
+  );
 
   return {
     tenantId: membership.tenantId,

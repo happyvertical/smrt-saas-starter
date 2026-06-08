@@ -20,6 +20,13 @@ The non-production demo-owner fallback is intentionally local developer
 scaffolding. Production requests require a real SMRT session identity and an
 active membership for the selected tenant.
 
+Signup creates the tenant, owner user, owner membership, and Starter
+subscription in one transaction-backed onboarding service. Login uses
+`smrt-users` magic-link tokens for single-use verification before creating the
+SMRT session. Tenant-member management lives on the settings page and grants
+active memberships through starter roles; it is deliberately small until SMRT
+ships a richer invitation workflow.
+
 ## SMRT Surface
 
 The starter consumes SMRT packages for tenancy, users, features, prompts, languages, secrets, jobs, chat, runtime MCP, commerce, ledgers, analytics, assets, content, messages, projects, sites, tags, and Svelte UI.
