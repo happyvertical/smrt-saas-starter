@@ -15,6 +15,8 @@ Tenant context is resolved from the `x-tenant-id` header, the local
 `smrt_starter_tenant_id` switch cookie, or a tenant subdomain. The app then
 resolves active `smrt-users` membership rows and maps the member role to
 starter permissions for app, billing, usage, settings, chat, and MCP routes.
+Mobile requests can also send `Authorization: Bearer <smrt session id>`; the
+hook resolves that session before the same membership resolver runs.
 
 The non-production demo-owner fallback is intentionally local developer
 scaffolding. Production requests require a real SMRT session identity and an
@@ -33,6 +35,13 @@ token, and signup redeems the invite after the tenant owner account is created.
 Tenant-member management lives on the settings page and grants active
 memberships through starter roles; it is deliberately small until SMRT ships a
 richer invitation workflow.
+
+Mobile auth is a thin native-client flow over the same identity model:
+`@happyvertical/auth` starts and completes OAuth/OIDC with PKCE-capable
+providers, the returned email is matched to an existing active `smrt-users`
+user, and `SessionService` mints a tenant-bound bearer session. Mobile signup
+is intentionally not duplicated; tenant creation and invite-only acceptance
+remain in the web onboarding flow.
 
 ## SMRT Surface
 

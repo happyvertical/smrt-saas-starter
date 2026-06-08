@@ -11,6 +11,9 @@ describe("mobile contract", () => {
     const source = readFile(join(packageRoot, "src/index.ts"), "utf8");
     return source.then((text) => {
       assert.match(text, /mobileContractVersion = "\d{4}-\d{2}-\d{2}\.v\d+"/);
+      assert.match(text, /interface MobileAuthStartRequest/);
+      assert.match(text, /interface MobileAuthSession/);
+      assert.match(text, /interface MobileSessionBootstrap/);
     });
   });
 });

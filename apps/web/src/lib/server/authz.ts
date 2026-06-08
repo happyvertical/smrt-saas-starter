@@ -39,6 +39,7 @@ export interface StarterMembershipContext extends TenantMembershipOption {
 interface RequestLocals {
   tenantId?: string | null;
   user?: unknown;
+  sessionId?: string | null;
   permissions?: string[];
   membership?: StarterMembershipContext | null;
 }

@@ -20,9 +20,6 @@
     "lint": "biome lint src scripts",
     "clean": "rm -rf dist generated"
   },
-  "dependencies": {
-    "@happyvertical/smrt-saas-objects": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "^5.9.3"
   }

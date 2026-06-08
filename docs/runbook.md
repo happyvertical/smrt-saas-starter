@@ -65,6 +65,17 @@ Production does not expose inline links and should use HappyVertical IDP or a
 configured email delivery adapter before enabling magic-link login. `/logout`
 destroys the SMRT session and clears the local tenant switch cookie.
 
+Mobile clients use the same `smrt-users` session store with bearer tokens.
+`/api/mobile/auth/providers` lists configured `@happyvertical/auth` providers,
+`/api/mobile/auth/start` creates the OAuth/OIDC authorization URL, and
+`/api/mobile/auth/complete` exchanges the authorization code for a SMRT session
+id returned as `tokenType: "Bearer"`. Send that token as
+`Authorization: Bearer <token>` to `/api/mobile/session` and tenant API routes.
+The default provider is HappyVertical IDP through `MOBILE_OIDC_CLIENT_ID` /
+`MOBILE_OIDC_CLIENT_SECRET` with `MOBILE_AUTH_HAPPYVERTICAL_TYPE=kanidm`; add
+Google, GitHub, Keycloak, Cognito, or other SDK OAuth/OIDC providers with
+`MOBILE_AUTH_PROVIDERS_JSON`.
+
 Super users are configured with `SMRT_STARTER_SUPERUSER_EMAILS`. In
 non-production, the seeded demo owner is also treated as a super user when the
 dev auth fallback is enabled. `/app/admin` lets super users switch signup

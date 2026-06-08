@@ -168,58 +168,58 @@ importers:
         version: 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/smrt-agents':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-analytics':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-app-mcp':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-assets':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-chat':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-cli':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@remotion/whisper-web@4.0.473)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(typescript@5.9.3)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@remotion/whisper-web@4.0.473)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(typescript@5.9.3)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-commerce':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76))(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76))(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-config':
         specifier: 0.27.12
         version: 0.27.12(typescript@5.9.3)
       '@happyvertical/smrt-content':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@types/node@24.13.1)(@xenova/transformers@2.17.2)(jimp@1.6.1)(sharp@0.34.5)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@types/node@24.13.1)(@xenova/transformers@2.17.2)(jimp@1.6.1)(sharp@0.34.5)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-core':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-features':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-jobs':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-languages':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-ledgers':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-messages':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-profiles':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-projects':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-prompts':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-saas-objects':
         specifier: workspace:*
         version: link:../../packages/app-objects
@@ -228,31 +228,31 @@ importers:
         version: link:../../packages/app-ui
       '@happyvertical/smrt-scanner':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
       '@happyvertical/smrt-secrets':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-sites':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-subscriptions':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-svelte':
         specifier: 0.27.12
-        version: 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+        version: 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       '@happyvertical/smrt-tags':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-tenancy':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types':
         specifier: 0.27.12
         version: 0.27.12
       '@happyvertical/smrt-users':
         specifier: 0.27.12
-        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+        version: 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/translator':
         specifier: 0.74.4
         version: 0.74.4(@opentelemetry/api@1.9.1)
@@ -333,13 +333,10 @@ importers:
       '@happyvertical/logger':
         specifier: 0.74.4
         version: 0.74.4(@sentry/node@10.56.0)
+    devDependencies:
       '@happyvertical/smrt-core':
         specifier: 0.27.12
-        version: 0.27.12(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)
-      '@happyvertical/smrt-subscriptions':
-        specifier: 0.27.12
-        version: 0.27.12(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(zod@3.25.76)
-    devDependencies:
+        version: 0.27.12(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -370,10 +367,6 @@ importers:
         version: 5.9.3
 
   packages/mobile-contract:
-    dependencies:
-      '@happyvertical/smrt-saas-objects':
-        specifier: workspace:*
-        version: link:../app-objects
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -1580,6 +1573,11 @@ packages:
     peerDependencies:
       '@huggingface/transformers': '>=3.0.0 <4.0.0'
       '@xenova/transformers': ^2.17.0
+    peerDependenciesMeta:
+      '@huggingface/transformers':
+        optional: true
+      '@xenova/transformers':
+        optional: true
 
   '@happyvertical/smrt-dev-mcp@0.27.12':
     resolution: {integrity: sha512-xDNTGk39lfwGdtY1+OxXYxx+O70FNiSen+IVQXDgceepWoeKiNjq89nJeohh7iQ7LfB6TNWWCfCHt9HQMaoDRw==, tarball: https://npm.pkg.github.com/download/@happyvertical/smrt-dev-mcp/0.27.12/8e19f98f6c82498b04dad6c59ad91642f655b0f5}
@@ -8658,16 +8656,16 @@ snapshots:
       - pg-native
       - utf-8-validate
 
-  '@happyvertical/smrt-agents@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-agents@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-secrets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-secrets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
-      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/utils': 0.74.4
     optionalDependencies:
       svelte: 5.56.2
@@ -8691,13 +8689,47 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-analytics@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-agents@0.27.12(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/ai': 0.74.4(zod@3.25.76)
+      '@happyvertical/files': 0.74.4
+      '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
+      '@happyvertical/smrt-core': 0.27.12(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)
+      '@happyvertical/smrt-secrets': 0.27.12(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(zod@3.25.76)
+      '@happyvertical/smrt-types': 0.27.12
+      '@happyvertical/smrt-users': 0.27.12(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)
+      '@happyvertical/utils': 0.74.4
+    optionalDependencies:
+      svelte: 5.56.2
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+      - '@happyvertical/smrt-profiles'
+      - '@huggingface/transformers'
+      - '@modelcontextprotocol/sdk'
+      - '@russellthehippo/honker-node'
+      - '@sentry/node'
+      - '@sqliteai/sqlite-vector'
+      - '@xenova/transformers'
+      - bufferutil
+      - encoding
+      - pg-native
+      - supports-color
+      - typescript
+      - utf-8-validate
+      - ws
+      - zod
+    optional: true
+
+  '@happyvertical/smrt-analytics@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+    dependencies:
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -8718,9 +8750,9 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-app-mcp@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-app-mcp@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -8739,19 +8771,19 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-assets@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-assets@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tags': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tags': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -8805,15 +8837,15 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-chat@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-chat@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
     optionalDependencies:
-      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -8833,16 +8865,16 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-cli@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@remotion/whisper-web@4.0.473)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(typescript@5.9.3)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-cli@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@remotion/whisper-web@4.0.473)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(typescript@5.9.3)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-dev-mcp': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-playground': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-dev-mcp': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-playground': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
@@ -8876,15 +8908,15 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-commerce@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76))(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-commerce@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76))(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-ledgers': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-ledgers': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -8911,7 +8943,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@happyvertical/smrt-content@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@types/node@24.13.1)(@xenova/transformers@2.17.2)(jimp@1.6.1)(sharp@0.34.5)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-content@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@types/node@24.13.1)(@xenova/transformers@2.17.2)(jimp@1.6.1)(sharp@0.34.5)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/documents': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(ws@8.21.0)(zod@3.25.76)
@@ -8921,15 +8953,15 @@ snapshots:
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/ocr': 0.60.45(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/pdf': 0.63.0(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-chat': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-facts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-images': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-messages': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-chat': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-facts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-images': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-messages': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/spider': 0.60.17(@noble/hashes@2.2.0)(@opentelemetry/api@1.9.1)(@types/node@24.13.1)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
@@ -8971,20 +9003,18 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/json': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-scanner': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
+      '@happyvertical/smrt-scanner': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
-      '@huggingface/transformers': 4.2.0
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
-      '@xenova/transformers': 2.17.2
       cheerio: 1.2.0
       fast-glob: 3.3.3
       minimatch: 10.1.1
@@ -8992,6 +9022,8 @@ snapshots:
       tsx: 4.22.4
       typescript: 5.9.3
       yaml: 2.9.0
+    optionalDependencies:
+      '@xenova/transformers': 2.17.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9018,9 +9050,7 @@ snapshots:
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
-      '@huggingface/transformers': 4.2.0
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
-      '@xenova/transformers': 2.17.2
       cheerio: 1.2.0
       fast-glob: 3.3.3
       minimatch: 10.1.1
@@ -9028,6 +9058,9 @@ snapshots:
       tsx: 4.22.4
       typescript: 5.9.3
       yaml: 2.9.0
+    optionalDependencies:
+      '@huggingface/transformers': 4.2.0
+      '@xenova/transformers': 2.17.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9043,10 +9076,46 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-dev-mcp@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-core@0.27.12(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-scanner': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
+      '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/files': 0.74.4
+      '@happyvertical/json': 0.74.4
+      '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
+      '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
+      '@happyvertical/smrt-scanner': 0.27.12(@happyvertical/smrt-core@0.27.12(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76))
+      '@happyvertical/smrt-types': 0.27.12
+      '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
+      '@happyvertical/utils': 0.74.4
+      '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
+      cheerio: 1.2.0
+      fast-glob: 3.3.3
+      minimatch: 10.1.1
+      pluralize: 8.0.0
+      tsx: 4.22.4
+      typescript: 5.9.3
+      yaml: 2.9.0
+    optionalDependencies:
+      '@xenova/transformers': 2.17.2
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+      - '@russellthehippo/honker-node'
+      - '@sentry/node'
+      - '@sqliteai/sqlite-vector'
+      - bufferutil
+      - encoding
+      - pg-native
+      - supports-color
+      - utf-8-validate
+      - ws
+      - zod
+
+  '@happyvertical/smrt-dev-mcp@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
+    dependencies:
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-scanner': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))
       '@happyvertical/smrt-types': 0.27.12
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
     transitivePeerDependencies:
@@ -9066,14 +9135,14 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-facts@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-facts@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     transitivePeerDependencies:
@@ -9097,11 +9166,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-features@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-features@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
     optionalDependencies:
-      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9119,21 +9188,21 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-images@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-images@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/images': 0.74.4(jimp@1.6.1)(sharp@0.34.5)
-      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/utils': 0.74.4
       jimp: 1.6.1
       sharp: 0.34.5
       svelte: 5.56.2
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9154,22 +9223,22 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-jobs@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-jobs@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@aws-sdk/client-sqs': 3.1063.0
       '@google-cloud/tasks': 6.2.3
       '@happyvertical/jobs': 0.74.4(@aws-sdk/client-sqs@3.1063.0)(@google-cloud/tasks@6.2.3)(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)(bull@4.16.5)(bullmq@5.78.0(redis@5.12.1(@opentelemetry/api@1.9.1)))
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
       bull: 4.16.5
       bullmq: 5.78.0(redis@5.12.1(@opentelemetry/api@1.9.1))
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9228,15 +9297,15 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-languages@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-languages@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-features': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-jobs': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-features': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-jobs': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9261,11 +9330,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-ledgers@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9286,22 +9355,22 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-messages@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-messages@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/encryption@0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3))(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/email': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/messages': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-secrets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-secrets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     optionalDependencies:
       '@happyvertical/encryption': 0.74.4(@sentry/node@10.56.0)(@types/node@24.13.1)(typescript@5.9.3)
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9323,9 +9392,9 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-playground@0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))':
+  '@happyvertical/smrt-playground@0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)(vite@7.3.5(@types/node@24.13.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.9.0))':
     dependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       fast-glob: 3.3.3
       tsx: 4.22.4
     optionalDependencies:
@@ -9342,15 +9411,15 @@ snapshots:
       - '@xenova/transformers'
       - chrono-node
 
-  '@happyvertical/smrt-profiles@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-profiles@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-assets': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
       '@noble/curves': 1.9.7
@@ -9412,21 +9481,21 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-projects@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-projects@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
       '@happyvertical/projects': 0.74.4
       '@happyvertical/repos': 0.74.4
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-prompts': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9448,11 +9517,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-prompts@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-prompts@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9500,14 +9569,14 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-scanner@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))':
+  '@happyvertical/smrt-scanner@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-core@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76))':
     dependencies:
       fast-glob: 3.3.3
       minimatch: 10.1.1
       oxc-parser: 0.108.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       oxc-resolver: 11.20.0
     optionalDependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -9524,11 +9593,23 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  '@happyvertical/smrt-secrets@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-scanner@0.27.12(@happyvertical/smrt-core@0.27.12(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76))':
+    dependencies:
+      fast-glob: 3.3.3
+      minimatch: 10.1.1
+      oxc-parser: 0.108.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      oxc-resolver: 11.20.0
+    optionalDependencies:
+      '@happyvertical/smrt-core': 0.27.12(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
+  '@happyvertical/smrt-secrets@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/secrets': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     transitivePeerDependencies:
@@ -9550,12 +9631,39 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-sites@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-secrets@0.27.12(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/secrets': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
+      '@happyvertical/smrt-core': 0.27.12(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(zod@3.25.76)
+      '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
+      '@happyvertical/utils': 0.74.4
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+      - '@happyvertical/smrt-users'
+      - '@huggingface/transformers'
+      - '@russellthehippo/honker-node'
+      - '@sentry/node'
+      - '@sqliteai/sqlite-vector'
+      - '@xenova/transformers'
+      - bufferutil
+      - encoding
+      - pg-native
+      - supports-color
+      - svelte
+      - utf-8-validate
+      - ws
+      - zod
+    optional: true
+
+  '@happyvertical/smrt-sites@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+    dependencies:
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
     optionalDependencies:
-      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - '@emnapi/core'
@@ -9575,12 +9683,12 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-subscriptions@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-subscriptions@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
     optionalDependencies:
-      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
+      '@happyvertical/smrt-svelte': 0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)
       svelte: 5.56.2
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -9631,23 +9739,38 @@ snapshots:
       esm-env: 1.2.2
       svelte: 5.56.2
     optionalDependencies:
-      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-jobs': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-agents': 0.27.12(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)
+      '@happyvertical/smrt-jobs': 0.27.12(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)
+      '@happyvertical/smrt-users': 0.27.12(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(zod@3.25.76)
       '@huggingface/transformers': 4.2.0
       '@mlc-ai/web-llm': 0.2.84
       '@remotion/whisper-web': 4.0.473
       '@xenova/transformers': 2.17.2
       chrono-node: 2.9.1
 
-  '@happyvertical/smrt-tags@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-svelte@0.27.12(@happyvertical/smrt-agents@0.27.12)(@happyvertical/smrt-jobs@0.27.12)(@happyvertical/smrt-profiles@0.27.12)(@happyvertical/smrt-users@0.27.12)(@mlc-ai/web-llm@0.2.84)(@remotion/whisper-web@4.0.473)(@xenova/transformers@2.17.2)(chrono-node@2.9.1)(svelte@5.56.2)':
+    dependencies:
+      '@happyvertical/smrt-types': 0.27.12
+      esm-env: 1.2.2
+      svelte: 5.56.2
+    optionalDependencies:
+      '@happyvertical/smrt-agents': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-jobs': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(redis@5.12.1(@opentelemetry/api@1.9.1))(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@mlc-ai/web-llm': 0.2.84
+      '@remotion/whisper-web': 4.0.473
+      '@xenova/transformers': 2.17.2
+      chrono-node: 2.9.1
+
+  '@happyvertical/smrt-tags@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/ai': 0.74.4(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/files': 0.74.4
       '@happyvertical/logger': 0.74.4(@sentry/node@10.56.0)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     transitivePeerDependencies:
@@ -9699,11 +9822,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-tenancy@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-tenancy@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
-      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-users': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/sql': 0.74.4(@russellthehippo/honker-node@0.3.3)(@sqliteai/sqlite-vector@1.0.0)
       '@happyvertical/utils': 0.74.4
     optionalDependencies:
@@ -9753,12 +9876,12 @@ snapshots:
 
   '@happyvertical/smrt-types@0.27.12': {}
 
-  '@happyvertical/smrt-users@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
+  '@happyvertical/smrt-users@0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-profiles@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@happyvertical/smrt-config': 0.27.12(typescript@5.9.3)
-      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
-      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@huggingface/transformers@4.2.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-core': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-profiles': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-svelte@0.27.12)(@happyvertical/smrt-tenancy@0.27.12)(@happyvertical/smrt-users@0.27.12)(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(typescript@5.9.3)(ws@8.21.0)(zod@3.25.76)
+      '@happyvertical/smrt-tenancy': 0.27.12(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@happyvertical/smrt-users@0.27.12)(@russellthehippo/honker-node@0.3.3)(@sentry/node@10.56.0)(@sqliteai/sqlite-vector@1.0.0)(@xenova/transformers@2.17.2)(svelte@5.56.2)(ws@8.21.0)(zod@3.25.76)
       '@happyvertical/smrt-types': 0.27.12
       jose: 6.2.3
     optionalDependencies:
@@ -9873,11 +9996,14 @@ snapshots:
     dependencies:
       hono: 4.12.23
 
-  '@huggingface/jinja@0.2.2': {}
+  '@huggingface/jinja@0.2.2':
+    optional: true
 
-  '@huggingface/jinja@0.5.9': {}
+  '@huggingface/jinja@0.5.9':
+    optional: true
 
-  '@huggingface/tokenizers@0.1.3': {}
+  '@huggingface/tokenizers@0.1.3':
+    optional: true
 
   '@huggingface/transformers@4.2.0':
     dependencies:
@@ -9886,6 +10012,7 @@ snapshots:
       onnxruntime-node: 1.24.3
       onnxruntime-web: 1.26.0-dev.20260416-b7804b056c
       sharp: 0.34.5
+    optional: true
 
   '@img/colour@1.1.0': {}
 
@@ -11453,7 +11580,8 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       parse5: 7.3.0
 
-  '@types/long@4.0.2': {}
+  '@types/long@4.0.2':
+    optional: true
 
   '@types/node@16.9.1': {}
 
@@ -11549,6 +11677,7 @@ snapshots:
       - bare-abort-controller
       - bare-buffer
       - react-native-b4a
+    optional: true
 
   '@zone-eu/mailsplit@5.4.12':
     dependencies:
@@ -11653,11 +11782,13 @@ snapshots:
 
   axobject-query@4.1.0: {}
 
-  b4a@1.8.1: {}
+  b4a@1.8.1:
+    optional: true
 
   balanced-match@1.0.2: {}
 
-  bare-events@2.9.1: {}
+  bare-events@2.9.1:
+    optional: true
 
   bare-fs@4.7.2:
     dependencies:
@@ -11669,12 +11800,15 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+    optional: true
 
-  bare-os@3.9.1: {}
+  bare-os@3.9.1:
+    optional: true
 
   bare-path@3.0.1:
     dependencies:
       bare-os: 3.9.1
+    optional: true
 
   bare-stream@2.13.1(bare-events@2.9.1):
     dependencies:
@@ -11684,10 +11818,12 @@ snapshots:
       bare-events: 2.9.1
     transitivePeerDependencies:
       - react-native-b4a
+    optional: true
 
   bare-url@2.4.5:
     dependencies:
       bare-path: 3.0.1
+    optional: true
 
   base64-js@0.0.8: {}
 
@@ -11729,7 +11865,8 @@ snapshots:
 
   boolbase@1.0.0: {}
 
-  boolean@3.2.0: {}
+  boolean@3.2.0:
+    optional: true
 
   bowser@2.14.1: {}
 
@@ -11873,7 +12010,8 @@ snapshots:
     dependencies:
       readdirp: 4.1.2
 
-  chownr@1.1.4: {}
+  chownr@1.1.4:
+    optional: true
 
   chownr@3.0.0: {}
 
@@ -12122,8 +12260,10 @@ snapshots:
   decompress-response@6.0.0:
     dependencies:
       mimic-response: 3.1.0
+    optional: true
 
-  deep-extend@0.6.0: {}
+  deep-extend@0.6.0:
+    optional: true
 
   deepl-node@1.27.0:
     dependencies:
@@ -12166,7 +12306,8 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  detect-node@2.1.0: {}
+  detect-node@2.1.0:
+    optional: true
 
   devalue@5.8.1: {}
 
@@ -12283,7 +12424,8 @@ snapshots:
 
   es-toolkit@1.47.0: {}
 
-  es6-error@4.1.1: {}
+  es6-error@4.1.1:
+    optional: true
 
   esbuild@0.27.7:
     optionalDependencies:
@@ -12384,6 +12526,7 @@ snapshots:
       bare-events: 2.9.1
     transitivePeerDependencies:
       - bare-abort-controller
+    optional: true
 
   eventsource-parser@3.1.0: {}
 
@@ -12393,7 +12536,8 @@ snapshots:
 
   exif-parser@0.1.12: {}
 
-  expand-template@2.0.3: {}
+  expand-template@2.0.3:
+    optional: true
 
   expect-type@1.3.0: {}
 
@@ -12439,7 +12583,8 @@ snapshots:
 
   fast-deep-equal@3.1.3: {}
 
-  fast-fifo@1.3.2: {}
+  fast-fifo@1.3.2:
+    optional: true
 
   fast-glob@3.3.3:
     dependencies:
@@ -12540,9 +12685,11 @@ snapshots:
     optionalDependencies:
       playwright: 1.60.0
 
-  flatbuffers@1.12.0: {}
+  flatbuffers@1.12.0:
+    optional: true
 
-  flatbuffers@25.9.23: {}
+  flatbuffers@25.9.23:
+    optional: true
 
   fn.name@1.1.0: {}
 
@@ -12581,7 +12728,8 @@ snapshots:
 
   from@0.1.7: {}
 
-  fs-constants@1.0.0: {}
+  fs-constants@1.0.0:
+    optional: true
 
   fs-extra@11.3.5:
     dependencies:
@@ -12695,7 +12843,8 @@ snapshots:
       - conventional-commits-filter
       - conventional-commits-parser
 
-  github-from-package@0.0.0: {}
+  github-from-package@0.0.0:
+    optional: true
 
   glob-parent@5.1.2:
     dependencies:
@@ -12718,6 +12867,7 @@ snapshots:
       roarr: 2.15.4
       semver: 7.8.2
       serialize-error: 7.0.1
+    optional: true
 
   global-agent@4.1.3:
     dependencies:
@@ -12872,7 +13022,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  guid-typescript@1.0.9: {}
+  guid-typescript@1.0.9:
+    optional: true
 
   happy-dom@20.10.2:
     dependencies:
@@ -13057,7 +13208,8 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ini@1.3.8: {}
+  ini@1.3.8:
+    optional: true
 
   ini@6.0.0: {}
 
@@ -13341,7 +13493,8 @@ snapshots:
 
   json-schema-typed@8.0.2: {}
 
-  json-stringify-safe@5.0.1: {}
+  json-stringify-safe@5.0.1:
+    optional: true
 
   json5@2.2.3: {}
 
@@ -13521,7 +13674,8 @@ snapshots:
 
   loglevel@1.9.2: {}
 
-  long@4.0.0: {}
+  long@4.0.0:
+    optional: true
 
   long@5.3.2: {}
 
@@ -13569,6 +13723,7 @@ snapshots:
   matcher@3.0.0:
     dependencies:
       escape-string-regexp: 4.0.0
+    optional: true
 
   matcher@4.0.0:
     dependencies:
@@ -13607,7 +13762,8 @@ snapshots:
 
   mimic-fn@2.1.0: {}
 
-  mimic-response@3.1.0: {}
+  mimic-response@3.1.0:
+    optional: true
 
   mimic-response@4.0.0: {}
 
@@ -13627,7 +13783,8 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  mkdirp-classic@0.5.3: {}
+  mkdirp-classic@0.5.3:
+    optional: true
 
   ml-array-max@2.0.0:
     dependencies:
@@ -13687,17 +13844,20 @@ snapshots:
 
   nanoid@3.3.12: {}
 
-  napi-build-utils@2.0.0: {}
+  napi-build-utils@2.0.0:
+    optional: true
 
   negotiator@1.0.0: {}
 
   node-abi@3.92.0:
     dependencies:
       semver: 7.8.2
+    optional: true
 
   node-abort-controller@3.1.1: {}
 
-  node-addon-api@6.1.0: {}
+  node-addon-api@6.1.0:
+    optional: true
 
   node-domexception@1.0.0: {}
 
@@ -13781,12 +13941,16 @@ snapshots:
   onnx-proto@4.0.4:
     dependencies:
       protobufjs: 6.11.6
+    optional: true
 
-  onnxruntime-common@1.14.0: {}
+  onnxruntime-common@1.14.0:
+    optional: true
 
-  onnxruntime-common@1.24.0-dev.20251116-b39e144322: {}
+  onnxruntime-common@1.24.0-dev.20251116-b39e144322:
+    optional: true
 
-  onnxruntime-common@1.24.3: {}
+  onnxruntime-common@1.24.3:
+    optional: true
 
   onnxruntime-common@1.26.0: {}
 
@@ -13800,6 +13964,7 @@ snapshots:
       adm-zip: 0.5.17
       global-agent: 3.0.0
       onnxruntime-common: 1.24.3
+    optional: true
 
   onnxruntime-node@1.26.0:
     dependencies:
@@ -13815,6 +13980,7 @@ snapshots:
       onnx-proto: 4.0.4
       onnxruntime-common: 1.14.0
       platform: 1.3.6
+    optional: true
 
   onnxruntime-web@1.26.0-dev.20260416-b7804b056c:
     dependencies:
@@ -13824,6 +13990,7 @@ snapshots:
       onnxruntime-common: 1.24.0-dev.20251116-b39e144322
       platform: 1.3.6
       protobufjs: 7.6.2
+    optional: true
 
   openai@6.34.0(ws@8.21.0)(zod@3.25.76):
     optionalDependencies:
@@ -14102,7 +14269,8 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  platform@1.3.6: {}
+  platform@1.3.6:
+    optional: true
 
   playwright-core@1.60.0: {}
 
@@ -14150,6 +14318,7 @@ snapshots:
       simple-get: 4.0.1
       tar-fs: 2.1.4
       tunnel-agent: 0.6.0
+    optional: true
 
   process-warning@5.0.0: {}
 
@@ -14180,6 +14349,7 @@ snapshots:
       '@types/long': 4.0.2
       '@types/node': 24.13.1
       long: 4.0.0
+    optional: true
 
   protobufjs@7.6.2:
     dependencies:
@@ -14215,6 +14385,7 @@ snapshots:
     dependencies:
       end-of-stream: 1.4.5
       once: 1.4.0
+    optional: true
 
   punycode.js@2.3.1: {}
 
@@ -14263,6 +14434,7 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
+    optional: true
 
   readable-stream@3.6.2:
     dependencies:
@@ -14364,6 +14536,7 @@ snapshots:
       json-stringify-safe: 5.0.1
       semver-compare: 1.0.0
       sprintf-js: 1.1.3
+    optional: true
 
   robots-parser@3.0.1: {}
 
@@ -14458,7 +14631,8 @@ snapshots:
     dependencies:
       parseley: 0.13.1
 
-  semver-compare@1.0.0: {}
+  semver-compare@1.0.0:
+    optional: true
 
   semver@7.8.0: {}
 
@@ -14483,6 +14657,7 @@ snapshots:
   serialize-error@7.0.1:
     dependencies:
       type-fest: 0.13.1
+    optional: true
 
   serialize-error@8.1.0:
     dependencies:
@@ -14515,6 +14690,7 @@ snapshots:
       - bare-abort-controller
       - bare-buffer
       - react-native-b4a
+    optional: true
 
   sharp@0.33.5:
     dependencies:
@@ -14613,13 +14789,15 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  simple-concat@1.0.1: {}
+  simple-concat@1.0.1:
+    optional: true
 
   simple-get@4.0.1:
     dependencies:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
+    optional: true
 
   simple-swizzle@0.2.4:
     dependencies:
@@ -14662,7 +14840,8 @@ snapshots:
     dependencies:
       through: 2.3.8
 
-  sprintf-js@1.1.3: {}
+  sprintf-js@1.1.3:
+    optional: true
 
   sqlite-vss-darwin-arm64@0.1.2:
     optional: true
@@ -14713,6 +14892,7 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+    optional: true
 
   strict-uri-encode@2.0.0: {}
 
@@ -14748,7 +14928,8 @@ snapshots:
     dependencies:
       ansi-regex: 6.2.2
 
-  strip-json-comments@2.0.1: {}
+  strip-json-comments@2.0.1:
+    optional: true
 
   strnum@2.3.0: {}
 
@@ -14808,6 +14989,7 @@ snapshots:
       mkdirp-classic: 0.5.3
       pump: 3.0.4
       tar-stream: 2.2.0
+    optional: true
 
   tar-fs@3.1.2:
     dependencies:
@@ -14820,6 +15002,7 @@ snapshots:
       - bare-abort-controller
       - bare-buffer
       - react-native-b4a
+    optional: true
 
   tar-stream@2.2.0:
     dependencies:
@@ -14828,6 +15011,7 @@ snapshots:
       fs-constants: 1.0.0
       inherits: 2.0.4
       readable-stream: 3.6.2
+    optional: true
 
   tar-stream@3.2.0:
     dependencies:
@@ -14839,6 +15023,7 @@ snapshots:
       - bare-abort-controller
       - bare-buffer
       - react-native-b4a
+    optional: true
 
   tar@7.5.16:
     dependencies:
@@ -14863,6 +15048,7 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+    optional: true
 
   tesseract.js-core@6.1.2: {}
 
@@ -14885,6 +15071,7 @@ snapshots:
       b4a: 1.8.1
     transitivePeerDependencies:
       - react-native-b4a
+    optional: true
 
   text-hex@1.0.0: {}
 
@@ -14976,6 +15163,7 @@ snapshots:
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
+    optional: true
 
   turbo@2.9.16:
     optionalDependencies:
@@ -14992,7 +15180,8 @@ snapshots:
   tweetnacl@1.0.3:
     optional: true
 
-  type-fest@0.13.1: {}
+  type-fest@0.13.1:
+    optional: true
 
   type-fest@0.20.2: {}
 

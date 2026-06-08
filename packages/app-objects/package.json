@@ -22,11 +22,13 @@
   },
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
-    "@happyvertical/logger": "catalog:",
-    "@happyvertical/smrt-core": "catalog:",
-    "@happyvertical/smrt-subscriptions": "catalog:"
+    "@happyvertical/logger": "catalog:"
+  },
+  "peerDependencies": {
+    "@happyvertical/smrt-core": "0.27.12"
   },
   "devDependencies": {
+    "@happyvertical/smrt-core": "catalog:",
     "typescript": "^5.9.3",
     "vitest": "^4.1.5"
   }

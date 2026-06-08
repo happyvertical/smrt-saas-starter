@@ -3,7 +3,11 @@ import {
   enableTenancy,
   getCurrentTenant,
 } from "@happyvertical/smrt-tenancy";
-import { createSessionHandler } from "@happyvertical/smrt-users/sveltekit";
+import {
+  createSessionHandler,
+  loadBearerSessionContext,
+  parseBearerToken,
+} from "@happyvertical/smrt-users/sveltekit";
 import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { resolveMembershipContext } from "$lib/server/authz";
@@ -24,6 +28,32 @@ const sessionHandle = createSessionHandler({
   enterTenantContext: true,
 }) as unknown as Handle;
 
+const bearerSessionHandle: Handle = async ({ event, resolve }) => {
+  if (event.locals.user) {
+    return resolve(event);
+  }
+
+  const token = parseBearerToken(event.request.headers.get("authorization"));
+  if (!token) {
+    return resolve(event);
+  }
+
+  const context = await loadBearerSessionContext(token, {
+    ...getSmrtConfig("Session"),
+    sessionCookieName: "sid",
+  });
+  if (!context) {
+    return new Response("Invalid bearer token", { status: 401 });
+  }
+
+  event.locals.user = context.user;
+  event.locals.permissions = context.permissions;
+  event.locals.tenantId = context.tenantId;
+  event.locals.sessionId = context.sessionId;
+
+  return resolve(event);
+};
+
 const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
   const activeContext = getCurrentTenant();
   if (activeContext) {
@@ -43,7 +73,12 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-export const handle: Handle = sequence(tenancyHandle, sessionHandle, reconcileTenantLocals);
+export const handle: Handle = sequence(
+  tenancyHandle,
+  sessionHandle,
+  bearerSessionHandle,
+  reconcileTenantLocals,
+);
 
 function shouldResolveMembership(pathname: string): boolean {
   return (

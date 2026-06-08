@@ -13,7 +13,7 @@ await writeFile(
   kotlinOut,
   `package com.happyvertical.starter
 
-const val MobileContractVersion = "2026-06-06.v1"
+const val MobileContractVersion = "2026-06-08.v2"
 
 data class MobileTenantSummary(
   val id: String,
@@ -23,12 +23,84 @@ data class MobileTenantSummary(
   val subscriptionStatus: String,
 )
 
+data class MobileTenantOption(
+  val id: String,
+  val name: String,
+  val slug: String,
+  val roleSlug: String,
+  val roleLabel: String,
+)
+
 data class MobileUsageThreshold(
   val metricKey: String,
   val label: String,
   val used: Double,
   val limit: Double,
   val action: String,
+  val state: String? = null,
+  val allowed: Boolean? = null,
+  val remaining: Double? = null,
+)
+
+data class MobileDashboardPayload(
+  val tenant: MobileTenantSummary,
+  val thresholds: List<MobileUsageThreshold>,
+  val enabledFeatures: List<String>,
+  val language: String,
+)
+
+data class MobileAuthProviderSummary(
+  val id: String,
+  val label: String,
+  val type: String,
+  val supportsPkce: Boolean,
+)
+
+data class MobileAuthStartRequest(
+  val providerId: String? = null,
+  val redirectUri: String,
+  val scopes: List<String> = emptyList(),
+  val state: String? = null,
+  val loginHint: String? = null,
+)
+
+data class MobileAuthStartResponse(
+  val providerId: String,
+  val authorizationUrl: String,
+  val state: String,
+  val codeVerifier: String? = null,
+  val nonce: String? = null,
+  val redirectUri: String,
+)
+
+data class MobileAuthCompleteRequest(
+  val providerId: String? = null,
+  val code: String,
+  val state: String? = null,
+  val codeVerifier: String? = null,
+  val redirectUri: String,
+)
+
+data class MobileUserSummary(
+  val id: String,
+  val email: String,
+  val label: String,
+)
+
+data class MobileAuthSession(
+  val accessToken: String,
+  val tokenType: String,
+  val expiresAt: String,
+  val user: MobileUserSummary,
+  val activeTenant: MobileTenantOption,
+  val tenants: List<MobileTenantOption>,
+)
+
+data class MobileSessionBootstrap(
+  val user: MobileUserSummary,
+  val activeTenant: MobileTenantOption,
+  val tenants: List<MobileTenantOption>,
+  val dashboard: MobileDashboardPayload,
 )
 `,
 );
@@ -37,9 +109,21 @@ await writeFile(
   jsonOut,
   JSON.stringify(
     {
-      version: "2026-06-06.v1",
+      version: "2026-06-08.v2",
       generatedAt: new Date(0).toISOString(),
-      models: ["MobileTenantSummary", "MobileUsageThreshold", "MobileDashboardPayload"],
+      models: [
+        "MobileTenantSummary",
+        "MobileTenantOption",
+        "MobileUsageThreshold",
+        "MobileDashboardPayload",
+        "MobileAuthProviderSummary",
+        "MobileAuthStartRequest",
+        "MobileAuthStartResponse",
+        "MobileAuthCompleteRequest",
+        "MobileUserSummary",
+        "MobileAuthSession",
+        "MobileSessionBootstrap",
+      ],
     },
     null,
     2,
