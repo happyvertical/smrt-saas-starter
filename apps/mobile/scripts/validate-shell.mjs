@@ -13,8 +13,9 @@ const required = [
   "androidApp/src/main/kotlin/com/happyvertical/starter/AndroidDeviceCapabilityAdapter.kt",
   "shared/src/commonMain/kotlin/com/happyvertical/starter/DeviceCapabilities.kt",
   "shared/src/commonMain/kotlin/com/happyvertical/starter/StarterClient.kt",
-  "iosApp/Info.plist",
-  "iosApp/SmrtStarterApp.swift",
+  "iosApp/project.yml",
+  "iosApp/SmrtStarter/Info.plist",
+  "iosApp/SmrtStarter/SmrtStarterApp.swift",
 ];
 
 for (const file of required) {
@@ -61,20 +62,34 @@ const androidAdapter = await readFile(
 );
 if (
   !androidAdapter.includes("FEATURE_CAMERA_ANY") ||
-  !androidAdapter.includes("FEATURE_MICROPHONE")
+  !androidAdapter.includes("FEATURE_MICROPHONE") ||
+  !androidAdapter.includes("AndroidPermissionRequestHistory") ||
+  !androidAdapter.includes("NOT_DETERMINED")
 ) {
-  throw new Error("Android shell must expose native camera and microphone capability checks");
+  throw new Error(
+    "Android shell must expose permission-aware camera and microphone capability checks",
+  );
 }
 
-const iosApp = await readFile(join(root, "iosApp/SmrtStarterApp.swift"), "utf8");
+const iosProject = await readFile(join(root, "iosApp/project.yml"), "utf8");
+if (
+  !iosProject.includes("sources:") ||
+  !iosProject.includes("SmrtStarter") ||
+  !iosProject.includes("INFOPLIST_FILE: SmrtStarter/Info.plist")
+) {
+  throw new Error("iOS shell must wire SwiftUI sources and Info.plist through XcodeGen");
+}
+
+const iosApp = await readFile(join(root, "iosApp/SmrtStarter/SmrtStarterApp.swift"), "utf8");
 if (
   !iosApp.includes("DeviceCapabilityBridge") ||
-  !iosApp.includes("AVCaptureDevice.authorizationStatus")
+  !iosApp.includes("AVCaptureDevice.authorizationStatus") ||
+  !iosApp.includes("checkedAtEpochMillis")
 ) {
   throw new Error("iOS shell must expose native camera and microphone capability checks");
 }
 
-const iosPlist = await readFile(join(root, "iosApp/Info.plist"), "utf8");
+const iosPlist = await readFile(join(root, "iosApp/SmrtStarter/Info.plist"), "utf8");
 if (
   !iosPlist.includes("NSCameraUsageDescription") ||
   !iosPlist.includes("NSMicrophoneUsageDescription")

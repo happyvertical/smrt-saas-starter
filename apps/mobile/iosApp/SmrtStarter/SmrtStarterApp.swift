@@ -59,6 +59,7 @@ struct DeviceCaptureCapability {
 struct DeviceCapabilityReport {
   let camera: DeviceCaptureCapability
   let microphone: DeviceCaptureCapability
+  let checkedAtEpochMillis: Int64
 
   var summaryLines: [String] {
     [camera.summaryLine, microphone.summaryLine]
@@ -69,7 +70,8 @@ final class DeviceCapabilityBridge {
   func currentCapabilities() -> DeviceCapabilityReport {
     DeviceCapabilityReport(
       camera: cameraCapability(),
-      microphone: microphoneCapability()
+      microphone: microphoneCapability(),
+      checkedAtEpochMillis: Int64(Date().timeIntervalSince1970 * 1000)
     )
   }
 

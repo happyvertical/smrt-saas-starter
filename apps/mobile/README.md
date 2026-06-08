@@ -19,6 +19,16 @@ Auth uses `/api/mobile/auth/*` on the web app:
 
 The shared layer defines `DeviceCapabilityAdapter` plus camera and microphone capability DTOs. Feature modules should consume that interface rather than platform-specific APIs directly.
 
-Android declares `CAMERA` and `RECORD_AUDIO` while keeping camera and microphone hardware optional for broad installability. It exposes `AndroidDeviceCapabilityAdapter`. iOS declares `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` and exposes `DeviceCapabilityBridge` from the SwiftUI shell.
+Android declares `CAMERA` and `RECORD_AUDIO` while keeping camera and microphone hardware optional for broad installability. It exposes `AndroidDeviceCapabilityAdapter`, which reports permissions as `not_determined` until a permission request flow records request history.
+
+iOS declares `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` in `iosApp/SmrtStarter/Info.plist`, exposes `DeviceCapabilityBridge` from the SwiftUI shell, and is wired through `iosApp/project.yml` for XcodeGen.
 
 The default CI validation is a shell-level check so the repo can validate on machines without Android SDK or Xcode.
+
+When XcodeGen is available locally:
+
+```sh
+cd apps/mobile/iosApp
+xcodegen generate
+xcodebuild -project SmrtStarter.xcodeproj -scheme SmrtStarter -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
+```

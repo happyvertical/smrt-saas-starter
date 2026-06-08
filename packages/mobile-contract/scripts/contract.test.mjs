@@ -16,6 +16,7 @@ describe("mobile contract", () => {
       assert.match(text, /interface MobileSessionBootstrap/);
       assert.match(text, /type MobileDeviceCaptureSurface = "camera" \| "microphone"/);
       assert.match(text, /interface MobileDeviceCapabilities/);
+      assert.match(text, /checkedAtEpochMillis\?: number/);
     });
   });
 });

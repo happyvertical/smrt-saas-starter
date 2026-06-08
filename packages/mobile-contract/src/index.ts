@@ -115,7 +115,7 @@ export interface MobileDeviceCapability {
 export interface MobileDeviceCapabilities {
   camera: MobileDeviceCapability;
   microphone: MobileDeviceCapability;
-  checkedAt?: string;
+  checkedAtEpochMillis?: number;
 }
 
-export const mobileContractVersion = "2026-06-08.v3";
+export const mobileContractVersion = "2026-06-08.v4";

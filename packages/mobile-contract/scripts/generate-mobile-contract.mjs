@@ -13,7 +13,7 @@ await writeFile(
   kotlinOut,
   `package com.happyvertical.starter
 
-const val MobileContractVersion = "2026-06-08.v3"
+const val MobileContractVersion = "2026-06-08.v4"
 
 data class MobileTenantSummary(
   val id: String,
@@ -120,7 +120,7 @@ data class MobileDeviceCapability(
 data class MobileDeviceCapabilities(
   val camera: MobileDeviceCapability,
   val microphone: MobileDeviceCapability,
-  val checkedAt: String? = null,
+  val checkedAtEpochMillis: Long? = null,
 )
 `,
 );
@@ -129,7 +129,7 @@ await writeFile(
   jsonOut,
   JSON.stringify(
     {
-      version: "2026-06-08.v3",
+      version: "2026-06-08.v4",
       generatedAt: new Date(0).toISOString(),
       models: [
         "MobileTenantSummary",

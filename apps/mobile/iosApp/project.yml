@@ -1,0 +1,17 @@
+name: SmrtStarter
+options:
+  bundleIdPrefix: com.happyvertical
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  SmrtStarter:
+    type: application
+    platform: iOS
+    sources:
+      - SmrtStarter
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.happyvertical.starter
+      INFOPLIST_FILE: SmrtStarter/Info.plist
+      INFOPLIST_KEY_CFBundleDisplayName: SMRT Starter
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      SWIFT_VERSION: "5.10"

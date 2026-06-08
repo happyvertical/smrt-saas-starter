@@ -1,11 +1,14 @@
 package com.happyvertical.starter
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 
 class AndroidDeviceCapabilityAdapter(
   private val context: Context,
+  private val permissionRequestHistory: AndroidPermissionRequestHistory =
+    UnknownAndroidPermissionRequestHistory,
 ) : DeviceCapabilityAdapter {
   override fun currentCapabilities(): DeviceCapabilityReport = DeviceCapabilityReport(
     camera = capability(
@@ -52,17 +55,41 @@ class AndroidDeviceCapabilityAdapter(
     )
   }
 
-  private fun permissionState(permission: String): DevicePermissionState =
+  private fun permissionState(permission: String): DevicePermissionState {
     if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-      DevicePermissionState(
+      return DevicePermissionState(
         status = DevicePermissionStatus.GRANTED,
         canRequest = false,
       )
-    } else {
-      DevicePermissionState(
-        status = DevicePermissionStatus.DENIED,
+    }
+
+    if (!permissionRequestHistory.hasRequested(permission)) {
+      return DevicePermissionState(
+        status = DevicePermissionStatus.NOT_DETERMINED,
         canRequest = true,
-        reason = "permission_not_granted",
+        reason = "permission_not_requested",
       )
     }
+
+    val canRequestAgain = (context as? Activity)
+      ?.shouldShowRequestPermissionRationale(permission)
+      ?: false
+    return DevicePermissionState(
+      status = DevicePermissionStatus.DENIED,
+      canRequest = canRequestAgain,
+      reason = if (canRequestAgain) {
+        "permission_denied"
+      } else {
+        "permission_denied_blocked_or_unavailable"
+      },
+    )
+  }
+}
+
+fun interface AndroidPermissionRequestHistory {
+  fun hasRequested(permission: String): Boolean
+}
+
+object UnknownAndroidPermissionRequestHistory : AndroidPermissionRequestHistory {
+  override fun hasRequested(permission: String): Boolean = false
 }
