@@ -10,7 +10,7 @@ class AndroidDeviceCapabilityAdapter(
   private val permissionRequestHistory: AndroidPermissionRequestHistory =
     UnknownAndroidPermissionRequestHistory,
 ) : DeviceCapabilityAdapter {
-  override fun currentCapabilities(): DeviceCapabilityReport = DeviceCapabilityReport(
+  override fun currentCapabilities(): MobileDeviceCapabilities = MobileDeviceCapabilities(
     camera = capability(
       surface = DeviceCaptureSurface.CAMERA,
       label = "Camera",
@@ -34,19 +34,19 @@ class AndroidDeviceCapabilityAdapter(
     feature: String,
     permission: String,
     preferredInput: String,
-  ): DeviceCaptureCapability {
+  ): MobileDeviceCapability {
     val supported = context.packageManager.hasSystemFeature(feature)
     val permissionState = if (supported) {
       permissionState(permission)
     } else {
-      DevicePermissionState(
+      MobileDevicePermissionState(
         status = DevicePermissionStatus.UNAVAILABLE,
         canRequest = false,
         reason = "hardware_unavailable",
       )
     }
 
-    return DeviceCaptureCapability(
+    return MobileDeviceCapability(
       surface = surface,
       label = label,
       supported = supported,
@@ -55,16 +55,16 @@ class AndroidDeviceCapabilityAdapter(
     )
   }
 
-  private fun permissionState(permission: String): DevicePermissionState {
+  private fun permissionState(permission: String): MobileDevicePermissionState {
     if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-      return DevicePermissionState(
+      return MobileDevicePermissionState(
         status = DevicePermissionStatus.GRANTED,
         canRequest = false,
       )
     }
 
     if (!permissionRequestHistory.hasRequested(permission)) {
-      return DevicePermissionState(
+      return MobileDevicePermissionState(
         status = DevicePermissionStatus.NOT_DETERMINED,
         canRequest = true,
         reason = "permission_not_requested",
@@ -74,7 +74,7 @@ class AndroidDeviceCapabilityAdapter(
     val canRequestAgain = (context as? Activity)
       ?.shouldShowRequestPermissionRationale(permission)
       ?: false
-    return DevicePermissionState(
+    return MobileDevicePermissionState(
       status = DevicePermissionStatus.DENIED,
       canRequest = canRequestAgain,
       reason = if (canRequestAgain) {

@@ -5,7 +5,7 @@ This follows the Amaru mobile strategy:
 - Kotlin Multiplatform owns shared contracts and sync behavior.
 - Android has a minimal native shell; Jetpack Compose is the target UI layer as screens fill in.
 - iOS uses SwiftUI.
-- The mobile client consumes generated DTOs from `packages/mobile-contract` at `shared/src/commonMain/kotlin/generated/Contract.kt`, not raw SMRT manifests at runtime.
+- The mobile client consumes generated DTOs from `packages/mobile-contract` at `shared/src/commonMain/kotlin/generated/Contract.kt` and `iosApp/SmrtStarter/MobileContract.swift`, not raw SMRT manifests at runtime.
 - Camera and microphone support follows Amaru's native adapter strategy: KMP defines the shared capability model, Android checks native hardware and permissions, and iOS checks AVFoundation privacy state.
 
 Auth uses `/api/mobile/auth/*` on the web app:

@@ -1,13 +1,5 @@
 package com.happyvertical.starter
 
-data class TenantSummary(
-  val id: String,
-  val name: String,
-  val slug: String,
-  val planName: String,
-  val subscriptionStatus: String,
-)
-
 data class AuthEndpointSet(
   val providers: String,
   val start: String,
@@ -32,9 +24,9 @@ class StarterClient(private val baseUrl: String = "http://localhost:5173") {
 
   fun deviceCapabilities(
     adapter: DeviceCapabilityAdapter = NoopDeviceCapabilityAdapter,
-  ): DeviceCapabilityReport = adapter.currentCapabilities()
+  ): MobileDeviceCapabilities = adapter.currentCapabilities()
 
-  fun demoTenant(): TenantSummary = TenantSummary(
+  fun demoTenant(): MobileTenantSummary = MobileTenantSummary(
     id = "demo",
     name = "Demo Tenant",
     slug = "demo-tenant",

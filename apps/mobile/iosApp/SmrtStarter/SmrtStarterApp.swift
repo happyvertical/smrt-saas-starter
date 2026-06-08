@@ -36,19 +36,7 @@ struct ContentView: View {
   }
 }
 
-struct DevicePermissionState {
-  let status: String
-  let canRequest: Bool
-  let reason: String
-}
-
-struct DeviceCaptureCapability {
-  let surface: String
-  let label: String
-  let supported: Bool
-  let permission: DevicePermissionState
-  let preferredInput: String
-
+extension MobileDeviceCapability {
   var summaryLine: String {
     let support = supported ? "supported" : "unavailable"
     let permissionText = permission.status.replacingOccurrences(of: "_", with: " ")
@@ -56,28 +44,24 @@ struct DeviceCaptureCapability {
   }
 }
 
-struct DeviceCapabilityReport {
-  let camera: DeviceCaptureCapability
-  let microphone: DeviceCaptureCapability
-  let checkedAtEpochMillis: Int64
-
+extension MobileDeviceCapabilities {
   var summaryLines: [String] {
     [camera.summaryLine, microphone.summaryLine]
   }
 }
 
 final class DeviceCapabilityBridge {
-  func currentCapabilities() -> DeviceCapabilityReport {
-    DeviceCapabilityReport(
+  func currentCapabilities() -> MobileDeviceCapabilities {
+    MobileDeviceCapabilities(
       camera: cameraCapability(),
       microphone: microphoneCapability(),
       checkedAtEpochMillis: Int64(Date().timeIntervalSince1970 * 1000)
     )
   }
 
-  private func cameraCapability() -> DeviceCaptureCapability {
+  private func cameraCapability() -> MobileDeviceCapability {
     let supported = UIImagePickerController.isSourceTypeAvailable(.camera)
-    return DeviceCaptureCapability(
+    return MobileDeviceCapability(
       surface: "camera",
       label: "Camera",
       supported: supported,
@@ -89,9 +73,9 @@ final class DeviceCapabilityBridge {
     )
   }
 
-  private func microphoneCapability() -> DeviceCaptureCapability {
+  private func microphoneCapability() -> MobileDeviceCapability {
     let supported = AVAudioSession.sharedInstance().isInputAvailable
-    return DeviceCaptureCapability(
+    return MobileDeviceCapability(
       surface: "microphone",
       label: "Microphone",
       supported: supported,
@@ -106,9 +90,9 @@ final class DeviceCapabilityBridge {
   private func permissionState(
     status: AVAuthorizationStatus,
     unsupportedReason: String
-  ) -> DevicePermissionState {
+  ) -> MobileDevicePermissionState {
     if !unsupportedReason.isEmpty {
-      return DevicePermissionState(
+      return MobileDevicePermissionState(
         status: "unavailable",
         canRequest: false,
         reason: unsupportedReason
@@ -117,13 +101,13 @@ final class DeviceCapabilityBridge {
 
     switch status {
     case .authorized:
-      return DevicePermissionState(status: "granted", canRequest: false, reason: "")
+      return MobileDevicePermissionState(status: "granted", canRequest: false, reason: nil)
     case .denied, .restricted:
-      return DevicePermissionState(status: "denied", canRequest: false, reason: "permission_not_granted")
+      return MobileDevicePermissionState(status: "denied", canRequest: false, reason: "permission_not_granted")
     case .notDetermined:
-      return DevicePermissionState(status: "not_determined", canRequest: true, reason: "permission_not_requested")
+      return MobileDevicePermissionState(status: "not_determined", canRequest: true, reason: "permission_not_requested")
     @unknown default:
-      return DevicePermissionState(status: "unavailable", canRequest: false, reason: "authorization_unknown")
+      return MobileDevicePermissionState(status: "unavailable", canRequest: false, reason: "authorization_unknown")
     }
   }
 }
