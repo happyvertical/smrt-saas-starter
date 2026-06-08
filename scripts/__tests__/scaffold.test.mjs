@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import { smrtRuntimePackages } from "../../apps/web/smrt-packages.mjs";
 
-const root = new URL("../..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../..", import.meta.url));
 
 describe("starter scaffold", () => {
   it("uses dev, staging, and main pipeline workflows", async () => {

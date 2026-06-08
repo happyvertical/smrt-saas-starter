@@ -1,7 +1,8 @@
 import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 const requiredFiles = [
   "README.md",
@@ -17,6 +18,10 @@ const requiredFiles = [
   "apps/web/src/routes/app/+layout.svelte",
   "apps/worker/package.json",
   "apps/mobile/package.json",
+  "apps/mobile/gradlew",
+  "apps/mobile/gradle/wrapper/gradle-wrapper.properties",
+  "apps/mobile/scripts/validate-android.mjs",
+  "apps/mobile/scripts/validate-ios.mjs",
   "packages/app-objects/package.json",
   "packages/app-ui/package.json",
   "packages/mobile-contract/package.json",
@@ -71,6 +76,25 @@ for (const scriptName of ["services:up", "services:down", "services:logs", "db:u
 const webPackageJson = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
 if (!webPackageJson.scripts?.["db:smoke"]) {
   throw new Error("apps/web/package.json must include script: db:smoke");
+}
+
+const mobilePackageJson = JSON.parse(
+  await readFile(join(root, "apps/mobile/package.json"), "utf8"),
+);
+for (const scriptName of ["validate:shell", "validate:android", "validate:ios"]) {
+  if (!mobilePackageJson.scripts?.[scriptName]) {
+    throw new Error(`apps/mobile/package.json must include script: ${scriptName}`);
+  }
+}
+
+const androidValidator = await readFile(
+  join(root, "apps/mobile/scripts/validate-android.mjs"),
+  "utf8",
+);
+for (const phrase of ["Java 21", "JAVA_HOME", ":androidApp:assembleDebug"]) {
+  if (!androidValidator.includes(phrase)) {
+    throw new Error(`Android validation must include: ${phrase}`);
+  }
 }
 
 console.log("Scaffold validation passed.");

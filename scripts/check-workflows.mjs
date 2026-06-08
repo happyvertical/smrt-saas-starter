@@ -1,7 +1,8 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const workflowsDir = join(root, ".github/workflows");
 const required = [
   "on-pull-request.yml",
@@ -44,6 +45,24 @@ const setupEnvironmentAction = await readFile(
 for (const phrase of ["uses: actions/setup-node@v6", 'node-version: "24"']) {
   if (!setupEnvironmentAction.includes(phrase)) {
     throw new Error(`setup-environment action must include: ${phrase}`);
+  }
+}
+
+const pullRequestWorkflow = await readFile(join(workflowsDir, "on-pull-request.yml"), "utf8");
+for (const phrase of [
+  "mobile-android:",
+  "uses: gradle/actions/wrapper-validation@v6",
+  "uses: actions/setup-java@v5",
+  'java-version: "21"',
+  'sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"',
+  "pnpm mobile:validate:android",
+  "mobile-ios:",
+  "runs-on: macos-latest",
+  "brew install xcodegen",
+  "pnpm mobile:validate:ios",
+]) {
+  if (!pullRequestWorkflow.includes(phrase)) {
+    throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
   }
 }
 

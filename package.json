@@ -34,6 +34,9 @@
     "validate": "node scripts/validate-scaffold.mjs",
     "check": "pnpm deps:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm db:smoke && pnpm workflows:check && pnpm manifests:check && pnpm sops:check && pnpm validate",
     "mobile:validate": "pnpm --filter @happyvertical/smrt-saas-mobile validate:shell",
+    "mobile:validate:android": "pnpm --filter @happyvertical/smrt-saas-mobile validate:android",
+    "mobile:validate:ios": "pnpm --filter @happyvertical/smrt-saas-mobile validate:ios",
+    "mobile:validate:native": "pnpm mobile:validate:android && pnpm mobile:validate:ios",
     "mobile:generate": "pnpm --filter @happyvertical/smrt-saas-mobile-contract generate",
     "objects:test": "pnpm --filter @happyvertical/smrt-saas-objects test",
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || echo 'Skipping lefthook install (not in git repository)'"
