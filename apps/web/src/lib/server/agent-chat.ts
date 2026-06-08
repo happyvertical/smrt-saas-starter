@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { type ChatMessage, ChatService } from "@happyvertical/smrt-chat";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import {
@@ -264,6 +265,13 @@ function renderAssistantResponse(tool: StarterRuntimeTool, content: unknown): st
     return `Effective prompt preview:\n${String(prompt.text ?? "")}`;
   }
 
+  if (tool.name === "tenant.subscription.update") {
+    const subscription = isRecord(structured.subscription) ? structured.subscription : {};
+    return `Plan changes require billing confirmation. Current plan: ${String(
+      subscription.planName ?? "Unknown",
+    )}. Open Billing to choose a plan or continue in the customer portal.`;
+  }
+
   return "The tool request is prepared and ready for upstream handling.";
 }
 
@@ -319,7 +327,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getStarterAgentId(tenantId: string): string {
-  return `${starterAgentIdPrefix}:${tenantId}`;
+  const bytes = createHash("sha256").update(`${starterAgentIdPrefix}:${tenantId}`).digest();
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString("hex").slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(
+    16,
+    20,
+  )}-${hex.slice(20, 32)}`;
 }
 
 export function resolveChatTenantId(tenantId: string | null | undefined): string {

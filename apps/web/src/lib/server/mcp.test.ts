@@ -89,6 +89,47 @@ describe("tenant MCP runtime tools", () => {
     });
   });
 
+  it("keeps subscription update tools non-mutating until billing confirmation", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.write_tools"]));
+
+    await expect(
+      executeRuntimeToolForTenant(
+        "tenant.subscription.update",
+        { requestedChange: "upgrade to scale" },
+        tenantId,
+      ),
+    ).resolves.toMatchObject({
+      tool: {
+        name: "tenant.subscription.update",
+        readOnly: false,
+      },
+      response: {
+        content: [{ text: "Subscription change requires checkout confirmation." }],
+        structuredContent: {
+          tenantId,
+          action: "requires_confirmation",
+          subscription: {
+            planName: "Growth",
+            planKey: "growth",
+            status: "active",
+          },
+        },
+      },
+    });
+
+    expect(mocks.recordUsageMetric).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId,
+        metricKey: "mcp.calls",
+        sourceId: "tenant.subscription.update",
+        dimensions: {
+          toolName: "tenant.subscription.update",
+          readOnly: false,
+        },
+      }),
+    );
+  });
+
   it("blocks unavailable tools before recording usage", async () => {
     mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
 

@@ -159,6 +159,26 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
     };
   }
 
+  if (name === "tenant.subscription.update") {
+    const overview = await getBillingOverview(context.tenantId);
+
+    return {
+      content: [{ type: "text", text: "Subscription change requires checkout confirmation." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        action: "requires_confirmation",
+        subscription: {
+          planName: overview.currentPlan.name,
+          planKey: overview.currentPlan.planKey,
+          status: overview.snapshot.status,
+          periodEnd: overview.periodEnd,
+          billingPortalAvailable: overview.billingPortalAvailable,
+        },
+        input,
+      },
+    };
+  }
+
   return {
     content: [
       { type: "text", text: `Tool ${name} is registered but requires its upstream handler.` },

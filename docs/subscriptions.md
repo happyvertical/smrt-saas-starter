@@ -41,6 +41,10 @@ questions through the shared MCP executor:
 - `tenant.prompt.preview`
 - `tenant.subscription.update`
 
+`tenant.subscription.update` is intentionally non-mutating in the starter. It
+returns `requires_confirmation`; actual plan changes continue through the
+billing checkout or customer portal.
+
 Threshold enforcement modes:
 
 - `observe`: show usage only

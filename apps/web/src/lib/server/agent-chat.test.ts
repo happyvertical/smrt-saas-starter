@@ -40,6 +40,12 @@ const chatMocks = vi.hoisted(() => {
       readOnly: true,
       requiredFeature: "prompts.tenant_overrides",
     },
+    {
+      name: "tenant.subscription.update",
+      description: "Subscription update",
+      readOnly: false,
+      requiredFeature: "mcp.write_tools",
+    },
   ];
 
   return {
@@ -158,7 +164,9 @@ describe("tenant agent chat", () => {
     expect(chatMocks.listRuntimeTools).toHaveBeenCalledWith(["chat.agent", "mcp.read_tools"]);
     expect(chatMocks.createAgentSession).toHaveBeenCalledWith({
       tenantId,
-      agentId: `smrt-saas-starter-agent:${tenantId}`,
+      agentId: expect.stringMatching(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      ),
       participantProfileId: "00000000-0000-4000-8000-000000000011",
       allowedTools: ["tenant.usage.summary", "tenant.subscription.summary"],
       systemPrompt: "Tenant assistant prompt",
@@ -197,6 +205,43 @@ describe("tenant agent chat", () => {
       content:
         "That MCP tool is not available on the current plan. Available tools: tenant.usage.summary, tenant.subscription.summary.",
     });
+  });
+
+  it("routes plan change requests through a confirmation-only subscription tool", async () => {
+    chatMocks.listRuntimeTools.mockReturnValue([
+      chatMocks.runtimeTools[0],
+      chatMocks.runtimeTools[1],
+      chatMocks.runtimeTools[3],
+    ]);
+    chatMocks.executeRuntimeToolForTenant.mockResolvedValueOnce({
+      tool: chatMocks.runtimeTools[3],
+      response: {
+        content: [{ type: "text", text: "Subscription change requires checkout confirmation." }],
+        structuredContent: {
+          action: "requires_confirmation",
+          subscription: {
+            planName: "Growth",
+          },
+        },
+      },
+    });
+
+    const result = await sendTenantChatMessage(tenantId, "upgrade my plan");
+
+    expect(result.selectedTool).toBe("tenant.subscription.update");
+    expect(result.messages.at(-1)).toMatchObject({
+      role: "assistant",
+      content:
+        "Plan changes require billing confirmation. Current plan: Growth. Open Billing to choose a plan or continue in the customer portal.",
+    });
+    expect(chatMocks.executeRuntimeToolForTenant).toHaveBeenCalledWith(
+      "tenant.subscription.update",
+      {
+        message: "upgrade my plan",
+        requestedChange: "upgrade my plan",
+      },
+      tenantId,
+    );
   });
 
   it("blocks tenants without the chat agent feature", async () => {
