@@ -1,4 +1,5 @@
 import { type Actions, fail } from "@sveltejs/kit";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
 import {
   getTenantCustomizationOverview,
   saveTenantLanguageOverride,
@@ -11,9 +12,10 @@ const promptFeatureKey = "prompts.tenant_overrides";
 const languageFeatureKey = "languages.ai_translate";
 
 export const load: PageServerLoad = async ({ locals }) => {
+  const membership = await requirePermission(locals, starterPermissions.settingsRead);
   const [billing, customization] = await Promise.all([
-    getBillingOverview(locals.tenantId),
-    getTenantCustomizationOverview(locals.tenantId),
+    getBillingOverview(membership.tenantId),
+    getTenantCustomizationOverview(membership.tenantId),
   ]);
   const features = new Set(billing.snapshot.featureKeys);
 
@@ -27,7 +29,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   prompt: async ({ locals, request }) => {
-    const billing = await getBillingOverview(locals.tenantId);
+    const membership = await requirePermission(locals, starterPermissions.settingsManage);
+    const billing = await getBillingOverview(membership.tenantId);
     if (!billing.snapshot.featureKeys.includes(promptFeatureKey)) {
       return fail(403, {
         kind: "prompt",
@@ -44,7 +47,7 @@ export const actions: Actions = {
 
     let result: Awaited<ReturnType<typeof saveTenantPromptOverride>>;
     try {
-      result = await saveTenantPromptOverride(locals.tenantId, { key, template });
+      result = await saveTenantPromptOverride(membership.tenantId, { key, template });
     } catch (error) {
       if (isUnknownStarterExperienceError(error)) {
         return fail(400, { kind: "prompt", message: error.message });
@@ -54,7 +57,8 @@ export const actions: Actions = {
     return { kind: "prompt", message: messageForResult("Prompt override", result.action) };
   },
   language: async ({ locals, request }) => {
-    const billing = await getBillingOverview(locals.tenantId);
+    const membership = await requirePermission(locals, starterPermissions.settingsManage);
+    const billing = await getBillingOverview(membership.tenantId);
     if (!billing.snapshot.featureKeys.includes(languageFeatureKey)) {
       return fail(403, {
         kind: "language",
@@ -72,7 +76,7 @@ export const actions: Actions = {
 
     let result: Awaited<ReturnType<typeof saveTenantLanguageOverride>>;
     try {
-      result = await saveTenantLanguageOverride(locals.tenantId, {
+      result = await saveTenantLanguageOverride(membership.tenantId, {
         key,
         locale,
         template,

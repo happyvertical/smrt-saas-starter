@@ -1,20 +1,18 @@
 import { error, isHttpError, json, type RequestHandler } from "@sveltejs/kit";
-import {
-  getTenantChatState,
-  resolveChatTenantId,
-  sendTenantChatMessage,
-  TenantChatError,
-} from "$lib/server/agent-chat";
+import { getTenantChatState, sendTenantChatMessage, TenantChatError } from "$lib/server/agent-chat";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const tenantId = resolveChatTenantId(locals.tenantId);
+  const membership = await requirePermission(locals, starterPermissions.chatUse);
+  const tenantId = membership.tenantId;
   const state = await getTenantChatState(tenantId).catch(mapTenantChatError);
   return json(state);
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
   const body = await readJsonObject(request);
-  const tenantId = resolveChatTenantId(locals.tenantId);
+  const membership = await requirePermission(locals, starterPermissions.chatUse);
+  const tenantId = membership.tenantId;
   const message = typeof body.message === "string" ? body.message : "";
 
   const result = await sendTenantChatMessage(tenantId, message).catch(mapTenantChatError);

@@ -46,6 +46,17 @@ demo prompt/language overrides.
 services first with `pnpm services:up`; CI workflows provide an isolated
 Postgres service.
 
+## Local Auth
+
+The web app uses `smrt-users` sessions when a `sid` cookie is present. In
+non-production environments, requests without a session fall back to the seeded
+demo owner so the reference app remains explorable after `pnpm db:seed`.
+
+Set `SMRT_STARTER_DEV_AUTH=false` to disable that fallback and require a real
+session identity locally. Tenant switching writes the
+`smrt_starter_tenant_id` cookie and updates the SMRT session tenant when a
+session exists.
+
 The seeded demo subscription does not include a Stripe customer id. The billing
 portal action appears only after checkout/webhook handling stores a real Stripe
 customer for the tenant.

@@ -1,11 +1,17 @@
-import { getActiveTenantId, starterData } from "$lib/server/starter-data";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
+  const membership = await requirePermission(locals, starterPermissions.appAccess);
+
   return {
-    tenantId: getActiveTenantId(locals.tenantId),
-    tenantLabel: starterData.demoTenant.name,
-    userLabel: "Demo Owner",
+    tenantId: membership.tenantId,
+    tenantLabel: membership.tenantLabel,
+    userLabel: membership.userEmail,
+    roleLabel: membership.roleLabel,
+    currentRole: membership.roleSlug,
+    permissions: membership.permissions,
+    tenants: membership.availableTenants,
     activePath: url.pathname,
   };
 };

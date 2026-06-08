@@ -1,6 +1,6 @@
 import { error, isHttpError, json, type RequestHandler } from "@sveltejs/kit";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
 import { executeRuntimeToolForTenant, RuntimeToolExecutionError } from "$lib/server/mcp";
-import { getActiveTenantId } from "$lib/server/starter-data";
 
 export const POST: RequestHandler = async ({ locals, request }) => {
   const body = await readJsonObject(request);
@@ -8,7 +8,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     throw error(400, "Missing tool name");
   }
 
-  const tenantId = getActiveTenantId(locals.tenantId);
+  const membership = await requirePermission(locals, starterPermissions.mcpCall);
+  const tenantId = membership.tenantId;
   const execution = await executeRuntimeToolForTenant(body.name.trim(), body.input, tenantId).catch(
     (executionError: unknown) => {
       if (executionError instanceof RuntimeToolExecutionError) {

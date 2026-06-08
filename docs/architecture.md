@@ -9,6 +9,17 @@
 - `apps/mobile`: KMP shared code with Android and iOS shells.
 - Postgres is the runtime database. SQLite is reserved for isolated package tests.
 
+## Tenancy And Access
+
+Tenant context is resolved from the `x-tenant-id` header, the local
+`smrt_starter_tenant_id` switch cookie, or a tenant subdomain. The app then
+resolves active `smrt-users` membership rows and maps the member role to
+starter permissions for app, billing, usage, settings, chat, and MCP routes.
+
+The non-production demo-owner fallback is intentionally local developer
+scaffolding. Production requests require a real SMRT session identity and an
+active membership for the selected tenant.
+
 ## SMRT Surface
 
 The starter consumes SMRT packages for tenancy, users, features, prompts, languages, secrets, jobs, chat, runtime MCP, commerce, ledgers, analytics, assets, content, messages, projects, sites, tags, and Svelte UI.

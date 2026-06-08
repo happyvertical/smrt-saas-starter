@@ -14,7 +14,12 @@ const routeMocks = vi.hoisted(() => {
   return {
     RuntimeToolExecutionError,
     executeRuntimeToolForTenant: vi.fn(),
-    getActiveTenantId: vi.fn((tenantId: string | null | undefined) => tenantId ?? "demo-tenant"),
+    requirePermission: vi.fn(async (locals: { tenantId?: string | null }) => ({
+      tenantId: locals.tenantId ?? "demo-tenant",
+    })),
+    starterPermissions: {
+      mcpCall: "tenant.mcp.call",
+    },
   };
 });
 
@@ -23,8 +28,9 @@ vi.mock("$lib/server/mcp", () => ({
   executeRuntimeToolForTenant: routeMocks.executeRuntimeToolForTenant,
 }));
 
-vi.mock("$lib/server/starter-data", () => ({
-  getActiveTenantId: routeMocks.getActiveTenantId,
+vi.mock("$lib/server/authz", () => ({
+  requirePermission: routeMocks.requirePermission,
+  starterPermissions: routeMocks.starterPermissions,
 }));
 
 import { POST } from "./+server";
@@ -52,6 +58,7 @@ describe("/api/mcp/call", () => {
       },
     });
     expect(routeMocks.executeRuntimeToolForTenant).not.toHaveBeenCalled();
+    expect(routeMocks.requirePermission).not.toHaveBeenCalled();
   });
 
   it("rejects missing tool names from object bodies", async () => {
@@ -93,6 +100,10 @@ describe("/api/mcp/call", () => {
       "tenant.usage.summary",
       { message: "usage" },
       tenantId,
+    );
+    expect(routeMocks.requirePermission).toHaveBeenCalledWith(
+      { tenantId },
+      routeMocks.starterPermissions.mcpCall,
     );
   });
 });

@@ -6,6 +6,8 @@ export interface TenantResolution {
   tenantId: string | null;
 }
 
+export const TENANT_SWITCH_COOKIE = "smrt_starter_tenant_id";
+
 const rootLikeHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const reservedSubdomains = new Set(["www", "api", "app", "admin"]);
 
@@ -13,6 +15,11 @@ export async function resolveTenant(event: RequestEvent): Promise<TenantResoluti
   const headerTenant = event.request.headers.get("x-tenant-id");
   if (headerTenant) {
     return { tenantId: await resolveTenantKey(headerTenant) };
+  }
+
+  const cookieTenant = event.cookies.get(TENANT_SWITCH_COOKIE);
+  if (cookieTenant) {
+    return { tenantId: await resolveTenantKey(cookieTenant) };
   }
 
   const host = event.url.hostname.toLowerCase();

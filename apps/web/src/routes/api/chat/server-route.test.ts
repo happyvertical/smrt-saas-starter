@@ -14,16 +14,25 @@ const routeMocks = vi.hoisted(() => {
   return {
     TenantChatError,
     getTenantChatState: vi.fn(),
-    resolveChatTenantId: vi.fn((tenantId: string | null | undefined) => tenantId ?? "demo-tenant"),
+    requirePermission: vi.fn(async (locals: { tenantId?: string | null }) => ({
+      tenantId: locals.tenantId ?? "demo-tenant",
+    })),
     sendTenantChatMessage: vi.fn(),
+    starterPermissions: {
+      chatUse: "tenant.chat.use",
+    },
   };
 });
 
 vi.mock("$lib/server/agent-chat", () => ({
   TenantChatError: routeMocks.TenantChatError,
   getTenantChatState: routeMocks.getTenantChatState,
-  resolveChatTenantId: routeMocks.resolveChatTenantId,
   sendTenantChatMessage: routeMocks.sendTenantChatMessage,
+}));
+
+vi.mock("$lib/server/authz", () => ({
+  requirePermission: routeMocks.requirePermission,
+  starterPermissions: routeMocks.starterPermissions,
 }));
 
 import { GET, POST } from "./+server";
@@ -46,6 +55,10 @@ describe("/api/chat", () => {
         message: "Agent chat is not available",
       },
     });
+    expect(routeMocks.requirePermission).toHaveBeenCalledWith(
+      { tenantId },
+      routeMocks.starterPermissions.chatUse,
+    );
   });
 
   it("rejects invalid JSON bodies before sending chat messages", async () => {
@@ -64,6 +77,7 @@ describe("/api/chat", () => {
       },
     });
     expect(routeMocks.sendTenantChatMessage).not.toHaveBeenCalled();
+    expect(routeMocks.requirePermission).not.toHaveBeenCalled();
   });
 
   it("rejects non-object JSON bodies", async () => {

@@ -47,7 +47,10 @@ const requiredTables = [
   "secrets",
   "sites",
   "tags",
+  "memberships",
+  "roles",
   "tenants",
+  "users",
 ];
 
 const tenantScopedTables = ["_smrt_tenant_subscriptions", "_smrt_tenant_usage_metrics"];
@@ -126,6 +129,28 @@ try {
 
   if (tenantResult.rows.length !== 1) {
     throw new Error(`Seeded demo tenant ${demoTenant.id} was not found`);
+  }
+
+  const ownerMembershipResult = await db.query(
+    `
+      SELECT memberships.id AS membership_id, roles.slug AS role_slug, users.email AS user_email
+      FROM memberships
+      INNER JOIN roles ON roles.id = memberships.role_id
+      INNER JOIN users ON users.id = memberships.user_id
+      WHERE memberships.tenant_id = ?
+        AND users.email = ?
+        AND memberships.status = 'active'
+      LIMIT 1
+    `,
+    demoTenant.id,
+    demoTenant.ownerUser.email,
+  );
+  const ownerMembership = ownerMembershipResult.rows[0];
+  if (ownerMembership?.membership_id !== demoTenant.ownerMembership.id) {
+    throw new Error("Seeded demo owner membership was not found");
+  }
+  if (ownerMembership.role_slug !== "owner") {
+    throw new Error(`Seeded demo owner has unexpected role ${ownerMembership.role_slug}`);
   }
 
   const activePlansResult = await db.query(`
