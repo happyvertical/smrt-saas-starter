@@ -27,6 +27,10 @@ import {
 } from "$lib/server/mcp";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
+const windowStart = new Date("2026-06-01T00:00:00.000Z");
+const windowEnd = new Date("2026-07-01T00:00:00.000Z");
+const dailyWindowStart = new Date("2026-06-08T00:00:00.000Z");
+const dailyWindowEnd = new Date("2026-06-09T00:00:00.000Z");
 
 describe("tenant MCP runtime tools", () => {
   beforeEach(() => {
@@ -48,7 +52,12 @@ describe("tenant MCP runtime tools", () => {
   });
 
   it("executes available tools and records tenant-scoped MCP usage", async () => {
-    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+    mocks.getBillingOverview.mockResolvedValue(
+      overview(["mcp.read_tools"], {
+        metricKey: "mcp.calls",
+        allowed: true,
+      }),
+    );
 
     await expect(
       executeRuntimeToolForTenant("tenant.subscription.summary", { message: "plan?" }, tenantId),
@@ -75,6 +84,7 @@ describe("tenant MCP runtime tools", () => {
       quantity: 1,
       source: "smrt-app-mcp",
       sourceId: "tenant.subscription.summary",
+      usageWindow: { start: windowStart, end: windowEnd },
       dimensions: {
         toolName: "tenant.subscription.summary",
         readOnly: true,
@@ -123,6 +133,37 @@ describe("tenant MCP runtime tools", () => {
     );
   });
 
+  it("records MCP usage against the contained matching threshold window", async () => {
+    mocks.getBillingOverview.mockResolvedValue(
+      overview(
+        ["mcp.read_tools"],
+        [
+          {
+            metricKey: "mcp.calls",
+            allowed: true,
+            windowStart,
+            windowEnd,
+          },
+          {
+            metricKey: "mcp.calls",
+            allowed: true,
+            windowStart: dailyWindowStart,
+            windowEnd: dailyWindowEnd,
+          },
+        ],
+      ),
+    );
+
+    await executeRuntimeToolForTenant("tenant.usage.summary", { message: "usage?" }, tenantId);
+
+    expect(mocks.recordTenantUsageSignal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metricKey: "mcp.calls",
+        usageWindow: { start: dailyWindowStart, end: dailyWindowEnd },
+      }),
+    );
+  });
+
   it("blocks unavailable tools before recording usage", async () => {
     mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
 
@@ -156,8 +197,16 @@ describe("tenant MCP runtime tools", () => {
 
 function overview(
   featureKeys: string[],
-  blockedThreshold?: { metricKey: string; allowed: boolean },
+  blockedThreshold?:
+    | { metricKey: string; allowed: boolean; windowStart?: Date; windowEnd?: Date }
+    | Array<{ metricKey: string; allowed: boolean; windowStart?: Date; windowEnd?: Date }>,
 ) {
+  const thresholdInputs = blockedThreshold
+    ? Array.isArray(blockedThreshold)
+      ? blockedThreshold
+      : [blockedThreshold]
+    : [];
+
   return {
     tenantId,
     currentPlan: {
@@ -170,22 +219,26 @@ function overview(
     snapshot: {
       status: "active",
       featureKeys,
-      thresholdEvaluations: blockedThreshold
-        ? [
-            {
-              threshold: {
-                metricKey: blockedThreshold.metricKey,
-                label: "MCP calls",
-                enforcement: "block",
-                limit: 10,
-              },
-              usage: { quantity: 10 },
-              remaining: 0,
-              state: "blocked",
-              allowed: blockedThreshold.allowed,
-            },
-          ]
-        : [],
+      thresholdEvaluations: thresholdInputs.map((threshold) => ({
+        threshold: {
+          metricKey: threshold.metricKey,
+          label: "MCP calls",
+          enforcement: "block",
+          limit: 10,
+          window: "month",
+        },
+        usage: {
+          tenantId,
+          metricKey: threshold.metricKey,
+          quantity: threshold.allowed ? 9 : 10,
+          windowStart: threshold.windowStart ?? windowStart,
+          windowEnd: threshold.windowEnd ?? windowEnd,
+        },
+        remaining: threshold.allowed ? 1 : 0,
+        ratio: threshold.allowed ? 0.9 : 1,
+        state: threshold.allowed ? "ok" : "blocked",
+        allowed: threshold.allowed,
+      })),
     },
   };
 }

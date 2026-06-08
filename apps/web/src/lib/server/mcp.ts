@@ -1,6 +1,10 @@
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import { getBillingOverview } from "$lib/server/subscriptions";
-import { assertMetricAllowed, TenantQuotaError } from "$lib/server/thresholds";
+import {
+  assertMetricAllowed,
+  getContainedThresholdUsageWindow,
+  TenantQuotaError,
+} from "$lib/server/thresholds";
 import { getUsageSummaries, recordTenantUsageSignal } from "$lib/server/usage";
 
 export interface RuntimeTool {
@@ -73,15 +77,16 @@ export async function executeRuntimeToolForTenant(
     throw new RuntimeToolExecutionError(403, "Tool is not available for the current tenant");
   }
 
-  let mcpThreshold: ReturnType<typeof assertMetricAllowed> = null;
+  let mcpThresholds: ReturnType<typeof assertMetricAllowed> = [];
   try {
-    mcpThreshold = assertMetricAllowed(overview.snapshot.thresholdEvaluations, "mcp.calls");
+    mcpThresholds = assertMetricAllowed(overview.snapshot.thresholdEvaluations, "mcp.calls");
   } catch (error) {
     if (!(error instanceof TenantQuotaError)) {
       throw error;
     }
     throw new RuntimeToolExecutionError(429, "Tenant exceeded the MCP calls threshold");
   }
+  const mcpUsageWindow = getContainedThresholdUsageWindow(mcpThresholds);
 
   const response = await callRuntimeTool(name, input, { tenantId });
   await recordTenantUsageSignal({
@@ -90,7 +95,11 @@ export async function executeRuntimeToolForTenant(
     quantity: 1,
     source: "smrt-app-mcp",
     sourceId: name,
-    ...(mcpThreshold ? { window: mcpThreshold.threshold.window } : {}),
+    ...(mcpUsageWindow
+      ? {
+          usageWindow: mcpUsageWindow,
+        }
+      : {}),
     dimensions: {
       toolName: tool.name,
       readOnly: tool.readOnly,

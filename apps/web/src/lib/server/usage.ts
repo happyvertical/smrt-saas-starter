@@ -6,6 +6,7 @@ import {
   type ThresholdWindow,
   type UsageMetricRecord,
   type UsageSummary,
+  type UsageWindow,
 } from "@happyvertical/smrt-subscriptions";
 import { getAppDatabase } from "$lib/server/db";
 import { getSmrtConfig } from "$lib/server/smrt";
@@ -22,6 +23,7 @@ export interface RecordTenantUsageSignalOptions {
   sourceId?: string;
   dimensions?: Record<string, unknown>;
   window?: ThresholdWindow;
+  usageWindow?: UsageWindow;
 }
 
 export async function getUsageSummaries(tenantId?: string | null): Promise<UsageSummary[]> {
@@ -124,7 +126,7 @@ export async function recordUsageMetric(options: RecordUsageOptions): Promise<Us
 export async function recordTenantUsageSignal(
   options: RecordTenantUsageSignalOptions,
 ): Promise<UsageMetricRecord> {
-  const window = getUsageWindow(options.window ?? "month");
+  const window = options.usageWindow ?? getUsageWindow(options.window ?? "month");
   return await recordUsageMetric({
     tenantId: options.tenantId,
     metricKey: options.metricKey,

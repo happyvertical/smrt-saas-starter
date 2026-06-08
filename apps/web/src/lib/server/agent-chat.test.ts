@@ -103,6 +103,10 @@ vi.mock("$lib/server/tenant-context", () => ({
 import { getTenantChatState, sendTenantChatMessage, TenantChatError } from "$lib/server/agent-chat";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
+const windowStart = new Date("2026-06-01T00:00:00.000Z");
+const windowEnd = new Date("2026-07-01T00:00:00.000Z");
+const dailyWindowStart = new Date("2026-06-08T00:00:00.000Z");
+const dailyWindowEnd = new Date("2026-06-09T00:00:00.000Z");
 
 describe("tenant agent chat", () => {
   beforeEach(() => {
@@ -111,7 +115,7 @@ describe("tenant agent chat", () => {
     chatMocks.getBillingOverview.mockResolvedValue({
       snapshot: {
         featureKeys: ["chat.agent", "mcp.read_tools"],
-        thresholdEvaluations: [],
+        thresholdEvaluations: [chatMessagesThreshold({ allowed: true })],
       },
     });
     chatMocks.listRuntimeTools.mockReturnValue(chatMocks.runtimeTools.slice(0, 2));
@@ -201,10 +205,36 @@ describe("tenant agent chat", () => {
       metricKey: "chat.messages",
       source: "smrt-chat",
       sourceId: "tenant.chat.message",
+      usageWindow: { start: windowStart, end: windowEnd },
       dimensions: {
         messageLength: "show usage this month".length,
       },
     });
+  });
+
+  it("records chat usage against the contained matching threshold window", async () => {
+    chatMocks.getBillingOverview.mockResolvedValue({
+      snapshot: {
+        featureKeys: ["chat.agent", "mcp.read_tools"],
+        thresholdEvaluations: [
+          chatMessagesThreshold({ allowed: true }),
+          chatMessagesThreshold({
+            allowed: true,
+            windowStart: dailyWindowStart,
+            windowEnd: dailyWindowEnd,
+          }),
+        ],
+      },
+    });
+
+    await sendTenantChatMessage(tenantId, "hello");
+
+    expect(chatMocks.recordTenantUsageSignal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metricKey: "chat.messages",
+        usageWindow: { start: dailyWindowStart, end: dailyWindowEnd },
+      }),
+    );
   });
 
   it("returns an assistant message when the selected MCP tool is denied", async () => {
@@ -268,34 +298,14 @@ describe("tenant agent chat", () => {
     });
 
     await expect(getTenantChatState(tenantId)).rejects.toBeInstanceOf(TenantChatError);
+    expect(chatMocks.createChatService).not.toHaveBeenCalled();
   });
 
   it("blocks chat sends when the tenant chat threshold denies the request", async () => {
     chatMocks.getBillingOverview.mockResolvedValueOnce({
       snapshot: {
         featureKeys: ["chat.agent", "mcp.read_tools"],
-        thresholdEvaluations: [
-          {
-            threshold: {
-              metricKey: "chat.messages",
-              limit: 1000,
-              window: "month",
-              enforcement: "block",
-              label: "Chat messages",
-            },
-            usage: {
-              tenantId,
-              metricKey: "chat.messages",
-              quantity: 1000,
-              windowStart: new Date("2026-06-01T00:00:00.000Z"),
-              windowEnd: new Date("2026-07-01T00:00:00.000Z"),
-            },
-            ratio: 1,
-            remaining: 0,
-            state: "blocked",
-            allowed: false,
-          },
-        ],
+        thresholdEvaluations: [chatMessagesThreshold({ allowed: false })],
       },
     });
 
@@ -304,6 +314,39 @@ describe("tenant agent chat", () => {
       message: "Tenant exceeded the chat messages threshold",
     });
     expect(chatMocks.sendAgentMessage).not.toHaveBeenCalled();
+    expect(chatMocks.createChatService).not.toHaveBeenCalled();
+    expect(chatMocks.createAgentSession).not.toHaveBeenCalled();
     expect(chatMocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 });
+
+function chatMessagesThreshold({
+  allowed,
+  windowStart: start = windowStart,
+  windowEnd: end = windowEnd,
+}: {
+  allowed: boolean;
+  windowStart?: Date;
+  windowEnd?: Date;
+}) {
+  return {
+    threshold: {
+      metricKey: "chat.messages",
+      limit: 1000,
+      window: "month",
+      enforcement: "block",
+      label: "Chat messages",
+    },
+    usage: {
+      tenantId,
+      metricKey: "chat.messages",
+      quantity: allowed ? 999 : 1000,
+      windowStart: start,
+      windowEnd: end,
+    },
+    ratio: allowed ? 0.999 : 1,
+    remaining: allowed ? 1 : 0,
+    state: allowed ? "ok" : "blocked",
+    allowed,
+  };
+}
