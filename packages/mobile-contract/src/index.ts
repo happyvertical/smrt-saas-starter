@@ -88,4 +88,34 @@ export interface MobileSessionBootstrap {
   dashboard: MobileDashboardPayload;
 }
 
-export const mobileContractVersion = "2026-06-08.v2";
+export type MobileDeviceCaptureSurface = "camera" | "microphone";
+
+export type MobileDevicePermissionStatus = "granted" | "denied" | "not_determined" | "unavailable";
+
+export interface MobileDevicePermissionState {
+  status: MobileDevicePermissionStatus;
+  canRequest: boolean;
+  reason?: string;
+}
+
+export type MobileDeviceInputKind =
+  | "native_camera"
+  | "native_microphone"
+  | "native_picker"
+  | "unavailable";
+
+export interface MobileDeviceCapability {
+  surface: MobileDeviceCaptureSurface;
+  label: string;
+  supported: boolean;
+  permission: MobileDevicePermissionState;
+  preferredInput: MobileDeviceInputKind;
+}
+
+export interface MobileDeviceCapabilities {
+  camera: MobileDeviceCapability;
+  microphone: MobileDeviceCapability;
+  checkedAt?: string;
+}
+
+export const mobileContractVersion = "2026-06-08.v3";

@@ -30,6 +30,10 @@ class StarterClient(private val baseUrl: String = "http://localhost:5173") {
   fun bearerHeader(accessToken: String): Pair<String, String> =
     "Authorization" to "Bearer $accessToken"
 
+  fun deviceCapabilities(
+    adapter: DeviceCapabilityAdapter = NoopDeviceCapabilityAdapter,
+  ): DeviceCapabilityReport = adapter.currentCapabilities()
+
   fun demoTenant(): TenantSummary = TenantSummary(
     id = "demo",
     name = "Demo Tenant",

@@ -6,6 +6,7 @@ This follows the Amaru mobile strategy:
 - Android has a minimal native shell; Jetpack Compose is the target UI layer as screens fill in.
 - iOS uses SwiftUI.
 - The mobile client consumes generated DTOs from `packages/mobile-contract`, not raw SMRT manifests at runtime.
+- Camera and microphone support follows Amaru's native adapter strategy: KMP defines the shared capability model, Android checks native hardware and permissions, and iOS checks AVFoundation privacy state.
 
 Auth uses `/api/mobile/auth/*` on the web app:
 
@@ -13,5 +14,11 @@ Auth uses `/api/mobile/auth/*` on the web app:
 - `POST /api/mobile/auth/start` returns the authorization URL, state, and PKCE verifier.
 - `POST /api/mobile/auth/complete` exchanges the code and returns a `smrt-users` bearer session.
 - `GET /api/mobile/session` bootstraps tenant, plan, usage threshold, and feature state from that bearer token.
+
+## Device Interfaces
+
+The shared layer defines `DeviceCapabilityAdapter` plus camera and microphone capability DTOs. Feature modules should consume that interface rather than platform-specific APIs directly.
+
+Android declares `CAMERA` and `RECORD_AUDIO` while keeping camera and microphone hardware optional for broad installability. It exposes `AndroidDeviceCapabilityAdapter`. iOS declares `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` and exposes `DeviceCapabilityBridge` from the SwiftUI shell.
 
 The default CI validation is a shell-level check so the repo can validate on machines without Android SDK or Xcode.

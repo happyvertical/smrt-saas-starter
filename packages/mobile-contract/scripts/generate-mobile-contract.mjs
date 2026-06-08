@@ -13,7 +13,7 @@ await writeFile(
   kotlinOut,
   `package com.happyvertical.starter
 
-const val MobileContractVersion = "2026-06-08.v2"
+const val MobileContractVersion = "2026-06-08.v3"
 
 data class MobileTenantSummary(
   val id: String,
@@ -102,6 +102,26 @@ data class MobileSessionBootstrap(
   val tenants: List<MobileTenantOption>,
   val dashboard: MobileDashboardPayload,
 )
+
+data class MobileDevicePermissionState(
+  val status: String,
+  val canRequest: Boolean,
+  val reason: String? = null,
+)
+
+data class MobileDeviceCapability(
+  val surface: String,
+  val label: String,
+  val supported: Boolean,
+  val permission: MobileDevicePermissionState,
+  val preferredInput: String,
+)
+
+data class MobileDeviceCapabilities(
+  val camera: MobileDeviceCapability,
+  val microphone: MobileDeviceCapability,
+  val checkedAt: String? = null,
+)
 `,
 );
 
@@ -109,7 +129,7 @@ await writeFile(
   jsonOut,
   JSON.stringify(
     {
-      version: "2026-06-08.v2",
+      version: "2026-06-08.v3",
       generatedAt: new Date(0).toISOString(),
       models: [
         "MobileTenantSummary",
@@ -123,6 +143,9 @@ await writeFile(
         "MobileUserSummary",
         "MobileAuthSession",
         "MobileSessionBootstrap",
+        "MobileDevicePermissionState",
+        "MobileDeviceCapability",
+        "MobileDeviceCapabilities",
       ],
     },
     null,

@@ -12,26 +12,29 @@ class MainActivity : Activity() {
 
     val client = StarterClient()
     val tenant = client.demoTenant()
+    val capabilities = client.deviceCapabilities(AndroidDeviceCapabilityAdapter(this))
     val layout = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
       setPadding(32, 32, 32, 32)
     }
-    layout.addView(TextView(this).apply {
-      text = "SMRT Starter"
-      textSize = 24f
-    })
-    layout.addView(TextView(this).apply {
-      text = "OIDC PKCE login starts at ${client.authEndpoints.start}"
-      textSize = 16f
-    })
-    layout.addView(TextView(this).apply {
-      text = "Session bootstrap uses ${client.authEndpoints.session}"
-      textSize = 16f
-    })
-    layout.addView(TextView(this).apply {
-      text = "Demo tenant: ${tenant.name} (${tenant.planName})"
-      textSize = 16f
-    })
+    layout.addLine("SMRT Starter", 24f)
+    layout.addLine("OIDC PKCE login starts at ${client.authEndpoints.start}")
+    layout.addLine("Session bootstrap uses ${client.authEndpoints.session}")
+    layout.addLine("Demo tenant: ${tenant.name} (${tenant.planName})")
+    layout.addLine("Device interfaces", 20f)
+    capabilities.summaryLines().forEach { line ->
+      layout.addLine(line)
+    }
     setContentView(layout)
+  }
+
+  private fun LinearLayout.addLine(
+    value: String,
+    size: Float = 16f,
+  ) {
+    addView(TextView(this@MainActivity).apply {
+      text = value
+      textSize = size
+    })
   }
 }
