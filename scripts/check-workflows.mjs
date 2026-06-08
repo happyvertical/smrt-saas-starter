@@ -54,6 +54,7 @@ for (const phrase of [
   "uses: gradle/actions/wrapper-validation@v6",
   "uses: actions/setup-java@v5",
   'java-version: "21"',
+  "uses: android-actions/setup-android@v4",
   'sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"',
   "pnpm mobile:validate:android",
   "mobile-ios:",
