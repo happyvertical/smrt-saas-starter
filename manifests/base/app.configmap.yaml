@@ -11,3 +11,19 @@ data:
   WORKER_RUN_AGENT_QUEUE: "true"
   WORKER_RUN_SCHEDULER: "true"
   WORKER_ENSURE_MAINTENANCE_SCHEDULES: "true"
+  # Tenant context can be selected with the `x-tenant-id` request header. That
+  # header is unauthenticated client input (it sets the ambient tenant before
+  # any session/membership check), so it is ignored unless this is "true".
+  # Only enable behind an authenticating gateway/BFF that injects the header
+  # after its own auth; browser flows use the membership-gated switch cookie or
+  # the tenant subdomain instead.
+  SMRT_STARTER_TRUST_TENANT_HEADER: "false"
+  # Comma/space-separated allow list of registered mobile auth redirect URIs.
+  # When non-empty, mobile auth start/complete reject any redirect URI not in
+  # the list. Leave empty to allow any non-dangerous scheme (https, native
+  # loopback http, or private-use app schemes). An entry ending in "/" matches
+  # as a path prefix so one origin can cover its callback sub-paths.
+  MOBILE_AUTH_ALLOWED_REDIRECT_URIS: ""
+  # Same redirect-URI allow list, scoped to the built-in HappyVertical IDP
+  # provider. Merged with MOBILE_AUTH_ALLOWED_REDIRECT_URIS at request time.
+  MOBILE_AUTH_HAPPYVERTICAL_REDIRECT_URIS: ""
