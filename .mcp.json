@@ -5,7 +5,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/smrt-dev-mcp@0.27.4"
+        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/smrt-dev-mcp@0.27.11"
       ]
     },
     "happyvertical-sdk-mcp": {
@@ -13,7 +13,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/sdk-mcp@0.74.3"
+        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/sdk-mcp@0.74.4"
       ]
     },
     "playwright": {

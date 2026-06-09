@@ -1,24 +1,65 @@
 import {
   type CheckoutSessionRequest,
   type CustomerPortalRequest,
+  createSdkStripeBillingProvider,
   requireStripeBillingProvider,
   type StripeBillingProvider,
 } from "@happyvertical/smrt-saas-objects";
 
 let provider: StripeBillingProvider | null = null;
+let providerPromise: Promise<StripeBillingProvider | null> | null = null;
 
-export function setStripeBillingProvider(nextProvider: StripeBillingProvider): void {
+export function setStripeBillingProvider(nextProvider: StripeBillingProvider | null): void {
   provider = nextProvider;
+  providerPromise = null;
+}
+
+export function isStripeBillingConfigured(): boolean {
+  return Boolean(provider || process.env.STRIPE_SECRET_KEY?.trim());
 }
 
 export async function createCheckoutSession(request: CheckoutSessionRequest) {
-  return await requireStripeBillingProvider(provider).createCheckoutSession(request);
+  return await (await getStripeBillingProvider()).createCheckoutSession(request);
 }
 
 export async function createCustomerPortalSession(request: CustomerPortalRequest) {
-  return await requireStripeBillingProvider(provider).createCustomerPortalSession(request);
+  return await (await getStripeBillingProvider()).createCustomerPortalSession(request);
 }
 
 export async function verifyBillingWebhook(payload: string, signature: string) {
-  return await requireStripeBillingProvider(provider).verifyWebhook(payload, signature);
+  return await (await getStripeBillingProvider()).verifyWebhook(payload, signature);
+}
+
+async function getStripeBillingProvider(): Promise<StripeBillingProvider> {
+  if (provider) {
+    return provider;
+  }
+
+  providerPromise ??= createProviderFromEnvironment();
+  provider = await providerPromise;
+
+  return requireStripeBillingProvider(provider);
+}
+
+async function createProviderFromEnvironment(): Promise<StripeBillingProvider | null> {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secretKey) {
+    return null;
+  }
+
+  return createSdkStripeBillingProvider({
+    secretKey,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || undefined,
+    webhookTolerance: readWebhookTolerance(),
+  });
+}
+
+function readWebhookTolerance(): number | undefined {
+  const value = process.env.STRIPE_WEBHOOK_TOLERANCE;
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

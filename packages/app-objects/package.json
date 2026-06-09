@@ -6,6 +6,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -22,14 +25,13 @@
   },
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
-    "@happyvertical/logger": "catalog:",
-    "@happyvertical/smrt-commerce": "catalog:",
-    "@happyvertical/smrt-core": "catalog:",
-    "@happyvertical/smrt-features": "catalog:",
-    "@happyvertical/smrt-tenancy": "catalog:",
-    "@happyvertical/smrt-types": "catalog:"
+    "@happyvertical/logger": "catalog:"
+  },
+  "peerDependencies": {
+    "@happyvertical/smrt-core": "0.27.12"
   },
   "devDependencies": {
+    "@happyvertical/smrt-core": "catalog:",
     "typescript": "^5.9.3",
     "vitest": "^4.1.5"
   }

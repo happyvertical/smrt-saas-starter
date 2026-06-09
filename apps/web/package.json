@@ -4,6 +4,15 @@
   "private": true,
   "description": "SvelteKit web app for the SMRT SaaS starter.",
   "type": "module",
+  "files": [
+    ".smrt/",
+    "build/",
+    "scripts/smrt-db-migrate.mjs",
+    "scripts/smrt-db-seed.mjs",
+    "scripts/smrt-db-smoke.mjs",
+    "smrt-packages.mjs",
+    "smrt.config.mjs"
+  ],
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -15,6 +24,8 @@
     "dev": "vite dev --host 0.0.0.0",
     "build": "vite build",
     "db:migrate": "node scripts/smrt-db-migrate.mjs",
+    "db:seed": "node scripts/smrt-db-seed.mjs",
+    "db:smoke": "node scripts/smrt-db-smoke.mjs",
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "biome lint src",
@@ -58,6 +69,7 @@
     "@happyvertical/smrt-scanner": "catalog:",
     "@happyvertical/smrt-secrets": "catalog:",
     "@happyvertical/smrt-sites": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-svelte": "catalog:",
     "@happyvertical/smrt-tags": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:",

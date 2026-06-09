@@ -1,7 +1,9 @@
 import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
+const digestPattern = /digest:\s+sha256:[a-f0-9]{64}/g;
 const required = [
   "manifests/base/kustomization.yaml",
   "manifests/base/web.deployment.yaml",
@@ -25,6 +27,16 @@ for (const env of ["dev", "staging", "production"]) {
   if (!text.includes("images:")) {
     throw new Error(`${env} overlay must pin deploy images`);
   }
+  if (!text.includes("ghcr.io/happyvertical/smrt-saas-starter-web")) {
+    throw new Error(`${env} overlay must include the web image`);
+  }
+  if (!text.includes("ghcr.io/happyvertical/smrt-saas-starter-worker")) {
+    throw new Error(`${env} overlay must include the worker image`);
+  }
+  const digestPins = [...text.matchAll(digestPattern)];
+  if (digestPins.length < 2) {
+    throw new Error(`${env} overlay must pin both deploy images by digest`);
+  }
 }
 
-console.log("Kubernetes manifests include base and environment overlays.");
+console.log("Kubernetes manifests include base overlays with digest-pinned images.");

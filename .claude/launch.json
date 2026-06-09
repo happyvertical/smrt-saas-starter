@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@happyvertical/smrt-saas-web",
+        "exec",
+        "vite",
+        "dev",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
+      "port": 5174,
+      "env": {
+        "DATABASE_URL": "postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas",
+        "SMRT_STARTER_DEV_AUTH": "true",
+        "PUBLIC_APP_NAME": "SMRT SaaS Starter"
+      }
+    }
+  ]
+}

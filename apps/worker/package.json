@@ -5,6 +5,9 @@
   "description": "Background worker for SMRT SaaS starter jobs.",
   "type": "module",
   "main": "./dist/index.js",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
@@ -19,6 +22,7 @@
     "@happyvertical/smrt-jobs": "catalog:",
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-core": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:"
   },
   "devDependencies": {

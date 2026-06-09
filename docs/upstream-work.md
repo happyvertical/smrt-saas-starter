@@ -1,12 +1,12 @@
 # Upstream Work
 
-Do not patch around these gaps locally. Implement them in isolated upstream worktrees and merge them before the first public starter release.
+Reusable starter functionality should continue to move upstream from isolated worktrees. Completed items are kept here so future starter work can see which package now owns each surface.
 
 ## SDK: Stripe In `@happyvertical/accounting`
 
-Current finding: the SDK has a typed Stripe provider stub under `@happyvertical/accounting`, while QuickBooks is implemented.
+Status: complete in `@happyvertical/accounting@0.74.4` via [happyvertical/sdk#1041](https://github.com/happyvertical/sdk/pull/1041).
 
-Required work:
+Covered surface:
 
 - customers: create, retrieve, list, sync
 - invoices: create, retrieve, list, send, void, sync
@@ -15,13 +15,6 @@ Required work:
 - customer portal sessions: create portal sessions
 - webhooks: verify signatures and parse events
 - subscription status retrieval: normalize Stripe subscription state for SMRT subscription rows
-
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/sdk
-git worktree add ../sdk-stripe-billing codex/sdk-stripe-billing
-```
 
 Validation:
 
@@ -33,36 +26,26 @@ pnpm build
 
 ## SMRT: Tenant Metering
 
-Required work:
+Status: initial tenant subscription metering is complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
 
-- persist tenant-aware signal metrics
+Covered surface:
+
+- persist tenant-aware usage metric records
 - expose public APIs for recording and summarizing metric windows
 - include `_smrt_ai_usage` in the same usage query surface
 - support threshold windows used by subscription plans
 
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/smrt
-git worktree add ../smrt-tenant-metering codex/smrt-tenant-metering
-```
-
 ## SMRT: Subscriptions
 
-Required work:
+Status: complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
+
+Covered surface:
 
 - add `@happyvertical/smrt-subscriptions`
 - models: subscription plan, plan feature, plan threshold, tenant subscription
-- services: entitlement resolver, threshold evaluator, billing provider adapter
-- Svelte components: plan picker, current plan summary, usage meters, admin threshold editor
+- services: entitlement resolver, threshold evaluator, usage meter
+- Svelte components: plan picker, current plan summary, usage thresholds
 - generated REST/CLI/MCP surfaces
-
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/smrt
-git worktree add ../smrt-subscriptions codex/smrt-subscriptions
-```
 
 ## SMRT Svelte: Right-Dock Chat Helpers
 

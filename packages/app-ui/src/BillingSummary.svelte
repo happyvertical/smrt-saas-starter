@@ -16,10 +16,18 @@
     status: string;
     periodEnd?: string | null;
     thresholds: Threshold[];
+    portalAvailable?: boolean;
     onportal?: () => void;
   }
 
-  const { planName, status, periodEnd = null, thresholds, onportal }: Props = $props();
+  const {
+    planName,
+    status,
+    periodEnd = null,
+    thresholds,
+    portalAvailable,
+    onportal,
+  }: Props = $props();
 </script>
 
 <section class="billing-summary">
@@ -29,7 +37,7 @@
       <h2>{planName}</h2>
       <span>{status}</span>
     </div>
-    {#if onportal}
+    {#if (portalAvailable ?? Boolean(onportal)) && onportal}
       <button type="button" onclick={onportal}>
         <ExternalLink size={16} />
         Manage

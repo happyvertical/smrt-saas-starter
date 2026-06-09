@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 const requiredSmrt = [
   "@happyvertical/smrt-core",
@@ -28,6 +29,7 @@ const requiredSmrt = [
   "@happyvertical/smrt-messages",
   "@happyvertical/smrt-projects",
   "@happyvertical/smrt-sites",
+  "@happyvertical/smrt-subscriptions",
   "@happyvertical/smrt-tags",
   "@happyvertical/smrt-svelte",
 ];
