@@ -88,9 +88,13 @@ export function createStripeBillingProvider(
         },
       });
 
+      if (!session.url) {
+        throw new Error("Stripe checkout session did not return a redirect URL.");
+      }
+
       return {
         id: session.externalId,
-        url: session.url ?? "",
+        url: session.url,
       };
     },
 

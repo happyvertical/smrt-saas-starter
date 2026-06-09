@@ -18,7 +18,7 @@ export const DELETE: RequestHandler = async ({ request }) => {
   return json({ authenticated: false });
 };
 
-function asHttpError(error: unknown): Error {
+function asHttpError(error: unknown): never {
   if (error instanceof MobileAuthError) {
     throw httpError(error.status, error.message);
   }

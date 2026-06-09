@@ -42,14 +42,14 @@ async function getStripeBillingProvider(): Promise<StripeBillingProvider> {
 }
 
 async function createProviderFromEnvironment(): Promise<StripeBillingProvider | null> {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
   if (!secretKey) {
     return null;
   }
 
   return createSdkStripeBillingProvider({
     secretKey,
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || undefined,
     webhookTolerance: readWebhookTolerance(),
   });
 }

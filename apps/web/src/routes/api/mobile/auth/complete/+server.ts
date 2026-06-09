@@ -35,7 +35,7 @@ async function readJsonObject(request: Request): Promise<MobileAuthCompleteReque
   }
 }
 
-function asHttpError(error: unknown): Error {
+function asHttpError(error: unknown): never {
   if (error instanceof MobileAuthError) {
     throw httpError(error.status, error.message);
   }

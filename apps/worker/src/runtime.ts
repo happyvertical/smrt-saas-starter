@@ -6,7 +6,6 @@ import {
 } from "@happyvertical/smrt-saas-objects";
 import "@happyvertical/smrt-subscriptions";
 import { enableTenancy } from "@happyvertical/smrt-tenancy";
-import "@happyvertical/smrt-saas-objects";
 
 let tenancyEnabled = false;
 

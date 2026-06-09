@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: smrt-saas-production
 resources:
   - ../../base
+# Digests below are all-zero placeholders. CI replaces them with the real
+# published image digests via `node scripts/update-manifest-digests.mjs
+# production <webDigest> <workerDigest>` before deploy. Do not `kubectl apply`
+# this overlay with the placeholder digest — the image pull will fail.
 images:
   - name: ghcr.io/happyvertical/smrt-saas-starter-web
     newTag: latest

@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     canManagePrompts: features.has(promptFeatureKey),
     canManageLanguages: features.has(languageFeatureKey),
     canManageMembers,
-    members: await listTenantMembers(membership.tenantId),
+    members: canManageMembers ? await listTenantMembers(membership.tenantId) : [],
   };
 };
 

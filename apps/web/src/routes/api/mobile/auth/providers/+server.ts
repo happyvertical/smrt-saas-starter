@@ -9,7 +9,7 @@ export const GET: RequestHandler = async () => {
   }
 };
 
-function asHttpError(error: unknown): Error {
+function asHttpError(error: unknown): never {
   if (error instanceof MobileAuthError) {
     throw httpError(error.status, error.message);
   }
