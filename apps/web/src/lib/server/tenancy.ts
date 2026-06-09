@@ -11,10 +11,24 @@ export const TENANT_SWITCH_COOKIE = "smrt_starter_tenant_id";
 const rootLikeHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const reservedSubdomains = new Set(["www", "api", "app", "admin"]);
 
+function isTrustedTenantHeaderEnabled(): boolean {
+  return process.env.SMRT_STARTER_TRUST_TENANT_HEADER === "true";
+}
+
 export async function resolveTenant(event: RequestEvent): Promise<TenantResolution> {
-  const headerTenant = event.request.headers.get("x-tenant-id");
-  if (headerTenant) {
-    return { tenantId: await resolveTenantKey(headerTenant) };
+  // The `x-tenant-id` header is unauthenticated client input that selects the
+  // ambient tenant context before any session/membership check runs. To fail
+  // safe it is ignored by default and only honored when an operator opts in
+  // (e.g. behind an authenticating gateway/BFF that injects it). Browser flows
+  // use the membership-gated switch cookie or the tenant subdomain instead.
+  // Either way, data access is still gated downstream by requirePermission /
+  // requireTenantMembership, which re-verify the authenticated user's
+  // membership for the resolved tenant.
+  if (isTrustedTenantHeaderEnabled()) {
+    const headerTenant = event.request.headers.get("x-tenant-id");
+    if (headerTenant) {
+      return { tenantId: await resolveTenantKey(headerTenant) };
+    }
   }
 
   const cookieTenant = event.cookies.get(TENANT_SWITCH_COOKIE);

@@ -110,6 +110,7 @@ export class MobileAuthError extends Error {
 
 interface MobileAuthProviderConfig extends MobileAuthProviderSummary {
   options: GetAuthOptions;
+  allowedRedirectUris: string[];
 }
 
 interface CompleteMobileAuthOptions {
@@ -130,7 +131,9 @@ const providerTypes = new Set<MobileAuthProviderType>([
 let mobileSessionService: Promise<SessionService> | null = null;
 
 export function listMobileAuthProviders(): MobileAuthProviderSummary[] {
-  return getMobileAuthProviders().map(({ options: _options, ...summary }) => summary);
+  return getMobileAuthProviders().map(
+    ({ options: _options, allowedRedirectUris: _allowedRedirectUris, ...summary }) => summary,
+  );
 }
 
 export async function startMobileAuth(
@@ -138,7 +141,7 @@ export async function startMobileAuth(
 ): Promise<MobileAuthStartResponse> {
   try {
     const provider = resolveProvider(input.providerId);
-    const redirectUri = normalizeRedirectUri(input.redirectUri);
+    const redirectUri = normalizeRedirectUri(input.redirectUri, provider);
     const auth = await createAuthClient(provider, redirectUri);
     const result = await auth.getAuthorizationUrl({
       redirectUri,
@@ -164,7 +167,7 @@ export async function completeMobileAuth(
   options: CompleteMobileAuthOptions,
 ): Promise<MobileAuthSession> {
   const provider = resolveProvider(options.request.providerId);
-  const redirectUri = normalizeRedirectUri(options.request.redirectUri);
+  const redirectUri = normalizeRedirectUri(options.request.redirectUri, provider);
   const code = normalizeRequiredString(options.request.code, "Missing authorization code");
 
   try {
@@ -503,6 +506,7 @@ function readHappyVerticalProvider(): MobileAuthProviderConfig | null {
         normalizeOptionalString(process.env.MOBILE_OIDC_CLIENT_SECRET) ??
         normalizeOptionalString(process.env.OIDC_CLIENT_SECRET),
       scopes: readScopes(process.env.MOBILE_AUTH_HAPPYVERTICAL_SCOPES) ?? defaultScopes,
+      allowedRedirectUris: process.env.MOBILE_AUTH_HAPPYVERTICAL_REDIRECT_URIS,
       usePKCE: true,
     },
     "HappyVertical mobile provider",
@@ -521,7 +525,13 @@ function normalizeProviderConfig(
   }
 
   const scopes = readScopes(input.scopes) ?? defaultScopes;
-  const base = { id, label, type, supportsPkce: supportsPkce(type) };
+  const base = {
+    id,
+    label,
+    type,
+    supportsPkce: supportsPkce(type),
+    allowedRedirectUris: readRedirectUriAllowList(input.allowedRedirectUris),
+  };
 
   if (type === "keycloak") {
     return {
@@ -622,14 +632,91 @@ function readBearerToken(authorizationHeader: string | null): string | null {
   return normalizeOptionalString(match?.[1]) ?? null;
 }
 
-function normalizeRedirectUri(value: string): string {
+// Schemes that can execute script or read local resources if a redirect ever
+// reaches a browser context. Rejected regardless of any configured allow list.
+const dangerousRedirectSchemes = new Set([
+  "javascript:",
+  "data:",
+  "vbscript:",
+  "file:",
+  "blob:",
+  "about:",
+]);
+
+function normalizeRedirectUri(value: string, provider: MobileAuthProviderConfig): string {
   const redirectUri = normalizeRequiredString(value, "Missing mobile redirect URI");
+
+  let parsed: URL;
   try {
-    new URL(redirectUri);
-    return redirectUri;
+    parsed = new URL(redirectUri);
   } catch {
     throw new MobileAuthError(400, "Mobile redirect URI must be an absolute URL");
   }
+
+  const scheme = parsed.protocol.toLowerCase();
+  if (dangerousRedirectSchemes.has(scheme)) {
+    throw new MobileAuthError(400, "Mobile redirect URI uses an unsupported scheme");
+  }
+  // Plain http is only permitted for native loopback redirects (RFC 8252).
+  // https and private-use app schemes (e.g. com.example.app://) are allowed.
+  if (scheme === "http:" && !isLoopbackHost(parsed.hostname)) {
+    throw new MobileAuthError(
+      400,
+      "Mobile redirect URI must use https, a loopback address, or an app scheme",
+    );
+  }
+
+  // When an allow list is configured (globally and/or per provider), the
+  // requested URI must match it exactly. This is the primary defense against
+  // redirecting authorization responses to an attacker-controlled URI.
+  const allowList = [...getGlobalAllowedRedirectUris(), ...provider.allowedRedirectUris];
+  if (allowList.length > 0 && !isAllowedRedirectUri(redirectUri, allowList)) {
+    throw new MobileAuthError(400, "Mobile redirect URI is not allowed for this provider");
+  }
+
+  return redirectUri;
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+}
+
+function isAllowedRedirectUri(candidate: string, allowList: string[]): boolean {
+  const normalized = candidate.trim();
+  return allowList.some((entry) => {
+    const allowed = entry.trim();
+    if (!allowed) {
+      return false;
+    }
+    if (normalized === allowed) {
+      return true;
+    }
+    // An allow-list entry ending in "/" is treated as a path prefix so a single
+    // registered origin can cover its callback sub-paths without wildcards.
+    return allowed.endsWith("/") && normalized.startsWith(allowed);
+  });
+}
+
+function getGlobalAllowedRedirectUris(): string[] {
+  return readRedirectUriAllowList(process.env.MOBILE_AUTH_ALLOWED_REDIRECT_URIS);
+}
+
+function readRedirectUriAllowList(value: unknown): string[] {
+  if (typeof value === "string") {
+    return value
+      .split(/[\s,]+/u)
+      .map((uri) => uri.trim())
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((uri): uri is string => typeof uri === "string" && uri.trim().length > 0)
+      .map((uri) => uri.trim());
+  }
+
+  return [];
 }
 
 function normalizeRequiredString(value: unknown, message: string): string {

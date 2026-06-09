@@ -14,12 +14,26 @@
 
 ## Tenancy And Access
 
-Tenant context is resolved from the `x-tenant-id` header, the local
-`smrt_starter_tenant_id` switch cookie, or a tenant subdomain. The app then
-resolves active `smrt-users` membership rows and maps the member role to
-starter permissions for app, billing, usage, settings, chat, and MCP routes.
+Tenant context is resolved from the local `smrt_starter_tenant_id` switch
+cookie (set only after the tenant switch endpoint verifies membership) or a
+tenant subdomain. The app then resolves active `smrt-users` membership rows and
+maps the member role to starter permissions for app, billing, usage, settings,
+chat, and MCP routes. Selecting a tenant never grants access on its own —
+`requirePermission`/`requireTenantMembership` re-verify the authenticated
+user's membership for the resolved tenant on every data path.
 Mobile requests can also send `Authorization: Bearer <smrt session id>`; the
 hook resolves that session before the same membership resolver runs.
+
+The `x-tenant-id` request header is unauthenticated client input, so it sets
+the ambient tenant context before any session/membership check. It is ignored
+by default and only honored when `SMRT_STARTER_TRUST_TENANT_HEADER=true` — set
+this only behind an authenticating gateway/BFF that injects the header after
+its own auth.
+
+Mobile auth redirect URIs are scheme-restricted (https, native loopback http,
+or private-use app schemes; `javascript:`/`data:`/`file:` and similar are
+rejected) and, when `MOBILE_AUTH_ALLOWED_REDIRECT_URIS` (global) or a provider's
+`allowedRedirectUris` is configured, must match the registered allow list.
 
 The non-production demo-owner fallback is intentionally local developer
 scaffolding. Production requests require a real SMRT session identity and an

@@ -165,6 +165,53 @@ describe("mobile auth", () => {
     );
   });
 
+  it("rejects a redirect URI that uses a dangerous scheme", async () => {
+    await expect(
+      startMobileAuth({ redirectUri: "javascript:alert(document.cookie)" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Mobile redirect URI uses an unsupported scheme",
+    });
+    expect(mobileAuthMocks.getAuth).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-loopback http redirect URI", async () => {
+    await expect(
+      startMobileAuth({ redirectUri: "http://attacker.example.com/callback" }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(mobileAuthMocks.getAuth).not.toHaveBeenCalled();
+  });
+
+  it("allows an http loopback redirect URI for native clients", async () => {
+    mobileAuthMocks.getAuthorizationUrl.mockResolvedValue({
+      url: "https://idp.example.test/oauth2/authorize",
+      state: "state-1",
+    });
+
+    await expect(
+      startMobileAuth({ redirectUri: "http://127.0.0.1:8765/callback" }),
+    ).resolves.toMatchObject({ redirectUri: "http://127.0.0.1:8765/callback" });
+  });
+
+  it("enforces a configured redirect URI allow list", async () => {
+    vi.stubEnv("MOBILE_AUTH_ALLOWED_REDIRECT_URIS", "smrtstarter://auth/callback");
+    mobileAuthMocks.getAuthorizationUrl.mockResolvedValue({
+      url: "https://idp.example.test/oauth2/authorize",
+      state: "state-1",
+    });
+
+    await expect(
+      startMobileAuth({ redirectUri: "smrtstarter://auth/callback" }),
+    ).resolves.toMatchObject({ redirectUri: "smrtstarter://auth/callback" });
+
+    await expect(
+      startMobileAuth({ redirectUri: "smrtstarter://attacker/callback" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Mobile redirect URI is not allowed for this provider",
+    });
+  });
+
   it("exchanges an authorization code for a smrt-users bearer session", async () => {
     mobileAuthMocks.exchangeCode.mockResolvedValue({
       accessToken: "provider-access-token",
