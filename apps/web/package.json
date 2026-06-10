@@ -29,7 +29,7 @@
     "preview": "vite preview",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "biome lint src",
-    "test": "vitest run --passWithNoTests --exclude e2e/**",
+    "test": "vitest run --passWithNoTests --exclude \"e2e/**\"",
     "test:e2e": "playwright test"
   },
   "dependencies": {

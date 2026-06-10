@@ -43,6 +43,9 @@ const requiredFiles = [
   "scripts/smoke-runtime-images.mjs",
   "scripts/render-manifests.mjs",
   "scripts/update-manifest-digests.mjs",
+  "scripts/wait-for-deploy.mjs",
+  "apps/web/playwright.config.ts",
+  "apps/web/e2e/public.spec.ts",
 ];
 
 for (const file of requiredFiles) {

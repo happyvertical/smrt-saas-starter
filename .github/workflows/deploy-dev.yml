@@ -61,6 +61,8 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
+          build-args: |
+            APP_VERSION=${{ github.sha }}
           tags: |
             ${{ env.WEB_IMAGE }}:dev-${{ github.sha }}
             ${{ env.WEB_IMAGE }}:dev-latest

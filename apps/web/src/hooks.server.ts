@@ -86,6 +86,7 @@ function shouldResolveMembership(pathname: string): boolean {
     pathname.startsWith("/app/") ||
     (pathname.startsWith("/api/") &&
       !pathname.startsWith("/api/billing/webhook") &&
+      !pathname.startsWith("/api/health") &&
       !pathname.startsWith("/api/mobile/auth/") &&
       !pathname.startsWith("/api/generated/"))
   );

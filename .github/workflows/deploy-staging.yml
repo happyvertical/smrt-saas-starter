@@ -61,6 +61,8 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
+          build-args: |
+            APP_VERSION=${{ github.sha }}
           tags: |
             ${{ env.WEB_IMAGE }}:staging-${{ github.sha }}
             ${{ env.WEB_IMAGE }}:staging-latest
@@ -93,6 +95,18 @@ jobs:
           git add manifests/overlays/staging/kustomization.yaml
           git commit -m "chore(deploy): update staging image digests [skip ci]"
           git push
+      # Gate promotion on a smoke test of the deployed staging environment.
+      # Requires the STAGING_BASE_URL variable on the staging environment;
+      # when unset the gate is skipped so fresh starter clones still deploy.
+      - name: Smoke staging deployment
+        if: vars.STAGING_BASE_URL != ''
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+          EXPECTED_APP_VERSION: ${{ github.sha }}
+        run: |
+          node scripts/wait-for-deploy.mjs "$PLAYWRIGHT_BASE_URL" "$EXPECTED_APP_VERSION"
+          pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
+          pnpm --filter @happyvertical/smrt-saas-web test:e2e
       - name: Open staging to main PR
         env:
           GH_TOKEN: ${{ github.token }}
