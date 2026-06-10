@@ -14,6 +14,8 @@ const requiredFiles = [
   "docker-compose.yml",
   ".dockerignore",
   "apps/web/package.json",
+  "apps/web/AGENTS.md",
+  "apps/web/CLAUDE.md",
   "apps/web/Dockerfile",
   "apps/web/Dockerfile.dockerignore",
   "apps/web/smrt.config.mjs",
@@ -23,6 +25,8 @@ const requiredFiles = [
   "apps/worker/Dockerfile",
   "apps/worker/Dockerfile.dockerignore",
   "apps/mobile/package.json",
+  "apps/mobile/AGENTS.md",
+  "apps/mobile/CLAUDE.md",
   "apps/mobile/gradlew",
   "apps/mobile/gradle/wrapper/gradle-wrapper.properties",
   "apps/mobile/scripts/validate-android.mjs",
@@ -33,6 +37,7 @@ const requiredFiles = [
   "docs/architecture.md",
   "docs/upstream-work.md",
   "docs/agentic-development.md",
+  "docs/testing.md",
   "scripts/prepare-runtime.mjs",
   "scripts/build-runtime-images.mjs",
   "scripts/smoke-runtime-images.mjs",
@@ -45,7 +50,14 @@ for (const file of requiredFiles) {
 }
 
 const agents = await readFile(join(root, "AGENTS.md"), "utf8");
-for (const phrase of ["SOPS", "isolated SMRT or SDK worktree", "UUID columns stay UUID"]) {
+for (const phrase of [
+  "SOPS",
+  "isolated SMRT or SDK worktree",
+  "UUID columns stay UUID",
+  "file an upstream issue",
+  "Wait for the blocker",
+  "docs/testing.md",
+]) {
   if (!agents.includes(phrase)) {
     throw new Error(`AGENTS.md must mention: ${phrase}`);
   }

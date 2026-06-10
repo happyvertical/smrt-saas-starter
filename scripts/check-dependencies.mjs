@@ -85,4 +85,45 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// .mcp.json launches HappyVertical MCP servers via `npx <pkg>@<version>`, so
+// pnpm never resolves those pins and they can drift from the catalog silently.
+// Require the agent-facing MCP servers to be registered and every pinned
+// @happyvertical package in .mcp.json to match its catalog version.
+const requiredMcpServers = ["smrt-dev-mcp", "happyvertical-sdk-mcp"];
+const catalogVersions = new Map(
+  Array.from(workspace.matchAll(/'(@happyvertical\/[^']+)':\s*([^\s#]+)/g)).map((match) => [
+    match[1],
+    match[2],
+  ]),
+);
+const mcpText = await readFile(join(root, ".mcp.json"), "utf8");
+const mcpConfig = JSON.parse(mcpText);
+
+for (const server of requiredMcpServers) {
+  if (!mcpConfig.mcpServers?.[server]) {
+    console.error(`.mcp.json must register MCP server: ${server}`);
+    process.exit(1);
+  }
+}
+
+const mcpPins = Array.from(mcpText.matchAll(/(@happyvertical\/[a-z0-9-]+)@(\d+\.\d+\.\d+)/g));
+if (mcpPins.length === 0) {
+  console.error(".mcp.json must pin HappyVertical MCP packages by version.");
+  process.exit(1);
+}
+for (const [, name, version] of mcpPins) {
+  const catalogVersion = catalogVersions.get(name);
+  if (!catalogVersion) {
+    console.error(`.mcp.json pins ${name}@${version} but the catalog has no entry for ${name}.`);
+    process.exit(1);
+  }
+  if (catalogVersion !== version) {
+    console.error(
+      `.mcp.json pins ${name}@${version} but the catalog says ${catalogVersion}. Keep them in sync.`,
+    );
+    process.exit(1);
+  }
+}
+
 console.log("Dependency surface includes required SMRT and SDK packages.");
+console.log("MCP server pins in .mcp.json match the pnpm catalog.");
