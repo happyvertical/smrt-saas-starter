@@ -54,6 +54,7 @@ for (const phrase of [
   "uses: Azure/setup-kubectl@v5.1.0",
   "pnpm runtime:check",
   "e2e:",
+  "pnpm --filter @happyvertical/smrt-saas-objects build",
   "pnpm db:seed",
   "playwright install --with-deps chromium",
   "test:e2e",

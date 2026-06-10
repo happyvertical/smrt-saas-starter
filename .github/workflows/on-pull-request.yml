@@ -60,6 +60,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-environment
+      # The web app and its db scripts import @happyvertical/smrt-saas-objects
+      # from dist/, so build it before seeding on a fresh runner.
+      - name: Build workspace objects
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
       - name: Seed database
         run: pnpm db:seed
       - name: Install Playwright browsers
