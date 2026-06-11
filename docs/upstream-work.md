@@ -2,6 +2,23 @@
 
 Reusable starter functionality should continue to move upstream from isolated worktrees. Completed items are kept here so future starter work can see which package now owns each surface.
 
+## Consumed Versions
+
+- SMRT (`@happyvertical/smrt-*`): **0.28.0**
+- SDK (`@happyvertical/*`): **0.74.5**
+
+The 0.27.12 → 0.28.0 SMRT bump pulled in many upstream fixes (core persisted-object
+id-conflict fix, jobs liveness-based recovery, config SSG secret-leak fix, smrt-svelte
+design-token migration). The relevant API change for the starter —
+[smrt#1454](https://github.com/happyvertical/smrt/pull/1454) polymorphic subscriber
+(`subscriberKind` / `subscriberExternalId` on `TenantSubscription` and
+`TenantUsageMetric`) — is **additive and back-compatible**: the starter's tenant-only
+path (`resolveTenantEntitlements`, `findCurrentForTenant`, `recordUsage`,
+`summarizeUsage`) is unchanged, and the new columns default to the tenant shape. No
+starter code changes were required; the bump migrates cleanly (`db:smoke`) and passes
+`pnpm check` and e2e. SDK 0.74.5 adds `@happyvertical/sql` `acquireSession()` and a
+session-release rollback fix — no starter changes.
+
 ## Process
 
 When starter work hits an upstream bug or a missing public API in a
