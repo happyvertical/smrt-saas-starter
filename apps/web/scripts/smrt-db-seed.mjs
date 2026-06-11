@@ -111,29 +111,39 @@ try {
     });
   }
 
-  await db.upsert("_smrt_tenant_subscriptions", ["tenant_id"], {
-    id: starterData.demoSubscription.id,
-    slug: starterData.demoSubscription.slug,
-    context: demoTenant.id,
-    updated_at: now.toISOString(),
-    tenant_id: demoTenant.id,
-    plan_id: demoPlan.id,
-    status: "active",
-    started_at: window.start.toISOString(),
-    current_period_start: window.start.toISOString(),
-    current_period_end: window.end.toISOString(),
-    trial_ends_at: null,
-    cancel_at_period_end: false,
-    canceled_at: null,
-    external_provider: "stripe",
-    stripe_customer_id: starterData.demoSubscription.stripeCustomerId,
-    stripe_subscription_id: "",
-    stripe_checkout_session_id: "",
-    metadata: JSON.stringify({
-      seededBy: "smrt-saas-starter",
-      planKey: demoPlan.planKey,
-    }),
-  });
+  // smrt-subscriptions 0.28.0 (smrt#1454) widened the TenantSubscription unique
+  // index to (tenant_id, subscriber_kind, subscriber_external_id) for the
+  // polymorphic subscriber. The conflict target must match that index; seed the
+  // tenant-shape defaults explicitly.
+  await db.upsert(
+    "_smrt_tenant_subscriptions",
+    ["tenant_id", "subscriber_kind", "subscriber_external_id"],
+    {
+      id: starterData.demoSubscription.id,
+      slug: starterData.demoSubscription.slug,
+      context: demoTenant.id,
+      updated_at: now.toISOString(),
+      tenant_id: demoTenant.id,
+      subscriber_kind: "tenant",
+      subscriber_external_id: "",
+      plan_id: demoPlan.id,
+      status: "active",
+      started_at: window.start.toISOString(),
+      current_period_start: window.start.toISOString(),
+      current_period_end: window.end.toISOString(),
+      trial_ends_at: null,
+      cancel_at_period_end: false,
+      canceled_at: null,
+      external_provider: "stripe",
+      stripe_customer_id: starterData.demoSubscription.stripeCustomerId,
+      stripe_subscription_id: "",
+      stripe_checkout_session_id: "",
+      metadata: JSON.stringify({
+        seededBy: "smrt-saas-starter",
+        planKey: demoPlan.planKey,
+      }),
+    },
+  );
 
   for (const setting of starterData.appSettings) {
     await db.upsert("starter_app_settings", ["key"], {
