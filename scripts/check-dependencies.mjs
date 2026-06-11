@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { extractCatalogVersions, findMcpPinIssues } from "./lib/mcp-pins.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -88,14 +89,9 @@ if (missing.length > 0) {
 // .mcp.json launches HappyVertical MCP servers via `npx <pkg>@<version>`, so
 // pnpm never resolves those pins and they can drift from the catalog silently.
 // Require the agent-facing MCP servers to be registered and every pinned
-// @happyvertical package in .mcp.json to match its catalog version.
+// @happyvertical package in .mcp.json to match its catalog version (scoped to
+// the catalog block — see scripts/lib/mcp-pins.mjs).
 const requiredMcpServers = ["smrt-dev-mcp", "happyvertical-sdk-mcp"];
-const catalogVersions = new Map(
-  Array.from(workspace.matchAll(/'(@happyvertical\/[^']+)':\s*([^\s#]+)/g)).map((match) => [
-    match[1],
-    match[2],
-  ]),
-);
 const mcpText = await readFile(join(root, ".mcp.json"), "utf8");
 const mcpConfig = JSON.parse(mcpText);
 
@@ -106,23 +102,12 @@ for (const server of requiredMcpServers) {
   }
 }
 
-const mcpPins = Array.from(mcpText.matchAll(/(@happyvertical\/[a-z0-9-]+)@(\d+\.\d+\.\d+)/g));
-if (mcpPins.length === 0) {
-  console.error(".mcp.json must pin HappyVertical MCP packages by version.");
+const mcpIssues = findMcpPinIssues(mcpText, extractCatalogVersions(workspace));
+if (mcpIssues.length > 0) {
+  for (const issue of mcpIssues) {
+    console.error(issue);
+  }
   process.exit(1);
-}
-for (const [, name, version] of mcpPins) {
-  const catalogVersion = catalogVersions.get(name);
-  if (!catalogVersion) {
-    console.error(`.mcp.json pins ${name}@${version} but the catalog has no entry for ${name}.`);
-    process.exit(1);
-  }
-  if (catalogVersion !== version) {
-    console.error(
-      `.mcp.json pins ${name}@${version} but the catalog says ${catalogVersion}. Keep them in sync.`,
-    );
-    process.exit(1);
-  }
 }
 
 console.log("Dependency surface includes required SMRT and SDK packages.");

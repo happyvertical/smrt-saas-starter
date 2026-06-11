@@ -19,4 +19,9 @@ describe("GET /api/health", () => {
     const response = await GET({} as HealthHandlerEvent);
     await expect(response.json()).resolves.toEqual({ status: "ok", version: null });
   });
+
+  it("is non-cacheable so deploy pipelines never see a stale version", async () => {
+    const response = await GET({} as HealthHandlerEvent);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
 });

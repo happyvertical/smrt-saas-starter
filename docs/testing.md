@@ -44,6 +44,9 @@ triggers below.
   running one outside CI); it needs seeded Postgres and
   `npx playwright install chromium` once. Extend `apps/web/e2e/` when adding
   user-visible flows. The CI `e2e` job runs this suite on every PR.
+- **Dockerfiles, runtime trees, manifests, deploy scripts** —
+  `pnpm runtime:check` (build → prepare runtime trees → build images → smoke
+  them → render manifests). Needs Docker and `kubectl`.
 
 ## E2E: one suite, two targets
 
@@ -69,9 +72,6 @@ Authenticated staging e2e is a deliberate follow-up: it needs a test-auth
 story (dedicated e2e tenant plus a real OIDC test account or controlled
 magic-link path) — do not enable the dev-auth fallback or inline sign-in
 links on deployed environments to make tests pass.
-- **Dockerfiles, runtime trees, manifests, deploy scripts** —
-  `pnpm runtime:check` (build → prepare runtime trees → build images → smoke
-  them → render manifests). Needs Docker and `kubectl`.
 
 ## Conventions
 
