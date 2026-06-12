@@ -18,6 +18,12 @@ function run(command, args) {
 
 const webSmoke = `
 set -eu
+# Guard for happyvertical/smrt#1507: the bundled server resolves SMRT field
+# metadata from build/server/manifest.json (written by the web build step).
+# Without it, the production server drops declared fields on create() and
+# rejects them in WHERE validation.
+test -s build/server/manifest.json
+node -e 'const m = require("./build/server/manifest.json"); const n = Object.keys(m.objects ?? {}).length; if (n < 100) { console.error("runtime manifest has only " + n + " objects"); process.exit(1); } console.log("runtime manifest ok: " + n + " objects");'
 node build/index.js >/tmp/smrt-web.log 2>&1 &
 pid=$!
 sleep 3

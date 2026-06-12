@@ -4,7 +4,10 @@ metadata:
   name: smrt-saas-config
 data:
   PUBLIC_APP_NAME: "SMRT SaaS Starter"
-  HAPPYVERTICAL_IDP_ISSUER: "https://idp.happyvertical.com"
+  # Kanidm serves OIDC discovery per client at /oauth2/openid/<client-id>/,
+  # not at the IDP root (the root issuer 404s on discovery). Replace the
+  # client id segment with the deployment's OIDC client.
+  HAPPYVERTICAL_IDP_ISSUER: "https://idp.happyvertical.com/oauth2/openid/smrt-saas-starter"
   LOG_LEVEL: "info"
   WORKER_MODE: "runner"
   WORKER_QUEUE: "starter-maintenance"
