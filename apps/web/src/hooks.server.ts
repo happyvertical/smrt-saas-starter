@@ -73,12 +73,23 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-export const handle: Handle = sequence(
+const appHandle: Handle = sequence(
   tenancyHandle,
   sessionHandle,
   bearerSessionHandle,
   reconcileTenantLocals,
 );
+
+export const handle: Handle = async ({ event, resolve }) => {
+  // The health probe must stay dependency-free: deploy pipelines poll it before
+  // Postgres is ready, and `tenancyHandle` -> `resolveTenant()` can hit the DB
+  // for tenant-slug hosts. Skip the entire tenancy/session chain and render the
+  // route directly so /api/health never touches tenancy, session, or the DB.
+  if (event.url.pathname === "/api/health") {
+    return resolve(event);
+  }
+  return appHandle({ event, resolve });
+};
 
 function shouldResolveMembership(pathname: string): boolean {
   return (

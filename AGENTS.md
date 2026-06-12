@@ -15,7 +15,9 @@
 
 ## Validation
 
-Run narrow checks first, then the full repo check before shipping:
+The full testing strategy (layers, tools, when to run what) is in
+`docs/testing.md`. Run narrow checks first, then the full repo check before
+shipping:
 
 ```sh
 pnpm install
@@ -38,6 +40,16 @@ pnpm mobile:validate
 
 ## Upstream Coordination
 
-- SDK payment work belongs in a separate SDK worktree and starts with `@happyvertical/accounting` Stripe support.
-- SMRT subscription, metering, and reusable dock helpers belong in separate SMRT worktrees.
+- When an upstream bug or missing public API in a `@happyvertical/*` package
+  blocks starter work, file an upstream issue on the owning repo:
+  `happyvertical/smrt` for `smrt-*` packages, `happyvertical/sdk` for the rest
+  (`gh issue create --repo happyvertical/smrt ...`). Include the starter
+  context, the package and version, and a minimal repro or the failing
+  surface. Never include secrets or tokens in issues.
+- Wait for the blocker to be resolved upstream. Do not vendor, fork, patch
+  `node_modules`, or duplicate framework behavior locally while the issue is
+  open. Record the blocker (with the issue link) in `docs/upstream-work.md`,
+  mark dependent work blocked, and continue with unblocked work.
+- Upstream implementation happens in an isolated SMRT or SDK worktree, never
+  inside this repo. Consume fixes by bumping the released package version.
 - Merge upstream work before cutting the first public starter release.

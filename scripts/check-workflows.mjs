@@ -53,6 +53,11 @@ for (const phrase of [
   "runtime:",
   "uses: Azure/setup-kubectl@v5.1.0",
   "pnpm runtime:check",
+  "e2e:",
+  "pnpm --filter @happyvertical/smrt-saas-objects build",
+  "pnpm db:seed",
+  "playwright install --with-deps chromium",
+  "test:e2e",
   "mobile-android:",
   "uses: gradle/actions/wrapper-validation@v6",
   "uses: actions/setup-java@v5",
@@ -86,6 +91,33 @@ for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]
       throw new Error(`${file} must include deploy runtime hardening: ${phrase}`);
     }
   }
+}
+
+// Web images must report the commit they were built from so post-deploy smoke
+// tests can wait for the rollout instead of racing it.
+for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {
+  const text = await readFile(join(workflowsDir, file), "utf8");
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: literal GitHub Actions expression
+  if (!text.includes("APP_VERSION=${{ github.sha }}")) {
+    throw new Error(`${file} must bake APP_VERSION into the web image build`);
+  }
+}
+
+const stagingWorkflow = await readFile(join(workflowsDir, "deploy-staging.yml"), "utf8");
+for (const phrase of [
+  "scripts/wait-for-deploy.mjs",
+  "vars.STAGING_BASE_URL",
+  "PLAYWRIGHT_BASE_URL",
+  "test:e2e",
+]) {
+  if (!stagingWorkflow.includes(phrase)) {
+    throw new Error(`deploy-staging.yml must smoke the deployed environment: ${phrase}`);
+  }
+}
+const smokeIndex = stagingWorkflow.indexOf("Smoke staging deployment");
+const promotePrIndex = stagingWorkflow.indexOf("Open staging to main PR");
+if (smokeIndex === -1 || promotePrIndex === -1 || smokeIndex > promotePrIndex) {
+  throw new Error("deploy-staging.yml must smoke the deployment before opening the promotion PR");
 }
 
 const promoteWorkflow = await readFile(join(workflowsDir, "promote-dev.yml"), "utf8");

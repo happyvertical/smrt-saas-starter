@@ -19,6 +19,25 @@ starter code changes were required; the bump migrates cleanly (`db:smoke`) and p
 `pnpm check` and e2e. SDK 0.74.5 adds `@happyvertical/sql` `acquireSession()` and a
 session-release rollback fix — no starter changes.
 
+## Process
+
+When starter work hits an upstream bug or a missing public API in a
+`@happyvertical/*` package:
+
+1. File an issue on the owning repo — `happyvertical/smrt` for `smrt-*`
+   packages, `happyvertical/sdk` for the rest — with the package, version,
+   starter context, and a minimal repro. No secrets or tokens.
+2. Add the blocker under **Open Blockers** below with the issue link.
+3. Wait for the fix to land upstream; do not work around it locally (no
+   vendoring, forking, or patching `node_modules`). Continue with unblocked
+   work in the meantime.
+4. When the fix is released, bump the package version, validate with
+   `pnpm check`, and move the entry to the completed sections below.
+
+## Open Blockers
+
+None.
+
 ## SDK: Stripe In `@happyvertical/accounting`
 
 Status: complete in `@happyvertical/accounting@0.74.4` via [happyvertical/sdk#1041](https://github.com/happyvertical/sdk/pull/1041).
