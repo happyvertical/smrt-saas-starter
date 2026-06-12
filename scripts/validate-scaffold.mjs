@@ -46,6 +46,8 @@ const requiredFiles = [
   "scripts/wait-for-deploy.mjs",
   "apps/web/playwright.config.ts",
   "apps/web/e2e/public.spec.ts",
+  "apps/web/e2e/authed.spec.ts",
+  "apps/web/src/routes/api/e2e/session/+server.ts",
 ];
 
 for (const file of requiredFiles) {

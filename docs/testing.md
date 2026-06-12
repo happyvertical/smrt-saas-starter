@@ -58,20 +58,39 @@ The Playwright suite has two run modes, switched by `PLAYWRIGHT_BASE_URL`:
   against the given environment. Deployed environments have real auth, so
   `@public` specs must stay unauthenticated, read-only, and free of seed-data
   assumptions (landing page, login form, `/api/health`).
+- **Authenticated (`@authed`)** — exercise tenant surfaces behind login. They
+  mint a real `smrt-users` session for a seeded e2e user via
+  `POST /api/e2e/session` (see below) instead of relying on the dev-auth
+  fallback, so they work on deployed environments. They run only when
+  `E2E_AUTH_SECRET` is configured.
 
 The staging deploy pipeline uses the deployed mode as a promotion gate: it
 bakes the commit SHA into the web image (`APP_VERSION`), waits for
 `/api/health` on `STAGING_BASE_URL` to report that SHA
 (`scripts/wait-for-deploy.mjs`, so the smoke never races the GitOps rollout),
-runs the `@public` suite, and only then opens the staging→main promotion PR.
-Set the `STAGING_BASE_URL` variable on the `staging` GitHub environment to
-enable the gate; when unset it is skipped so fresh starter clones still
-deploy.
+runs the suite, and only then opens the staging→main promotion PR. Set the
+`STAGING_BASE_URL` variable on the `staging` GitHub environment to enable the
+gate; when unset it is skipped so fresh starter clones still deploy.
 
-Authenticated staging e2e is a deliberate follow-up: it needs a test-auth
-story (dedicated e2e tenant plus a real OIDC test account or controlled
-magic-link path) — do not enable the dev-auth fallback or inline sign-in
-links on deployed environments to make tests pass.
+### Authenticated e2e: the session-mint endpoint
+
+Deployed environments have real auth and (correctly) do not enable the
+`SMRT_STARTER_DEV_AUTH` fallback or `SMRT_STARTER_AUTH_INLINE_LINKS` — do not
+turn those on just to make tests pass. Instead, `@authed` specs authenticate
+through a gated test endpoint:
+
+- `POST /api/e2e/session` mints a real session for the configured e2e user,
+  bypassing only the OIDC/magic-link step. Identity comes solely from
+  `E2E_USER_EMAIL` (a seeded user), never the request.
+- The route is **fail-closed**: a 404 unless `E2E_AUTH_SECRET` is set, and the
+  caller must present that secret (constant-time check). The gate is the
+  secret, not `NODE_ENV` — deployed images run `NODE_ENV=production`, so
+  production simply never sets the secret and the route never exists there.
+- Enable it on staging by adding the `E2E_AUTH_SECRET` secret and the
+  `E2E_USER_EMAIL` variable to the `staging` GitHub environment, and seed a
+  dedicated e2e tenant/user. To run `@authed` locally, export both against a
+  seeded user (e.g. `E2E_AUTH_SECRET=dev E2E_USER_EMAIL=demo-owner@example.com
+  pnpm --filter @happyvertical/smrt-saas-web test:e2e`).
 
 ## Conventions
 

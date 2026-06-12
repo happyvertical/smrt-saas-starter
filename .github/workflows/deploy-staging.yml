@@ -103,6 +103,11 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.STAGING_BASE_URL }}
           EXPECTED_APP_VERSION: ${{ github.sha }}
+          # Optional: when set on the staging environment (secret + var), the
+          # suite also runs @authed specs via the /api/e2e/session mint
+          # endpoint. Without them only @public specs run.
+          E2E_AUTH_SECRET: ${{ secrets.E2E_AUTH_SECRET }}
+          E2E_USER_EMAIL: ${{ vars.E2E_USER_EMAIL }}
         run: |
           node scripts/wait-for-deploy.mjs "$PLAYWRIGHT_BASE_URL" "$EXPECTED_APP_VERSION"
           pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
