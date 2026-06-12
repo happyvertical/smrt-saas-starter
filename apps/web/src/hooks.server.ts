@@ -11,10 +11,16 @@ import {
 import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { resolveMembershipContext } from "$lib/server/authz";
+import { loadStarterExperienceConfig } from "$lib/server/experience";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { resolveTenant } from "$lib/server/tenancy";
 
 enableTenancy();
+
+// The smrt config must be registered before any request handler runs;
+// without this, routes that do not cross the MCP/chat modules (e.g. OIDC
+// login) resolve an empty package config in the production build.
+await loadStarterExperienceConfig();
 
 const tenancyHandle = createSvelteKitHandle({
   resolveTenantId: async (event) => {

@@ -36,7 +36,41 @@ When starter work hits an upstream bug or a missing public API in a
 
 ## Open Blockers
 
-None.
+### SMRT: Field metadata is lost in vite-bundled production servers
+
+Status: open upstream as [happyvertical/smrt#1506](https://github.com/happyvertical/smrt/issues/1506)
+and [happyvertical/smrt#1507](https://github.com/happyvertical/smrt/issues/1507).
+Discovered downstream in smrtsaas (the first starter-derived app with a real
+authenticated production user); reproduced on `@happyvertical/smrt-*@0.28.x`.
+
+Root cause (verified against the built server tree): SMRT package dists
+self-register field metadata at import time via
+`ObjectRegistry.registerPackageManifest(new URL("./manifest.json", import.meta.url))`.
+When Vite bundles package code into SvelteKit server chunks,
+`import.meta.url` points at `build/server/chunks/<chunk>.js`, so the lookup
+resolves to `build/server/chunks/manifest.json`, which does not exist, and
+registration becomes a silent no-op. Plain fields vanish from the registry
+while relationship fields (registered through the decorator path) survive.
+That one failure explains both production bugs:
+
+- `create()`/`save()` silently drop declared plain-field values
+  (`users.email`, `sessions.expires_at`/`user_agent`/`ip_address`) — #1506.
+- WHERE validation only knows base fields and rejects declared fields
+  (`TenantUsageMetric.metricKey`, `TenantSubscription.subscriberKind`) — #1507.
+
+Script mode (`db:smoke`) and dev mode are unaffected because packages load
+unbundled from `node_modules`, where `./manifest.json` resolves correctly.
+
+Workaround in this repo (remove once upstream fixes bundled registration):
+`apps/web/scripts/generate-runtime-manifest.mjs` merges every runtime package
+manifest plus the app-local manifest into `build/server/manifest.json` during
+`pnpm build`. smrt-core's upward-search recovery in `registerPackageManifest`
+finds that file from the chunks directory. `scripts/smoke-runtime-images.mjs`
+guards the file's presence in the web image.
+
+The proper upstream fix belongs in smrt-core/the package build (for example,
+inlining field definitions into the registration call instead of resolving a
+file next to `import.meta.url`).
 
 ## SDK: Stripe In `@happyvertical/accounting`
 
