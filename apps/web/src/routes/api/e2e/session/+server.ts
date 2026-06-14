@@ -35,7 +35,11 @@ export const POST: RequestHandler = async (event) => {
   try {
     const target = await signInWithEmail(email);
     await startAccountSession(event, target);
-    return json({ authenticated: true, tenantId: target.tenantId });
+    // The response carries Set-Cookie; never let an intermediary cache it.
+    return json(
+      { authenticated: true, tenantId: target.tenantId },
+      { headers: { "cache-control": "no-store" } },
+    );
   } catch (caught) {
     if (caught instanceof AccountFlowError) {
       throw error(caught.status, caught.message);

@@ -100,8 +100,12 @@ through a gated test endpoint:
   The staging smoke step probes the deployed endpoint first and degrades to
   `@public` (with a warning) if the pod isn't provisioned, so a runner-only
   setup won't block promotion. To run `@authed` locally, export both against a
-  seeded user (e.g. `E2E_AUTH_SECRET=dev E2E_USER_EMAIL=demo-owner@example.com
-  pnpm --filter @happyvertical/smrt-saas-web test:e2e`).
+  seeded user:
+
+  ```sh
+  E2E_AUTH_SECRET=dev E2E_USER_EMAIL=demo-owner@example.com \
+    pnpm --filter @happyvertical/smrt-saas-web test:e2e
+  ```
 
 ## Conventions
 

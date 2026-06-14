@@ -91,6 +91,7 @@ describe("POST /api/e2e/session", () => {
     vi.stubEnv("E2E_USER_EMAIL", "e2e@example.com");
     const event = makeEvent("super-secret");
     const response = await POST(event);
+    expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({
       authenticated: true,
       tenantId: target.tenantId,
