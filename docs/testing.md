@@ -86,9 +86,20 @@ through a gated test endpoint:
   caller must present that secret (constant-time check). The gate is the
   secret, not `NODE_ENV` — deployed images run `NODE_ENV=production`, so
   production simply never sets the secret and the route never exists there.
-- Enable it on staging by adding the `E2E_AUTH_SECRET` secret and the
-  `E2E_USER_EMAIL` variable to the `staging` GitHub environment, and seed a
-  dedicated e2e tenant/user. To run `@authed` locally, export both against a
+- Enabling it on staging requires the secret/email on **both sides**, because
+  the runner sends the header but the deployed web pod reads the env:
+  1. **Deployed web pod** — add `E2E_AUTH_SECRET` (staging secret) and
+     `E2E_USER_EMAIL` (staging config) to the staging deployment's
+     secret/config so `/api/e2e/session` is enabled in the pod. Staging only —
+     never the base/production overlays.
+  2. **CI runner** — add the same `E2E_AUTH_SECRET` secret and `E2E_USER_EMAIL`
+     variable to the `staging` GitHub environment so the smoke step can call the
+     endpoint.
+  3. Seed a dedicated e2e tenant/user (the `E2E_USER_EMAIL` identity).
+
+  The staging smoke step probes the deployed endpoint first and degrades to
+  `@public` (with a warning) if the pod isn't provisioned, so a runner-only
+  setup won't block promotion. To run `@authed` locally, export both against a
   seeded user (e.g. `E2E_AUTH_SECRET=dev E2E_USER_EMAIL=demo-owner@example.com
   pnpm --filter @happyvertical/smrt-saas-web test:e2e`).
 

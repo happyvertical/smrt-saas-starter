@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { AccountFlowError, signInWithEmail } from "$lib/server/accounts";
 import { startAccountSession } from "$lib/server/session";
@@ -45,10 +45,11 @@ export const POST: RequestHandler = async (event) => {
 };
 
 function constantTimeEquals(a: string, b: string): boolean {
-  const aBuf = Buffer.from(a);
-  const bBuf = Buffer.from(b);
-  if (aBuf.length !== bBuf.length) {
-    return false;
-  }
-  return timingSafeEqual(aBuf, bBuf);
+  // Hash both sides to a fixed 32 bytes before comparing. timingSafeEqual
+  // requires equal-length buffers, and a raw length pre-check would leak the
+  // secret's byte-length via response timing (a length oracle). Hashing first
+  // removes that branch — the comparison is always over two 32-byte digests.
+  const ah = createHash("sha256").update(a).digest();
+  const bh = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ah, bh);
 }

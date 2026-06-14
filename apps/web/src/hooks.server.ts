@@ -17,6 +17,17 @@ import { resolveTenant } from "$lib/server/tenancy";
 
 enableTenancy();
 
+// Defense-in-depth: the /api/e2e/session auth-bypass route is enabled whenever
+// E2E_AUTH_SECRET is set (it can't gate on NODE_ENV — staging runs
+// production). It must never be set on a real production deployment, so make a
+// misconfiguration loud at startup rather than silent.
+if (process.env.E2E_AUTH_SECRET?.trim() && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[security] E2E_AUTH_SECRET is set with NODE_ENV=production — the /api/e2e/session " +
+      "auth-bypass route is ENABLED. Expected on staging; never set this on real production.",
+  );
+}
+
 // The smrt config must be registered before any request handler runs;
 // without this, routes that do not cross the MCP/chat modules (e.g. OIDC
 // login) resolve an empty package config in the production build.
@@ -104,6 +115,8 @@ function shouldResolveMembership(pathname: string): boolean {
     (pathname.startsWith("/api/") &&
       !pathname.startsWith("/api/billing/webhook") &&
       !pathname.startsWith("/api/mobile/auth/") &&
+      // /api/e2e/* skip membership resolution; any future route added under
+      // this prefix must do its own requirePermission/requireTenantMembership.
       !pathname.startsWith("/api/e2e/") &&
       !pathname.startsWith("/api/generated/"))
   );

@@ -11,7 +11,11 @@ test.beforeEach(async ({ page }) => {
   const response = await page.request.post("/api/e2e/session", {
     headers: { "x-e2e-auth": secret },
   });
-  expect(response.ok(), "e2e session mint should succeed").toBeTruthy();
+  if (!response.ok()) {
+    // Surface the server's reason (e.g. unseeded user, missing E2E_USER_EMAIL)
+    // instead of a bare "expected truthy" on the status code.
+    throw new Error(`e2e session mint failed (${response.status()}): ${await response.text()}`);
+  }
 });
 
 test("authenticated tenant dashboard loads @authed", async ({ page }) => {

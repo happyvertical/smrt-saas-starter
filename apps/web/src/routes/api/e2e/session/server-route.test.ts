@@ -63,6 +63,13 @@ describe("POST /api/e2e/session", () => {
     expect(routeMocks.signInWithEmail).not.toHaveBeenCalled();
   });
 
+  it("treats a whitespace-only E2E_AUTH_SECRET as unset (404)", async () => {
+    vi.stubEnv("E2E_AUTH_SECRET", "   ");
+    vi.stubEnv("E2E_USER_EMAIL", "e2e@example.com");
+    await expect(POST(makeEvent("   "))).rejects.toMatchObject({ status: 404 });
+    expect(routeMocks.signInWithEmail).not.toHaveBeenCalled();
+  });
+
   it("rejects a request without the matching secret", async () => {
     vi.stubEnv("E2E_AUTH_SECRET", "super-secret");
     vi.stubEnv("E2E_USER_EMAIL", "e2e@example.com");
@@ -71,9 +78,11 @@ describe("POST /api/e2e/session", () => {
     expect(routeMocks.startAccountSession).not.toHaveBeenCalled();
   });
 
-  it("errors when no e2e identity is configured", async () => {
+  it("errors when no e2e identity is configured (empty or whitespace)", async () => {
     vi.stubEnv("E2E_AUTH_SECRET", "super-secret");
     vi.stubEnv("E2E_USER_EMAIL", "");
+    await expect(POST(makeEvent("super-secret"))).rejects.toMatchObject({ status: 500 });
+    vi.stubEnv("E2E_USER_EMAIL", "   ");
     await expect(POST(makeEvent("super-secret"))).rejects.toMatchObject({ status: 500 });
   });
 
