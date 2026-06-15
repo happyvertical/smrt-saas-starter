@@ -103,8 +103,26 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.STAGING_BASE_URL }}
           EXPECTED_APP_VERSION: ${{ github.sha }}
+          # Enables the @authed specs. The SAME secret/email must ALSO be present
+          # in the deployed web pod (its config/secret), since /api/e2e/session
+          # reads them server-side — the runner having them is not enough. The
+          # probe below degrades to @public if the deployed endpoint isn't
+          # enabled, so a half-provisioned setup doesn't block promotion.
+          E2E_AUTH_SECRET: ${{ secrets.E2E_AUTH_SECRET }}
+          E2E_USER_EMAIL: ${{ vars.E2E_USER_EMAIL }}
         run: |
           node scripts/wait-for-deploy.mjs "$PLAYWRIGHT_BASE_URL" "$EXPECTED_APP_VERSION"
+          # Only run @authed if the DEPLOYED app actually has the mint endpoint
+          # enabled (its pod must carry E2E_AUTH_SECRET/E2E_USER_EMAIL too).
+          if [ -n "$E2E_AUTH_SECRET" ]; then
+            code="$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+              -H "x-e2e-auth: $E2E_AUTH_SECRET" \
+              "$PLAYWRIGHT_BASE_URL/api/e2e/session" || echo 000)"
+            if [ "$code" != "200" ]; then
+              echo "::warning::Deployed /api/e2e/session not enabled (HTTP $code) — running @public only. Provision E2E_AUTH_SECRET/E2E_USER_EMAIL in the staging web pod to enable @authed."
+              unset E2E_AUTH_SECRET
+            fi
+          fi
           pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
           pnpm --filter @happyvertical/smrt-saas-web test:e2e
       - name: Open staging to main PR

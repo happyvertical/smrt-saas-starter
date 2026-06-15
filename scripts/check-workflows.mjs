@@ -109,6 +109,7 @@ for (const phrase of [
   "vars.STAGING_BASE_URL",
   "PLAYWRIGHT_BASE_URL",
   "test:e2e",
+  "E2E_AUTH_SECRET",
 ]) {
   if (!stagingWorkflow.includes(phrase)) {
     throw new Error(`deploy-staging.yml must smoke the deployed environment: ${phrase}`);
