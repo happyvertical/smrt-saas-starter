@@ -413,7 +413,19 @@ function isStaleStripeEvent(
   existing: SyncedSubscriptionRecord,
   update: StripeSubscriptionUpdate,
 ): boolean {
-  const lastEventAt = dateFromStripeValue(readRecord(existing.metadata.stripe)?.lastEventAt);
+  const lastStripe = readRecord(existing.metadata.stripe);
+
+  // Stripe delivers at-least-once: the exact same event id can arrive twice.
+  // Skip an exact replay of the last processed event. (A missing/blank stored
+  // id can't false-skip because readString returns undefined.)
+  const lastEventId = readString(lastStripe?.lastEventId);
+  if (lastEventId && lastEventId === update.eventId) {
+    return true;
+  }
+
+  // `created` is whole seconds, so distinct events in the same second tie; keep
+  // the strict `>` so a genuinely distinct same-second event still applies.
+  const lastEventAt = dateFromStripeValue(lastStripe?.lastEventAt);
   return Boolean(lastEventAt && lastEventAt.getTime() > update.eventCreatedAt.getTime());
 }
 
