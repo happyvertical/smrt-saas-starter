@@ -36,8 +36,20 @@ async function getStripeBillingProvider(): Promise<StripeBillingProvider> {
   }
 
   providerPromise ??= createProviderFromEnvironment();
-  provider = await providerPromise;
+  const pending = providerPromise;
+  const resolved = await pending;
 
+  // `provider` may have been set explicitly (e.g. via setStripeBillingProvider)
+  // while we were awaiting. Never clobber an explicitly-set provider, and never
+  // adopt a stale env result from a promise that has since been reset.
+  if (provider) {
+    return provider;
+  }
+  if (providerPromise !== pending) {
+    return requireStripeBillingProvider(provider);
+  }
+
+  provider = resolved;
   return requireStripeBillingProvider(provider);
 }
 
