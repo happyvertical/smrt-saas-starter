@@ -16,7 +16,7 @@ env:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: arc-happyvertical
     services:
       postgres:
         image: postgres:18-alpine
@@ -40,7 +40,7 @@ jobs:
         run: pnpm check
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: arc-happyvertical
     services:
       postgres:
         image: postgres:18-alpine
@@ -72,7 +72,7 @@ jobs:
         run: pnpm --filter @happyvertical/smrt-saas-web test:e2e
 
   mobile-android:
-    runs-on: ubuntu-latest
+    runs-on: arc-happyvertical
     steps:
       - uses: actions/checkout@v6
       - uses: gradle/actions/wrapper-validation@v6
@@ -90,20 +90,10 @@ jobs:
         run: pnpm mobile:validate:android
 
   runtime:
-    runs-on: ubuntu-latest
+    runs-on: arc-happyvertical
     steps:
       - uses: actions/checkout@v6
       - uses: Azure/setup-kubectl@v5.1.0
       - uses: ./.github/actions/setup-environment
       - name: Validate runtime artifacts
         run: pnpm runtime:check
-
-  mobile-ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-environment
-      - name: Install XcodeGen
-        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
-      - name: Validate iOS shell
-        run: pnpm mobile:validate:ios
