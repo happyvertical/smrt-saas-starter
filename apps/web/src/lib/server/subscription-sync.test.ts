@@ -375,6 +375,47 @@ describe("Stripe subscription sync", () => {
     });
   });
 
+  it("ignores a replay of a non-most-recent event id that ties on timestamp", async () => {
+    // A (this event) then B were both processed in the same Stripe `created`
+    // second; B is now lastEventId. A redelivery of A must still be rejected via
+    // the recent-event-id set, since the seconds-resolution timestamp ties.
+    const store = new MemorySubscriptionStore(
+      [growthPlan],
+      [
+        subscriptionRecord({
+          tenantId,
+          planId: growthPlan.id,
+          stripeCustomerId: "cus_test",
+          stripeSubscriptionId: "sub_test",
+          status: "active",
+          metadata: {
+            stripe: {
+              lastEventAt: "2026-06-07T00:00:00.000Z",
+              lastEventId: "evt_later_same_second",
+              recentEventIds: ["evt_customer_subscription_updated", "evt_later_same_second"],
+              lastEventType: "customer.subscription.updated",
+              priceId: "price_growth",
+            },
+          },
+        }),
+      ],
+    );
+    const event = stripeEvent("customer.subscription.updated", {
+      id: "sub_test",
+      object: "subscription",
+      customer: "cus_test",
+      status: "past_due",
+      items: { data: [{ price: { id: "price_growth" } }] },
+    });
+
+    await expect(syncStripeBillingEvent(event, store)).resolves.toMatchObject({
+      action: "ignored",
+      reason: "stale-event",
+      tenantId,
+    });
+    expect(store.subscriptions[0]).toMatchObject({ status: "active" });
+  });
+
   it("ignores old subscription mutations matched only by Stripe customer id", async () => {
     const store = new MemorySubscriptionStore(
       [growthPlan],

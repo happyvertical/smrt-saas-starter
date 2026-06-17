@@ -404,6 +404,10 @@ function mergeSubscriptionMetadata(
       lastEventId: update.eventId,
       lastEventType: update.eventType,
       lastEventAt: update.eventCreatedAt.toISOString(),
+      recentEventIds: appendRecentEventId(
+        readStringArray(existingStripe?.recentEventIds),
+        update.eventId,
+      ),
       priceId: update.stripePriceId ?? readString(existingStripe?.priceId),
     },
   };
@@ -415,11 +419,17 @@ function isStaleStripeEvent(
 ): boolean {
   const lastStripe = readRecord(existing.metadata.stripe);
 
-  // Stripe delivers at-least-once: the exact same event id can arrive twice.
-  // Skip an exact replay of the last processed event. (A missing/blank stored
-  // id can't false-skip because readString returns undefined.)
+  // Stripe delivers at-least-once: the same event id can arrive again. Reject a
+  // replay of ANY recently processed event id, not just the most recent — so an
+  // A, B, A redelivery within the same `created` second can't slip past the
+  // seconds-resolution timestamp tie below. (lastEventId is kept as a fallback
+  // for rows written before recentEventIds existed.)
+  const recentEventIds = readStringArray(lastStripe?.recentEventIds);
   const lastEventId = readString(lastStripe?.lastEventId);
-  if (lastEventId && lastEventId === update.eventId) {
+  if (
+    update.eventId &&
+    (recentEventIds.includes(update.eventId) || lastEventId === update.eventId)
+  ) {
     return true;
   }
 
@@ -575,6 +585,26 @@ function readRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+}
+
+// Bounded set of recently processed Stripe event ids, kept in subscription
+// metadata for at-least-once redelivery dedupe. Capped so the row can't grow
+// unbounded; older ids fall off and are instead caught by the timestamp check.
+const MAX_RECENT_EVENT_IDS = 20;
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item.length > 0)
+    : [];
+}
+
+function appendRecentEventId(existing: string[], eventId: string): string[] {
+  if (!eventId) {
+    return existing.slice(-MAX_RECENT_EVENT_IDS);
+  }
+  const next = existing.filter((id) => id !== eventId);
+  next.push(eventId);
+  return next.slice(-MAX_RECENT_EVENT_IDS);
 }
 
 function rowToPlan(row: unknown): SubscriptionSyncPlan | null {
