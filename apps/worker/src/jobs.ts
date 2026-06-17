@@ -263,8 +263,14 @@ export async function auditUsageThresholds(
       );
 
       for (const evaluation of resolution.thresholdEvaluations) {
+        // `observe` thresholds are informational only — the resolver never
+        // enforces them, but it can still report state "warn" for them. They
+        // must not feed the ok/warned/blocked counters or the warn logs below,
+        // otherwise an informational threshold over its warning ratio triggers
+        // a misleading "thresholds near/exceeded" warning.
         if (evaluation.threshold.enforcement === "observe") {
           observed += 1;
+          continue;
         }
 
         if (evaluation.state === "blocked") {

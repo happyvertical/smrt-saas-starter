@@ -104,12 +104,75 @@ describe("worker jobs", () => {
     ).resolves.toEqual({
       job: "usage.audit",
       processed: 2,
-      ok: 2,
+      // tenant-1 (block enforcement): ok + warn. tenant-2 (observe): both
+      // evaluations are informational, so they only count as observed — never
+      // ok/blocked.
+      ok: 1,
       warned: 1,
-      blocked: 1,
+      blocked: 0,
       observed: 2,
       failed: 0,
     });
+  });
+
+  it("does not warn or block for observe-enforcement thresholds reported as exceeded", async () => {
+    const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const store = memoryUsageAuditStore(["tenant-2"]);
+    const resolver = memoryUsageAuditResolver({
+      "tenant-2": entitlementResolution("tenant-2", ["blocked", "warn"], "observe"),
+    });
+
+    await expect(
+      auditUsageThresholds({
+        store,
+        resolver,
+        logger,
+        now: new Date("2026-06-08T00:00:00.000Z"),
+      }),
+    ).resolves.toEqual({
+      job: "usage.audit",
+      processed: 1,
+      ok: 0,
+      warned: 0,
+      blocked: 0,
+      observed: 2,
+      failed: 0,
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(
+      "Usage thresholds audited",
+      expect.objectContaining({ blocked: 0, warned: 0, observed: 2 }),
+    );
+  });
+
+  it("still blocks for block-enforcement thresholds while observing others", async () => {
+    const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const store = memoryUsageAuditStore(["tenant-1", "tenant-2"]);
+    const resolver = memoryUsageAuditResolver({
+      "tenant-1": entitlementResolution("tenant-1", ["blocked"]),
+      "tenant-2": entitlementResolution("tenant-2", ["blocked"], "observe"),
+    });
+
+    await expect(
+      auditUsageThresholds({
+        store,
+        resolver,
+        logger,
+        now: new Date("2026-06-08T00:00:00.000Z"),
+      }),
+    ).resolves.toEqual({
+      job: "usage.audit",
+      processed: 2,
+      ok: 0,
+      warned: 0,
+      blocked: 1,
+      observed: 1,
+      failed: 0,
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Usage thresholds exceeded",
+      expect.objectContaining({ blocked: 1, observed: 1 }),
+    );
   });
 
   it("runs a selected worker cycle", async () => {
