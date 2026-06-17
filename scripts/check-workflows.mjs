@@ -25,6 +25,12 @@ for (const file of workflowFiles) {
   if (!text.includes("setup-environment")) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
+  // CI runs on the self-hosted arc-happyvertical runner, not GitHub-hosted.
+  for (const runner of text.matchAll(/runs-on:\s*(\S+)/g)) {
+    if (runner[1] !== "arc-happyvertical") {
+      throw new Error(`${file} must run on arc-happyvertical (found runs-on: ${runner[1]})`);
+    }
+  }
   if (text.includes("pnpm check")) {
     for (const phrase of [
       "postgres:18-alpine",
@@ -65,10 +71,6 @@ for (const phrase of [
   "uses: android-actions/setup-android@v4",
   'sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"',
   "pnpm mobile:validate:android",
-  "mobile-ios:",
-  "runs-on: macos-latest",
-  "brew install xcodegen",
-  "pnpm mobile:validate:ios",
 ]) {
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
