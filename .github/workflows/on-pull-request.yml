@@ -15,7 +15,12 @@ env:
   GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
 
 jobs:
+  # Only run on same-repo PRs. The self-hosted arc-happyvertical runner must
+  # never execute untrusted code from fork PRs (it checks out, installs, and
+  # runs contributor-controlled scripts). Fork PRs are skipped here; gate their
+  # CI behind maintainer approval / a GitHub-hosted path instead.
   check:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: arc-happyvertical
     services:
       postgres:
@@ -40,6 +45,7 @@ jobs:
         run: pnpm check
 
   e2e:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: arc-happyvertical
     services:
       postgres:
@@ -72,6 +78,7 @@ jobs:
         run: pnpm --filter @happyvertical/smrt-saas-web test:e2e
 
   mobile-android:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: arc-happyvertical
     steps:
       - uses: actions/checkout@v6
@@ -90,6 +97,7 @@ jobs:
         run: pnpm mobile:validate:android
 
   runtime:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: arc-happyvertical
     steps:
       - uses: actions/checkout@v6
