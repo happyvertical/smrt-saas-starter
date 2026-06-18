@@ -1,13 +1,52 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   enqueueMaintenanceJobs,
   ensureStarterMaintenanceSchedules,
+  getNextCronDate,
   type MutableStarterMaintenanceSchedule,
   parseWorkerMode,
   resolveMaintenanceJobRequests,
   resolveStarterMaintenanceScheduleDefinitions,
   resolveTaskRunnerQueues,
 } from "./smrt-jobs.js";
+
+describe("getNextCronDate field bounds", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("steps the month field from its 1-based minimum", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 1, 1, 12, 0, 0)); // 2026-02-01 12:00 local
+    // `*/3` month is Jan(1), Apr(4), Jul(7), Oct(10); next after Feb is April.
+    const next = getNextCronDate("0 0 1 */3 *");
+    expect(next.getMonth() + 1).toBe(4);
+    expect(next.getDate()).toBe(1);
+    expect(next.getHours()).toBe(0);
+    expect(next.getMinutes()).toBe(0);
+  });
+
+  it("steps the day-of-month field from its 1-based minimum", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 2, 12, 0, 0)); // 2026-06-02 12:00 local
+    // `*/10` day-of-month is the 1st, 11th, 21st, 31st; next after the 2nd is the 11th.
+    const next = getNextCronDate("0 0 */10 * *");
+    expect(next.getMonth() + 1).toBe(6);
+    expect(next.getDate()).toBe(11);
+    expect(next.getHours()).toBe(0);
+    expect(next.getMinutes()).toBe(0);
+  });
+
+  it("keeps 0-based hour stepping anchored at zero", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 2, 12, 30, 0)); // 2026-06-02 12:30 local
+    // `*/5` hour is 0,5,10,15,20; next slot after 12:30 is hour 15.
+    const next = getNextCronDate("0 */5 * * *");
+    expect(next.getDate()).toBe(2);
+    expect(next.getHours()).toBe(15);
+    expect(next.getMinutes()).toBe(0);
+  });
+});
 
 describe("SMRT worker job adapter", () => {
   it("parses worker modes with a queued one-shot default", () => {
