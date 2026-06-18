@@ -931,7 +931,19 @@ function readInteger(value: unknown): number | null {
   return null;
 }
 
-function getNextCronDate(cron: string): Date {
+type CronFieldBounds = { min: number; max: number };
+
+// Per-field ranges. The min matters for `*/N`: standard cron steps from the
+// field minimum, which is 1 for month and day-of-month (not 0). Using 0 there
+// shifted every stepped match (e.g. `*/3` month matched Mar/Jun/Sep/Dec
+// instead of Jan/Apr/Jul/Oct).
+const MINUTE_BOUNDS: CronFieldBounds = { min: 0, max: 59 };
+const HOUR_BOUNDS: CronFieldBounds = { min: 0, max: 23 };
+const DAY_OF_MONTH_BOUNDS: CronFieldBounds = { min: 1, max: 31 };
+const MONTH_BOUNDS: CronFieldBounds = { min: 1, max: 12 };
+const DAY_OF_WEEK_BOUNDS: CronFieldBounds = { min: 0, max: 6 };
+
+export function getNextCronDate(cron: string): Date {
   const parts = cron.trim().split(/\s+/);
   if (parts.length !== 5) {
     throw new Error(`Invalid cron expression: expected 5 fields, got ${parts.length}`);
@@ -944,11 +956,13 @@ function getNextCronDate(cron: string): Date {
 
   for (let index = 0; index < 525_600; index += 1) {
     if (
-      matchesCronField(candidate.getMinutes(), minute) &&
-      matchesCronField(candidate.getHours(), hour) &&
-      matchesCronField(candidate.getDate(), dayOfMonth) &&
-      matchesCronField(candidate.getMonth() + 1, month) &&
-      matchesCronField(candidate.getDay(), dayOfWeek, { allowSundaySeven: true })
+      matchesCronField(candidate.getMinutes(), minute, MINUTE_BOUNDS) &&
+      matchesCronField(candidate.getHours(), hour, HOUR_BOUNDS) &&
+      matchesCronField(candidate.getDate(), dayOfMonth, DAY_OF_MONTH_BOUNDS) &&
+      matchesCronField(candidate.getMonth() + 1, month, MONTH_BOUNDS) &&
+      matchesCronField(candidate.getDay(), dayOfWeek, DAY_OF_WEEK_BOUNDS, {
+        allowSundaySeven: true,
+      })
     ) {
       return candidate;
     }
@@ -962,14 +976,16 @@ function getNextCronDate(cron: string): Date {
 function matchesCronField(
   value: number,
   expression: string,
+  bounds: CronFieldBounds,
   options: { allowSundaySeven?: boolean } = {},
 ): boolean {
-  return expression.split(",").some((part) => matchesCronPart(value, part.trim(), options));
+  return expression.split(",").some((part) => matchesCronPart(value, part.trim(), bounds, options));
 }
 
 function matchesCronPart(
   value: number,
   expression: string,
+  bounds: CronFieldBounds,
   options: { allowSundaySeven?: boolean },
 ): boolean {
   if (expression === "*") {
@@ -982,7 +998,7 @@ function matchesCronPart(
     return false;
   }
 
-  const [start, end] = parseCronRange(range, options);
+  const [start, end] = parseCronRange(range, bounds, options);
   if (start === null || end === null || value < start || value > end) {
     return false;
   }
@@ -992,10 +1008,11 @@ function matchesCronPart(
 
 function parseCronRange(
   value: string,
+  bounds: CronFieldBounds,
   options: { allowSundaySeven?: boolean },
 ): [number | null, number | null] {
   if (value === "*") {
-    return [0, options.allowSundaySeven ? 6 : 59];
+    return [bounds.min, bounds.max];
   }
   if (value.includes("-")) {
     const [start, end] = value.split("-");
