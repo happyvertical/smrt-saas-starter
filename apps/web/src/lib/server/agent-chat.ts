@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { type ChatMessage, ChatService } from "@happyvertical/smrt-chat";
+import { sendAgentReply } from "@happyvertical/smrt-chat/internal/agent-runtime";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import {
   executeRuntimeToolForTenant,
@@ -82,12 +83,11 @@ export async function sendTenantChatMessage(
 
     const session = await ensureTenantAgentSession(activeTenantId, billing);
     const service = session.service;
-    await service.sendAgentMessage({
+    await service.sendAgentUserMessage({
       tenantId: activeTenantId,
       agentSessionId: session.sessionId,
-      senderProfileId: starterData.demoTenant.ownerUser.id,
+      actorProfileId: starterData.demoTenant.ownerUser.id,
       content: message,
-      role: "user",
     });
     await recordTenantUsageSignal({
       tenantId: activeTenantId,
@@ -132,7 +132,7 @@ async function ensureTenantAgentSession(tenantId: string, billing?: BillingOverv
   const { session, room } = await service.createAgentSession({
     tenantId,
     agentId: getStarterAgentId(tenantId),
-    participantProfileId: starterData.demoTenant.ownerUser.id,
+    actorProfileId: starterData.demoTenant.ownerUser.id,
     allowedTools: tools.map((tool) => tool.name),
     systemPrompt: prompt.text,
     maxMessages: 100,
@@ -171,7 +171,13 @@ async function readTenantChatState(
   tenantId: string,
   session: Awaited<ReturnType<typeof ensureTenantAgentSession>>,
 ): Promise<TenantChatState> {
-  const messages = (await session.service.messages.getByAgentSession(session.sessionId))
+  const messages = (
+    await session.service.getRoomMessages({
+      roomId: session.roomId,
+      actorProfileId: starterData.demoTenant.ownerUser.id,
+      tenantId,
+    })
+  )
     .map(toTenantChatMessage)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
@@ -193,12 +199,26 @@ async function callToolForChat(options: {
   availableTools: StarterRuntimeTool[];
 }) {
   const tool = runtimeTools.find((candidate) => candidate.name === options.toolName);
-  await options.service.sendAgentMessage({
+
+  // The agent-runtime bridge gates tool_call replies fail-closed against the
+  // session allowlist (which mirrors the tenant's available tools), so a tool
+  // the tenant lacks would throw on the send below — before the catch that
+  // renders the friendly denial. Short-circuit to that denial here instead.
+  if (!options.availableTools.some((candidate) => candidate.name === options.toolName)) {
+    await sendAgentReply(options.service, {
+      tenantId: options.tenantId,
+      agentSessionId: options.sessionId,
+      content: renderUnavailableTool(options.availableTools),
+      kind: "assistant",
+    });
+    return;
+  }
+
+  await sendAgentReply(options.service, {
     tenantId: options.tenantId,
     agentSessionId: options.sessionId,
-    senderProfileId: getStarterAgentId(options.tenantId),
     content: tool ? `Calling ${tool.name}` : `Calling ${options.toolName}`,
-    role: "assistant",
+    kind: "assistant",
     messageType: "tool_call",
     toolCallData: {
       name: options.toolName,
@@ -212,36 +232,33 @@ async function callToolForChat(options: {
       buildToolInput(options.toolName, options.message),
       options.tenantId,
     );
-    await options.service.sendAgentMessage({
+    await sendAgentReply(options.service, {
       tenantId: options.tenantId,
       agentSessionId: options.sessionId,
-      senderProfileId: getStarterAgentId(options.tenantId),
       content: execution.response.content.map((item) => item.text).join("\n"),
-      role: "tool",
+      kind: "tool",
       messageType: "tool_result",
       toolCallData: {
         name: options.toolName,
         response: execution.response.structuredContent,
       },
     });
-    await options.service.sendAgentMessage({
+    await sendAgentReply(options.service, {
       tenantId: options.tenantId,
       agentSessionId: options.sessionId,
-      senderProfileId: getStarterAgentId(options.tenantId),
       content: renderAssistantResponse(execution.tool, execution.response.structuredContent),
-      role: "assistant",
+      kind: "assistant",
     });
   } catch (error) {
     if (!(error instanceof RuntimeToolExecutionError)) {
       throw error;
     }
 
-    await options.service.sendAgentMessage({
+    await sendAgentReply(options.service, {
       tenantId: options.tenantId,
       agentSessionId: options.sessionId,
-      senderProfileId: getStarterAgentId(options.tenantId),
       content: renderToolError(error, options.availableTools),
-      role: "assistant",
+      kind: "assistant",
     });
   }
 }
@@ -316,6 +333,10 @@ function renderToolError(error: RuntimeToolExecutionError, availableTools: Start
   if (error.status === 429) {
     return "I cannot call that MCP tool because this tenant has reached the MCP call threshold.";
   }
+  return renderUnavailableTool(availableTools);
+}
+
+function renderUnavailableTool(availableTools: StarterRuntimeTool[]): string {
   const names = availableTools.map((tool) => tool.name).join(", ");
   return `That MCP tool is not available on the current plan. Available tools: ${names || "none"}.`;
 }

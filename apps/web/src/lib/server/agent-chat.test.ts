@@ -48,14 +48,20 @@ const chatMocks = vi.hoisted(() => {
     },
   ];
 
+  // Session tool allowlist captured at createAgentSession time; the sendAgentReply
+  // mock enforces it the way the real agent-runtime bridge does (fail-closed).
+  const allowlist: { tools: string[] } = { tools: [] };
+
   return {
     RuntimeToolExecutionError,
     messages,
     runtimeTools,
+    allowlist,
     createChatService: vi.fn(),
     createAgentSession: vi.fn(),
-    sendAgentMessage: vi.fn(),
-    getByAgentSession: vi.fn(),
+    sendAgentUserMessage: vi.fn(),
+    sendAgentReply: vi.fn(),
+    getRoomMessages: vi.fn(),
     getBillingOverview: vi.fn(),
     resolveStarterPromptPreview: vi.fn(),
     executeRuntimeToolForTenant: vi.fn(),
@@ -68,6 +74,10 @@ vi.mock("@happyvertical/smrt-chat", () => ({
   ChatService: {
     create: chatMocks.createChatService,
   },
+}));
+
+vi.mock("@happyvertical/smrt-chat/internal/agent-runtime", () => ({
+  sendAgentReply: chatMocks.sendAgentReply,
 }));
 
 vi.mock("$lib/server/subscriptions", () => ({
@@ -129,36 +139,68 @@ describe("tenant agent chat", () => {
         },
       },
     });
-    chatMocks.getByAgentSession.mockImplementation(async () => chatMocks.messages);
-    chatMocks.sendAgentMessage.mockImplementation(async (message) => {
+    const pushMessage = (
+      role: "user" | "assistant" | "system" | "tool",
+      messageType: "text" | "system" | "action" | "file" | "tool_call" | "tool_result",
+      content: string,
+      toolCallData: Record<string, unknown> | null,
+    ) => {
       chatMocks.messages.push({
         id: `msg-${chatMocks.messages.length + 1}`,
         slug: null,
-        role: message.role ?? "assistant",
-        messageType: message.messageType ?? "text",
-        content: message.content,
+        role,
+        messageType,
+        content,
         created_at: new Date(`2026-06-07T00:00:0${chatMocks.messages.length}.000Z`),
-        getToolCallData: () => message.toolCallData ?? null,
+        getToolCallData: () => toolCallData,
       });
+    };
+    chatMocks.getRoomMessages.mockImplementation(async () => chatMocks.messages);
+    chatMocks.sendAgentUserMessage.mockImplementation(async (message) => {
+      pushMessage("user", message.messageType ?? "text", message.content, null);
     });
-    chatMocks.createAgentSession.mockResolvedValue({
-      session: {
-        id: "33333333-3333-4333-8333-333333333333",
-        systemPrompt: "Tenant assistant prompt",
-        getAllowedTools: () => chatMocks.runtimeTools.slice(0, 2).map((tool) => tool.name),
-        setAllowedTools: vi.fn(),
-        save: vi.fn(),
-      },
-      room: {
-        id: "44444444-4444-4444-8444-444444444444",
-      },
+    // Module-level agent-runtime bridge: author assistant/tool messages as the
+    // session agent (kind 'tool' -> role 'tool', otherwise 'assistant'). It gates
+    // tool_call/tool replies fail-closed against the session allowlist exactly as
+    // the real bridge does, so a tool outside the allowlist throws rather than
+    // being recorded.
+    chatMocks.sendAgentReply.mockImplementation(async (_service, reply) => {
+      const isToolCall =
+        reply.messageType === "tool_call" || reply.kind === "tool" || Boolean(reply.toolCallData);
+      if (isToolCall) {
+        const toolName = (reply.toolCallData as { name?: string } | null | undefined)?.name;
+        if (!toolName || !chatMocks.allowlist.tools.includes(toolName)) {
+          throw new Error(
+            `Tool '${toolName}' is not allowed for this agent session (authorization denied)`,
+          );
+        }
+      }
+      pushMessage(
+        reply.kind === "tool" ? "tool" : "assistant",
+        reply.messageType ?? "text",
+        reply.content,
+        reply.toolCallData ?? null,
+      );
+    });
+    chatMocks.createAgentSession.mockImplementation(async (params) => {
+      chatMocks.allowlist.tools = params.allowedTools ?? [];
+      return {
+        session: {
+          id: "33333333-3333-4333-8333-333333333333",
+          systemPrompt: "Tenant assistant prompt",
+          getAllowedTools: () => chatMocks.allowlist.tools,
+          setAllowedTools: vi.fn(),
+          save: vi.fn(),
+        },
+        room: {
+          id: "44444444-4444-4444-8444-444444444444",
+        },
+      };
     });
     chatMocks.createChatService.mockResolvedValue({
       createAgentSession: chatMocks.createAgentSession,
-      messages: {
-        getByAgentSession: chatMocks.getByAgentSession,
-      },
-      sendAgentMessage: chatMocks.sendAgentMessage,
+      sendAgentUserMessage: chatMocks.sendAgentUserMessage,
+      getRoomMessages: chatMocks.getRoomMessages,
     });
   });
 
@@ -177,7 +219,7 @@ describe("tenant agent chat", () => {
       agentId: expect.stringMatching(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       ),
-      participantProfileId: "00000000-0000-4000-8000-000000000011",
+      actorProfileId: "00000000-0000-4000-8000-000000000011",
       allowedTools: ["tenant.usage.summary", "tenant.subscription.summary"],
       systemPrompt: "Tenant assistant prompt",
       maxMessages: 100,
@@ -237,14 +279,16 @@ describe("tenant agent chat", () => {
     );
   });
 
-  it("returns an assistant message when the selected MCP tool is denied", async () => {
-    chatMocks.executeRuntimeToolForTenant.mockRejectedValueOnce(
-      new chatMocks.RuntimeToolExecutionError(403, "denied"),
-    );
-
+  it("returns an assistant message when the selected MCP tool is not on the plan", async () => {
+    // "preview the prompt" selects tenant.prompt.preview, which is outside the
+    // session allowlist for this plan. The agent-runtime bridge gates tool_call
+    // replies fail-closed, so the handler must short-circuit to the denial
+    // message rather than attempting (and throwing on) the gated tool call.
     const result = await sendTenantChatMessage(tenantId, "preview the prompt");
 
     expect(result.selectedTool).toBe("tenant.prompt.preview");
+    expect(chatMocks.executeRuntimeToolForTenant).not.toHaveBeenCalled();
+    expect(result.messages.some((message) => message.messageType === "tool_call")).toBe(false);
     expect(result.messages.at(-1)).toMatchObject({
       role: "assistant",
       content:
@@ -313,7 +357,8 @@ describe("tenant agent chat", () => {
       status: 429,
       message: "Tenant exceeded the chat messages threshold",
     });
-    expect(chatMocks.sendAgentMessage).not.toHaveBeenCalled();
+    expect(chatMocks.sendAgentUserMessage).not.toHaveBeenCalled();
+    expect(chatMocks.sendAgentReply).not.toHaveBeenCalled();
     expect(chatMocks.createChatService).not.toHaveBeenCalled();
     expect(chatMocks.createAgentSession).not.toHaveBeenCalled();
     expect(chatMocks.recordTenantUsageSignal).not.toHaveBeenCalled();
