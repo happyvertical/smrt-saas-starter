@@ -54,8 +54,9 @@ const chatMocks = vi.hoisted(() => {
     runtimeTools,
     createChatService: vi.fn(),
     createAgentSession: vi.fn(),
-    sendAgentMessage: vi.fn(),
-    getByAgentSession: vi.fn(),
+    sendAgentUserMessage: vi.fn(),
+    sendAgentReply: vi.fn(),
+    getRoomMessages: vi.fn(),
     getBillingOverview: vi.fn(),
     resolveStarterPromptPreview: vi.fn(),
     executeRuntimeToolForTenant: vi.fn(),
@@ -68,6 +69,10 @@ vi.mock("@happyvertical/smrt-chat", () => ({
   ChatService: {
     create: chatMocks.createChatService,
   },
+}));
+
+vi.mock("@happyvertical/smrt-chat/internal/agent-runtime", () => ({
+  sendAgentReply: chatMocks.sendAgentReply,
 }));
 
 vi.mock("$lib/server/subscriptions", () => ({
@@ -129,17 +134,35 @@ describe("tenant agent chat", () => {
         },
       },
     });
-    chatMocks.getByAgentSession.mockImplementation(async () => chatMocks.messages);
-    chatMocks.sendAgentMessage.mockImplementation(async (message) => {
+    const pushMessage = (
+      role: "user" | "assistant" | "system" | "tool",
+      messageType: "text" | "system" | "action" | "file" | "tool_call" | "tool_result",
+      content: string,
+      toolCallData: Record<string, unknown> | null,
+    ) => {
       chatMocks.messages.push({
         id: `msg-${chatMocks.messages.length + 1}`,
         slug: null,
-        role: message.role ?? "assistant",
-        messageType: message.messageType ?? "text",
-        content: message.content,
+        role,
+        messageType,
+        content,
         created_at: new Date(`2026-06-07T00:00:0${chatMocks.messages.length}.000Z`),
-        getToolCallData: () => message.toolCallData ?? null,
+        getToolCallData: () => toolCallData,
       });
+    };
+    chatMocks.getRoomMessages.mockImplementation(async () => chatMocks.messages);
+    chatMocks.sendAgentUserMessage.mockImplementation(async (message) => {
+      pushMessage("user", message.messageType ?? "text", message.content, null);
+    });
+    // Module-level agent-runtime bridge: author assistant/tool messages as the
+    // session agent (kind 'tool' -> role 'tool', otherwise 'assistant').
+    chatMocks.sendAgentReply.mockImplementation(async (_service, reply) => {
+      pushMessage(
+        reply.kind === "tool" ? "tool" : "assistant",
+        reply.messageType ?? "text",
+        reply.content,
+        reply.toolCallData ?? null,
+      );
     });
     chatMocks.createAgentSession.mockResolvedValue({
       session: {
@@ -155,10 +178,8 @@ describe("tenant agent chat", () => {
     });
     chatMocks.createChatService.mockResolvedValue({
       createAgentSession: chatMocks.createAgentSession,
-      messages: {
-        getByAgentSession: chatMocks.getByAgentSession,
-      },
-      sendAgentMessage: chatMocks.sendAgentMessage,
+      sendAgentUserMessage: chatMocks.sendAgentUserMessage,
+      getRoomMessages: chatMocks.getRoomMessages,
     });
   });
 
@@ -177,7 +198,7 @@ describe("tenant agent chat", () => {
       agentId: expect.stringMatching(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       ),
-      participantProfileId: "00000000-0000-4000-8000-000000000011",
+      actorProfileId: "00000000-0000-4000-8000-000000000011",
       allowedTools: ["tenant.usage.summary", "tenant.subscription.summary"],
       systemPrompt: "Tenant assistant prompt",
       maxMessages: 100,
@@ -313,7 +334,8 @@ describe("tenant agent chat", () => {
       status: 429,
       message: "Tenant exceeded the chat messages threshold",
     });
-    expect(chatMocks.sendAgentMessage).not.toHaveBeenCalled();
+    expect(chatMocks.sendAgentUserMessage).not.toHaveBeenCalled();
+    expect(chatMocks.sendAgentReply).not.toHaveBeenCalled();
     expect(chatMocks.createChatService).not.toHaveBeenCalled();
     expect(chatMocks.createAgentSession).not.toHaveBeenCalled();
     expect(chatMocks.recordTenantUsageSignal).not.toHaveBeenCalled();
