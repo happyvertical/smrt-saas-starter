@@ -199,6 +199,21 @@ async function callToolForChat(options: {
   availableTools: StarterRuntimeTool[];
 }) {
   const tool = runtimeTools.find((candidate) => candidate.name === options.toolName);
+
+  // The agent-runtime bridge gates tool_call replies fail-closed against the
+  // session allowlist (which mirrors the tenant's available tools), so a tool
+  // the tenant lacks would throw on the send below — before the catch that
+  // renders the friendly denial. Short-circuit to that denial here instead.
+  if (!options.availableTools.some((candidate) => candidate.name === options.toolName)) {
+    await sendAgentReply(options.service, {
+      tenantId: options.tenantId,
+      agentSessionId: options.sessionId,
+      content: renderUnavailableTool(options.availableTools),
+      kind: "assistant",
+    });
+    return;
+  }
+
   await sendAgentReply(options.service, {
     tenantId: options.tenantId,
     agentSessionId: options.sessionId,
@@ -318,6 +333,10 @@ function renderToolError(error: RuntimeToolExecutionError, availableTools: Start
   if (error.status === 429) {
     return "I cannot call that MCP tool because this tenant has reached the MCP call threshold.";
   }
+  return renderUnavailableTool(availableTools);
+}
+
+function renderUnavailableTool(availableTools: StarterRuntimeTool[]): string {
   const names = availableTools.map((tool) => tool.name).join(", ");
   return `That MCP tool is not available on the current plan. Available tools: ${names || "none"}.`;
 }
