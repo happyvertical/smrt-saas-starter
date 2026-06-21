@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/happyvertical/smrt-saas-starter/security/advisories/new
+    about: Please report security issues privately — do not open a public issue. See SECURITY.md.
+  - name: Upstream SMRT package issue
+    url: https://github.com/happyvertical/smrt/issues/new
+    about: For bugs in @happyvertical/smrt-* packages, file upstream on happyvertical/smrt.
+  - name: Upstream SDK package issue
+    url: https://github.com/happyvertical/sdk/issues/new
+    about: For bugs in the other @happyvertical/* (SDK) packages, file upstream on happyvertical/sdk.
