@@ -31,7 +31,9 @@ export interface CreateTenantOwnerInvitationResult {
   acceptUrl: string;
 }
 
-type DbOverride = NonNullable<Parameters<typeof StarterInvitationCollection.create>[0]>["db"];
+export type DbOverride = NonNullable<
+  Parameters<typeof StarterInvitationCollection.create>[0]
+>["db"];
 
 const signupAccessModeKey = "signup.access_mode";
 const defaultSignupAccessMode: SignupAccessMode = "public";

@@ -74,6 +74,7 @@
     "@happyvertical/smrt-tags": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:",
     "@happyvertical/smrt-types": "catalog:",
+    "@happyvertical/smrt-ui": "catalog:",
     "@happyvertical/smrt-users": "catalog:",
     "@happyvertical/translator": "catalog:",
     "@sveltejs/adapter-node": "^5.5.4",

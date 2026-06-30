@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Provider, ThemeProvider } from "@happyvertical/smrt-svelte";
+  import { Provider } from "@happyvertical/smrt-svelte";
+  import { ThemeProvider } from "@happyvertical/smrt-ui/theme";
 
   let { children } = $props();
 </script>
