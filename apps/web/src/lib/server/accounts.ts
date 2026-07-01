@@ -48,6 +48,18 @@ export interface SignInLinkRequestResult {
   verificationUrl: string | null;
 }
 
+export interface WelcomeMagicLink {
+  email: string;
+  expiresAt: Date;
+  verificationUrl: string;
+}
+
+export interface TenantSummary {
+  id: string;
+  slug: string;
+  name: string;
+}
+
 export interface DbLike {
   query: (
     sql: string,
@@ -94,6 +106,33 @@ export async function requestSignInLink(input: {
     email,
     expiresAt: result.expiresAt,
     verificationUrl: shouldExposeInlineMagicLinks() ? verificationUrl : null,
+  };
+}
+
+/**
+ * Generate a single-use welcome sign-in link for a freshly graduated user.
+ * Mirrors {@link requestSignInLink}'s magic-link generation but skips the
+ * membership lookup (graduation just created the user + membership) and always
+ * returns the URL so the caller can deliver it (e.g. an access-request welcome
+ * email). Returns `null` when local magic-link delivery is not configured — the
+ * same gate as the sign-in flow, so production (which ships no inline links or
+ * mail transport) is a no-op until a real transport is wired in.
+ */
+export async function generateWelcomeMagicLink(input: {
+  email: string;
+  origin: string;
+  returnTo?: string | null;
+}): Promise<WelcomeMagicLink | null> {
+  if (!isMagicLinkDeliveryConfigured()) {
+    return null;
+  }
+  const email = normalizeEmail(input.email);
+  const magicLinks = await createMagicLinkService();
+  const result = await magicLinks.generate(email);
+  return {
+    email,
+    expiresAt: result.expiresAt,
+    verificationUrl: buildVerificationUrl(input.origin, result.token, input.returnTo),
   };
 }
 
@@ -257,6 +296,27 @@ export async function seedDefaultTenantSubscription(
     stripe_checkout_session_id: "",
     metadata: JSON.stringify({ createdBy: "smrt-saas-starter", planKey: defaultPlanKey }),
   });
+}
+
+/**
+ * List active tenants (id / slug / name), ordered by name. Used by the admin
+ * access-request triage UI to graduate a requester into an existing tenant.
+ */
+export async function listTenants(): Promise<TenantSummary[]> {
+  const db = (await getAppDatabase()) as DbLike;
+  const result = await db.query(
+    `
+      SELECT id, slug, name
+      FROM tenants
+      WHERE status = 'active'
+      ORDER BY name ASC
+    `,
+  );
+  return result.rows.map((row) => ({
+    id: readRequiredString(row, "id"),
+    slug: readRequiredString(row, "slug"),
+    name: readRequiredString(row, "name"),
+  }));
 }
 
 async function validateAccountInvitation(token: string, email: string, db: DbLike): Promise<void> {

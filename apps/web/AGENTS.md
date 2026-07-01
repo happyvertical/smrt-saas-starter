@@ -18,8 +18,14 @@ settings, admin, mobile auth/session endpoints, and the runtime MCP surface.
 - The dev-auth fallback (`SMRT_STARTER_DEV_AUTH`, non-production only) signs in
   the demo Owner. Keep new auth paths working with it off.
 - Access requests (SMRT `AccessRequest`) go through `$lib/server/access-requests.ts`:
-  `submitAccessRequest` is public (the `/request-access` form); operator triage
-  (list/approve/decline/graduate) is gated on the super-user tier, not tenant roles.
+  `submitAccessRequest` is public (the `/request-access` form) and rate-limited
+  per-IP/per-email by `$lib/server/rate-limit.ts` — an in-memory, per-instance
+  limiter (defense-in-depth only; multi-replica deploys must ALSO rate-limit at
+  the edge/ingress, which it does not replace). Operator triage
+  (list/approve/decline; graduate into a new **or** existing tenant, or
+  user-only) is gated on the super-user tier, not tenant roles. Graduation sends
+  the new user a best-effort welcome magic link (reuses the `MagicLinkService`
+  pattern from `accounts.ts`; a failed send never blocks graduation).
 - Use `.claude/skills/run-web` to launch and preview the app locally.
 
 ## Validation

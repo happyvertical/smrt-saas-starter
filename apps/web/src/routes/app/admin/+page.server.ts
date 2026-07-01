@@ -7,6 +7,7 @@ import {
   listAccessRequests,
   toAccessRequestMessage,
 } from "$lib/server/access-requests";
+import { listTenants } from "$lib/server/accounts";
 import {
   createTenantOwnerInvitation,
   getSignupAccessMode,
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     superUser,
     signupMode: await getSignupAccessMode(),
     invitations: await listTenantOwnerInvitations(),
+    tenants: await listTenants(),
     accessRequests: await listAccessRequests(superUser, {
       status: [AccessRequestStatus.REQUESTED, AccessRequestStatus.APPROVED],
     }),
@@ -121,13 +123,19 @@ export const actions: Actions = {
     );
   },
 
-  graduateAccessRequest: async ({ request, locals }) => {
+  graduateAccessRequest: async ({ request, locals, url }) => {
     const superUser = requireSuperUser(locals);
     const data = await request.formData();
     const id = String(data.get("id") ?? "").trim();
     const tenantName = String(data.get("tenantName") ?? "").trim() || null;
+    const existingTenantId = String(data.get("existingTenantId") ?? "").trim() || null;
+    const role = String(data.get("role") ?? "").trim() || null;
     return await runAccessRequestAction("graduateAccessRequest", id, () =>
-      graduateAccessRequest(superUser, id, { tenantName }),
+      graduateAccessRequest(superUser, id, {
+        tenantName,
+        tenant: existingTenantId ? { tenantId: existingTenantId, role } : null,
+        origin: url.origin,
+      }),
     );
   },
 };

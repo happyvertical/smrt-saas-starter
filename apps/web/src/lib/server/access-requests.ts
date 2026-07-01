@@ -2,11 +2,18 @@ import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import {
   type AccessRequest,
   AccessRequestError,
+  type AccessRequestEvent,
   AccessRequestService,
   AccessRequestStatus,
+  type GraduateNewTenantOption,
+  type GraduateTenantOption,
 } from "@happyvertical/smrt-users";
 import { error } from "@sveltejs/kit";
-import { type DbLike, seedDefaultTenantSubscription } from "$lib/server/accounts";
+import {
+  type DbLike,
+  generateWelcomeMagicLink,
+  seedDefaultTenantSubscription,
+} from "$lib/server/accounts";
 import { getAppDatabase } from "$lib/server/db";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { isSuperUserEmail, type SuperUserContext } from "$lib/server/super-users";
@@ -36,6 +43,17 @@ export interface SubmitAccessRequestInput {
 export interface GraduateAccessRequestInput {
   /** When set, graduate into a brand-new tenant with the requester as owner. */
   tenantName?: string | null;
+  /**
+   * When set, graduate into an existing tenant, enrolling the requester with the
+   * given membership role (defaults to `member`). Takes precedence over
+   * `tenantName`.
+   */
+  tenant?: { tenantId: string; role?: string | null } | null;
+  /**
+   * Request origin (e.g. `https://app.example.com`), used to build the
+   * best-effort welcome sign-in link sent on graduation. Omit to skip the link.
+   */
+  origin?: string | null;
 }
 
 function accessRequestConfig() {
@@ -53,7 +71,10 @@ async function createPublicService() {
 // super-user tier — same tier that guards /app/admin — rather than a tenant
 // role permission. The route also calls requireSuperUser before reaching here;
 // this hook is defense-in-depth bound to the verified operator.
-async function createOperatorService(operator: SuperUserContext) {
+async function createOperatorService(
+  operator: SuperUserContext,
+  options: { origin?: string } = {},
+) {
   return AccessRequestService.create({
     ...accessRequestConfig(),
     authorize: async ({ by }) => {
@@ -61,12 +82,43 @@ async function createOperatorService(operator: SuperUserContext) {
         throw error(403, "Super-user access is required to manage access requests.");
       }
     },
-    // Lifecycle hook — best-effort, never on the critical path. Email delivery
-    // (confirmation / welcome magic link) would wire in here.
-    onEvent: (event) => {
-      console.info(`[access-request] ${event.type} ${event.accessRequest?.email ?? ""}`);
-    },
+    // Lifecycle hook — best-effort, never on the critical path. A throw here is
+    // swallowed by the service (it won't roll back an already-persisted
+    // transition), and we guard again inside the handler.
+    onEvent: (event) => handleAccessRequestEvent(event, options),
   });
+}
+
+/**
+ * Best-effort reactions to access-request lifecycle transitions. On graduation
+ * we send the new user a welcome magic link so they can sign in immediately.
+ * Delivery must never break the (already-committed) transition, so any failure
+ * is logged and swallowed.
+ */
+async function handleAccessRequestEvent(
+  event: AccessRequestEvent,
+  options: { origin?: string },
+): Promise<void> {
+  console.info(`[access-request] ${event.type} ${event.accessRequest?.email ?? ""}`);
+  if (event.type !== "access-request.graduated") {
+    return;
+  }
+  const email = event.user?.email ?? event.accessRequest?.email;
+  if (!email || !options.origin) {
+    return;
+  }
+  try {
+    const link = await generateWelcomeMagicLink({ email, origin: options.origin });
+    if (link) {
+      // The starter ships no mail transport: locally this surfaces the inline
+      // link; wire a real mailer here to deliver the welcome email in production.
+      console.info(
+        `[access-request] welcome sign-in link for ${link.email}: ${link.verificationUrl}`,
+      );
+    }
+  } catch (err) {
+    console.error(`[access-request] welcome email failed for ${email}:`, err);
+  }
 }
 
 /** Public: capture a prospective user from the request-access form. No auth. */
@@ -123,36 +175,62 @@ export async function declineAccessRequest(
 }
 
 /**
- * Operator: graduate a request into a real User. With `tenantName`, creates a
- * new tenant and enrolls the requester as owner (the self-serve SaaS outcome,
- * mirroring `onboardTenant`); otherwise creates the user only. `allowFromRequested`
- * lets an operator graduate directly without a separate approve step.
+ * Operator: graduate a request into a real User. With an existing `tenant`,
+ * enrolls the requester in that tenant with the given role; with `tenantName`,
+ * creates a new tenant and enrolls the requester as owner (the self-serve SaaS
+ * outcome, mirroring `onboardTenant`); with neither, creates the user only.
+ * `allowFromRequested` lets an operator graduate directly without a separate
+ * approve step. A best-effort welcome magic link is sent when `origin` is set.
  */
 export async function graduateAccessRequest(
   operator: SuperUserContext,
   id: string,
   input: GraduateAccessRequestInput = {},
 ): Promise<AccessRequestSummary> {
-  const service = await createOperatorService(operator);
-  const tenantName = input.tenantName?.trim();
+  const origin = input.origin?.trim() || undefined;
+  const service = await createOperatorService(operator, { origin });
+  const tenant = resolveGraduateTenantOption(input);
   const result = await withSystemContext(() =>
     service.graduateAccessRequest(id, {
       by: operator.userId,
       allowFromRequested: true,
-      tenant: tenantName ? { create: { name: tenantName } } : "none",
+      tenant,
     }),
   );
 
   // A brand-new tenant needs the same default subscription a normal signup gets
   // (onboardTenant seeds it) — otherwise the graduated tenant hits /app billing +
-  // entitlement resolution with no subscription row. Reuse the shared seeder.
-  if (tenantName && result.tenant?.id && result.tenant?.slug) {
+  // entitlement resolution with no subscription row. An EXISTING tenant already
+  // has one, so never re-seed it. Reuse the shared seeder for the new-tenant case.
+  if (isNewTenantOption(tenant) && result.tenant?.id && result.tenant?.slug) {
     const db = (await getAppDatabase()) as DbLike;
-    const tenant = { id: result.tenant.id, slug: result.tenant.slug };
-    await withSystemContext(() => seedDefaultTenantSubscription(db, tenant));
+    const seedTenant = { id: result.tenant.id, slug: result.tenant.slug };
+    await withSystemContext(() => seedDefaultTenantSubscription(db, seedTenant));
   }
 
   return serializeAccessRequest(result.accessRequest);
+}
+
+/**
+ * Translate the wrapper's graduation input into the SMRT service's tenant
+ * option: an existing tenant (with membership role) wins over a new-tenant name,
+ * and with neither the requester graduates to a user with no tenant.
+ */
+function resolveGraduateTenantOption(input: GraduateAccessRequestInput): GraduateTenantOption {
+  const existingTenantId = input.tenant?.tenantId?.trim();
+  if (existingTenantId) {
+    const role = input.tenant?.role?.trim();
+    return role ? { tenantId: existingTenantId, role } : { tenantId: existingTenantId };
+  }
+  const tenantName = input.tenantName?.trim();
+  if (tenantName) {
+    return { create: { name: tenantName } };
+  }
+  return "none";
+}
+
+function isNewTenantOption(option: GraduateTenantOption): option is GraduateNewTenantOption {
+  return typeof option === "object" && "create" in option;
 }
 
 /** Map an AccessRequestError to a user-facing message (null for other errors). */

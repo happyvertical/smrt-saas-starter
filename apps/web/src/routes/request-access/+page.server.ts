@@ -1,5 +1,6 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { submitAccessRequest, toAccessRequestMessage } from "$lib/server/access-requests";
+import { requestAccessRateLimiter } from "$lib/server/rate-limit";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -10,7 +11,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-  default: async ({ request }) => {
+  default: async ({ request, getClientAddress }) => {
     const form = await request.formData();
     const email = readFormString(form, "email").trim();
     const name = readFormString(form, "name").trim();
@@ -21,9 +22,25 @@ export const actions: Actions = {
       return fail(400, { email, name, company, message, error: "A work email is required." });
     }
 
-    // NOTE: this endpoint is public and unauthenticated. The model de-dups open
-    // requests by email, but that is not abuse protection on its own — add
-    // rate-limiting at the edge (ingress/CDN) or here before exposing publicly.
+    // This endpoint is public and unauthenticated. The model de-dups open
+    // requests by email, but that is not abuse protection on its own. Bound
+    // floods per-instance by client IP and email — this is defense-in-depth;
+    // multi-replica / production deployments MUST also rate-limit at the
+    // edge/ingress (the in-memory limiter is not shared across replicas). See
+    // $lib/server/rate-limit.ts.
+    const ipLimit = requestAccessRateLimiter.check(`ip:${getClientAddress()}`);
+    const emailLimit = requestAccessRateLimiter.check(`email:${email.toLowerCase()}`);
+    if (!ipLimit.ok || !emailLimit.ok) {
+      const retryAfter = Math.max(ipLimit.retryAfterSeconds, emailLimit.retryAfterSeconds);
+      return fail(429, {
+        email,
+        name,
+        company,
+        message,
+        error: `Too many requests. Please try again in ${retryAfter} seconds.`,
+      });
+    }
+
     try {
       await submitAccessRequest({ email, name, company, message });
     } catch (error) {

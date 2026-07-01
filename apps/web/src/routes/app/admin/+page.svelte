@@ -3,6 +3,7 @@
 
   const inviteRows = $derived(data.invitations ?? []);
   const accessRows = $derived(data.accessRequests ?? []);
+  const tenantRows = $derived(data.tenants ?? []);
   const currentMode = $derived(
     form?.kind === "signupMode" && form.signupMode ? form.signupMode : data.signupMode,
   );
@@ -175,7 +176,18 @@
             </form>
             <form method="POST" action="?/graduateAccessRequest" class="graduate">
               <input type="hidden" name="id" value={request.id} />
-              <input name="tenantName" placeholder="New tenant (blank = user only)" />
+              <select name="existingTenantId" aria-label="Graduate into an existing tenant">
+                <option value="">New tenant / user only</option>
+                {#each tenantRows as tenant (tenant.id)}
+                  <option value={tenant.id}>{tenant.name}</option>
+                {/each}
+              </select>
+              <select name="role" aria-label="Membership role for existing tenant">
+                <option value="member">member</option>
+                <option value="admin">admin</option>
+                <option value="viewer">viewer</option>
+              </select>
+              <input name="tenantName" placeholder="New tenant name (blank = user only)" />
               <button type="submit">Graduate</button>
             </form>
           </span>
@@ -370,13 +382,17 @@
     align-items: center;
   }
 
+  .actions .graduate select,
   .actions .graduate input {
     min-height: 2rem;
-    min-width: 11rem;
     border: 1px solid var(--smrt-color-outline, #cbd3dc);
     border-radius: 6px;
     padding: 0 0.5rem;
     font: inherit;
+  }
+
+  .actions .graduate input {
+    min-width: 11rem;
   }
 
   @media (max-width: 760px) {
