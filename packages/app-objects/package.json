@@ -28,7 +28,7 @@
     "@happyvertical/logger": "catalog:"
   },
   "peerDependencies": {
-    "@happyvertical/smrt-core": "0.29.34"
+    "@happyvertical/smrt-core": "catalog:"
   },
   "devDependencies": {
     "@happyvertical/smrt-core": "catalog:",
