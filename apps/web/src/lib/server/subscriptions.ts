@@ -7,12 +7,12 @@ import {
   SubscriptionPlanCollection,
   SubscriptionResolver,
   TenantSubscriptionCollection,
-  TenantUsageMeter,
 } from "@happyvertical/smrt-subscriptions";
 import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getCurrentMonthWindow, isUuid, readFeatureLabel } from "$lib/server/starter-data";
 import { withActiveTenant } from "$lib/server/tenant-context";
+import { summarizeUsageMetric } from "$lib/server/usage";
 
 export interface StarterFeatureGrant extends PlanFeatureGrant {
   label: string;
@@ -40,24 +40,22 @@ export interface BillingOverview {
 
 export async function getBillingOverview(tenantId?: string | null): Promise<BillingOverview> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
-    const config = getSmrtConfig("SubscriptionPlan");
-    const [plans, subscriptions, usage] = await Promise.all([
-      SubscriptionPlanCollection.create(config),
-      TenantSubscriptionCollection.create(config),
-      TenantUsageMeter.create(config),
-    ]);
+    const { plans, subscriptions } = await createSubscriptionCollections();
     const resolver = new SubscriptionResolver({
       plans: {
         get: (criteria) => withSystemContext(() => plans.get(criteria)),
       },
       subscriptions,
-      usage,
+      // Keep the single-metric summarizer: it wraps the optional `_smrt_ai_usage`
+      // table so a missing table falls back instead of throwing. The batching
+      // TenantUsageMeter can't be passed directly until it guards that table
+      // upstream (smrt#1722); once it does, switch to SubscriptionResolver.create.
+      usage: { summarize: summarizeUsageMetric },
     });
 
     // Load the subscription/plan pair once and reuse it: passing it back via
     // `context` stops resolveTenantEntitlements from re-querying the current
-    // subscription and its plan, and TenantUsageMeter collapses the
-    // per-threshold usage lookups into batched windowed queries (smrt#1573).
+    // subscription and its plan after resolution (smrt#1573).
     const context = await resolver.loadEntitlementContext(activeTenantId);
     const snapshot = await resolver.resolveTenantEntitlements(activeTenantId, { context });
 
