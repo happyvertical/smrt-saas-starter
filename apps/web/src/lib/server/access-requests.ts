@@ -6,6 +6,8 @@ import {
   AccessRequestStatus,
 } from "@happyvertical/smrt-users";
 import { error } from "@sveltejs/kit";
+import { type DbLike, seedDefaultTenantSubscription } from "$lib/server/accounts";
+import { getAppDatabase } from "$lib/server/db";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { isSuperUserEmail, type SuperUserContext } from "$lib/server/super-users";
 
@@ -86,7 +88,7 @@ export async function submitAccessRequest(
 /** Operator: the triage queue (defaults to open REQUESTED requests). */
 export async function listAccessRequests(
   operator: SuperUserContext,
-  filter?: { status?: AccessRequestStatus },
+  filter?: { status?: AccessRequestStatus | AccessRequestStatus[] },
 ): Promise<AccessRequestSummary[]> {
   const service = await createOperatorService(operator);
   const rows = await withSystemContext(() =>
@@ -140,6 +142,16 @@ export async function graduateAccessRequest(
       tenant: tenantName ? { create: { name: tenantName } } : "none",
     }),
   );
+
+  // A brand-new tenant needs the same default subscription a normal signup gets
+  // (onboardTenant seeds it) — otherwise the graduated tenant hits /app billing +
+  // entitlement resolution with no subscription row. Reuse the shared seeder.
+  if (tenantName && result.tenant?.id && result.tenant?.slug) {
+    const db = (await getAppDatabase()) as DbLike;
+    const tenant = { id: result.tenant.id, slug: result.tenant.slug };
+    await withSystemContext(() => seedDefaultTenantSubscription(db, tenant));
+  }
+
   return serializeAccessRequest(result.accessRequest);
 }
 

@@ -152,6 +152,7 @@
       <div class="row access header" role="row">
         <span role="columnheader">Email</span>
         <span role="columnheader">Name</span>
+        <span role="columnheader">Status</span>
         <span role="columnheader">Requested</span>
         <span role="columnheader">Actions</span>
       </div>
@@ -159,6 +160,7 @@
         <div class="row access" role="row">
           <span role="cell">{request.email}</span>
           <span role="cell">{request.name || "—"}</span>
+          <span role="cell"><span class="status">{request.status}</span></span>
           <span role="cell">
             {request.requestedAt ? new Date(request.requestedAt).toLocaleDateString() : "—"}
           </span>
@@ -347,7 +349,12 @@
   }
 
   .row.access {
-    grid-template-columns: minmax(9rem, 1.4fr) minmax(6rem, 1fr) minmax(6rem, 0.7fr) minmax(15rem, 2.2fr);
+    grid-template-columns: minmax(8rem, 1.3fr) minmax(5rem, 0.9fr) minmax(5rem, 0.55fr) minmax(5rem, 0.6fr) minmax(14rem, 2fr);
+  }
+
+  .status {
+    text-transform: capitalize;
+    color: var(--smrt-color-on-surface-variant, #5e6470);
   }
 
   .actions {

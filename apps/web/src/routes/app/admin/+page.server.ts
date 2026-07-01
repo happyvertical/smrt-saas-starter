@@ -25,7 +25,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     superUser,
     signupMode: await getSignupAccessMode(),
     invitations: await listTenantOwnerInvitations(),
-    accessRequests: await listAccessRequests(superUser, { status: AccessRequestStatus.REQUESTED }),
+    accessRequests: await listAccessRequests(superUser, {
+      status: [AccessRequestStatus.REQUESTED, AccessRequestStatus.APPROVED],
+    }),
   };
 };
 

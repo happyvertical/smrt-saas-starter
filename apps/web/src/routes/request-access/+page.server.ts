@@ -21,6 +21,9 @@ export const actions: Actions = {
       return fail(400, { email, name, company, message, error: "A work email is required." });
     }
 
+    // NOTE: this endpoint is public and unauthenticated. The model de-dups open
+    // requests by email, but that is not abuse protection on its own — add
+    // rate-limiting at the edge (ingress/CDN) or here before exposing publicly.
     try {
       await submitAccessRequest({ email, name, company, message });
     } catch (error) {
