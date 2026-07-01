@@ -1,5 +1,13 @@
 import { fail } from "@sveltejs/kit";
 import {
+  AccessRequestStatus,
+  approveAccessRequest,
+  declineAccessRequest,
+  graduateAccessRequest,
+  listAccessRequests,
+  toAccessRequestMessage,
+} from "$lib/server/access-requests";
+import {
   createTenantOwnerInvitation,
   getSignupAccessMode,
   listTenantOwnerInvitations,
@@ -17,6 +25,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     superUser,
     signupMode: await getSignupAccessMode(),
     invitations: await listTenantOwnerInvitations(),
+    accessRequests: await listAccessRequests(superUser, {
+      status: [AccessRequestStatus.REQUESTED, AccessRequestStatus.APPROVED],
+    }),
   };
 };
 
@@ -91,4 +102,49 @@ export const actions: Actions = {
       });
     }
   },
+
+  approveAccessRequest: async ({ request, locals }) => {
+    const superUser = requireSuperUser(locals);
+    const id = String((await request.formData()).get("id") ?? "").trim();
+    return await runAccessRequestAction("approveAccessRequest", id, () =>
+      approveAccessRequest(superUser, id),
+    );
+  },
+
+  declineAccessRequest: async ({ request, locals }) => {
+    const superUser = requireSuperUser(locals);
+    const data = await request.formData();
+    const id = String(data.get("id") ?? "").trim();
+    const reason = String(data.get("reason") ?? "").trim() || null;
+    return await runAccessRequestAction("declineAccessRequest", id, () =>
+      declineAccessRequest(superUser, id, reason),
+    );
+  },
+
+  graduateAccessRequest: async ({ request, locals }) => {
+    const superUser = requireSuperUser(locals);
+    const data = await request.formData();
+    const id = String(data.get("id") ?? "").trim();
+    const tenantName = String(data.get("tenantName") ?? "").trim() || null;
+    return await runAccessRequestAction("graduateAccessRequest", id, () =>
+      graduateAccessRequest(superUser, id, { tenantName }),
+    );
+  },
 };
+
+async function runAccessRequestAction(
+  kind: string,
+  id: string,
+  run: () => Promise<{ email: string }>,
+) {
+  if (!id) {
+    return fail(400, { kind, success: false, message: "Access request id is required." });
+  }
+  try {
+    const result = await run();
+    return { kind, success: true, email: result.email };
+  } catch (error) {
+    const message = toAccessRequestMessage(error) ?? "Could not update the access request.";
+    return fail(400, { kind, success: false, message });
+  }
+}

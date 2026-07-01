@@ -48,7 +48,7 @@ export interface SignInLinkRequestResult {
   verificationUrl: string | null;
 }
 
-interface DbLike {
+export interface DbLike {
   query: (
     sql: string,
     ...values: unknown[]
@@ -156,7 +156,6 @@ export async function onboardTenant(input: {
   const tenantId = randomUUID();
   const userId = randomUUID();
   const userSlug = createUserSlug(email);
-  const window = getCurrentMonthWindow();
 
   return await withDbTransaction(db, async (tx) => {
     if (invitationToken) {
@@ -170,7 +169,6 @@ export async function onboardTenant(input: {
 
     const tenantSlug = await createUniqueTenantSlug(tx, slugify(tenantName));
     const ownerRole = await ensureSystemRole(tx, "owner");
-    const starterPlan = await findSubscriptionPlan(tx, defaultPlanKey);
 
     await tx.upsert("tenants", ["slug", "context", "_meta_type"], {
       id: tenantId,
@@ -210,29 +208,7 @@ export async function onboardTenant(input: {
       status: membershipStatusActive,
     });
 
-    await tx.upsert("_smrt_tenant_subscriptions", ["tenant_id"], {
-      id: randomUUID(),
-      slug: `${tenantSlug}-${defaultPlanKey}`,
-      context: tenantId,
-      updated_at: now,
-      tenant_id: tenantId,
-      plan_id: readRequiredString(starterPlan, "id"),
-      status: "active",
-      started_at: window.start.toISOString(),
-      current_period_start: window.start.toISOString(),
-      current_period_end: window.end.toISOString(),
-      trial_ends_at: null,
-      cancel_at_period_end: false,
-      canceled_at: null,
-      external_provider: "stripe",
-      stripe_customer_id: "",
-      stripe_subscription_id: "",
-      stripe_checkout_session_id: "",
-      metadata: JSON.stringify({
-        createdBy: "smrt-saas-starter-signup",
-        planKey: defaultPlanKey,
-      }),
-    });
+    await seedDefaultTenantSubscription(tx, { id: tenantId, slug: tenantSlug });
 
     if (invitationToken) {
       await redeemAccountInvitation(invitationToken, email, userId, tx);
@@ -245,6 +221,41 @@ export async function onboardTenant(input: {
       tenantSlug,
       tenantLabel: tenantName,
     };
+  });
+}
+
+/**
+ * Seed the default (`starter`) subscription for a tenant. Shared by the signup
+ * onboarding path and access-request graduation so both produce the same
+ * billing/entitlement state (`getBillingOverview` expects a subscription row).
+ * Idempotent on `tenant_id`.
+ */
+export async function seedDefaultTenantSubscription(
+  db: DbLike,
+  tenant: { id: string; slug: string },
+): Promise<void> {
+  const now = new Date().toISOString();
+  const window = getCurrentMonthWindow();
+  const starterPlan = await findSubscriptionPlan(db, defaultPlanKey);
+  await db.upsert("_smrt_tenant_subscriptions", ["tenant_id"], {
+    id: randomUUID(),
+    slug: `${tenant.slug}-${defaultPlanKey}`,
+    context: tenant.id,
+    updated_at: now,
+    tenant_id: tenant.id,
+    plan_id: readRequiredString(starterPlan, "id"),
+    status: "active",
+    started_at: window.start.toISOString(),
+    current_period_start: window.start.toISOString(),
+    current_period_end: window.end.toISOString(),
+    trial_ends_at: null,
+    cancel_at_period_end: false,
+    canceled_at: null,
+    external_provider: "stripe",
+    stripe_customer_id: "",
+    stripe_subscription_id: "",
+    stripe_checkout_session_id: "",
+    metadata: JSON.stringify({ createdBy: "smrt-saas-starter", planKey: defaultPlanKey }),
   });
 }
 

@@ -4,7 +4,7 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT (`@happyvertical/smrt-*`): **0.37.1**
+- SMRT (`@happyvertical/smrt-*`): **0.37.2**
 - SDK (`@happyvertical/*`): **0.74.11**
 
 These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
@@ -27,6 +27,14 @@ The batched/reusable entitlement resolver from
 `loadEntitlementContext`, `EntitlementResolutionContext`, `TenantUsageMeter`) is adopted in
 `getBillingOverview` (loads the subscription/plan context once and batches threshold usage).
 The bump migrates cleanly (`db:smoke`) and passes `pnpm check` and e2e.
+
+The 0.37.2 bump adds the **`AccessRequest`** primitive
+([smrt#1713](https://github.com/happyvertical/smrt/pull/1713), `@happyvertical/smrt-users`):
+a "request access / waitlist" flow. The starter adopts it in
+`apps/web/src/lib/server/access-requests.ts` (a wrapper over `AccessRequestService`) — a
+public `/request-access` form, a third `request-access` signup mode, and super-user triage
+(approve / decline / graduate into a new tenant+owner) on `/app/admin`. The model registers
+automatically, so `access_requests` migrates with the normal flow.
 
 ## Process
 

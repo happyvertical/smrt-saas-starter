@@ -17,6 +17,9 @@ settings, admin, mobile auth/session endpoints, and the runtime MCP surface.
   `$lib/server/mobile-auth.ts`; extend the allow list, never bypass it.
 - The dev-auth fallback (`SMRT_STARTER_DEV_AUTH`, non-production only) signs in
   the demo Owner. Keep new auth paths working with it off.
+- Access requests (SMRT `AccessRequest`) go through `$lib/server/access-requests.ts`:
+  `submitAccessRequest` is public (the `/request-access` form); operator triage
+  (list/approve/decline/graduate) is gated on the super-user tier, not tenant roles.
 - Use `.claude/skills/run-web` to launch and preview the app locally.
 
 ## Validation
