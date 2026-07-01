@@ -7,12 +7,12 @@ import {
   SubscriptionPlanCollection,
   SubscriptionResolver,
   TenantSubscriptionCollection,
+  TenantUsageMeter,
 } from "@happyvertical/smrt-subscriptions";
 import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getCurrentMonthWindow, isUuid, readFeatureLabel } from "$lib/server/starter-data";
 import { withActiveTenant } from "$lib/server/tenant-context";
-import { summarizeUsageMetric } from "$lib/server/usage";
 
 export interface StarterFeatureGrant extends PlanFeatureGrant {
   label: string;
@@ -40,23 +40,30 @@ export interface BillingOverview {
 
 export async function getBillingOverview(tenantId?: string | null): Promise<BillingOverview> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
-    const { plans, subscriptions } = await createSubscriptionCollections();
+    const config = getSmrtConfig("SubscriptionPlan");
+    const [plans, subscriptions, usage] = await Promise.all([
+      SubscriptionPlanCollection.create(config),
+      TenantSubscriptionCollection.create(config),
+      TenantUsageMeter.create(config),
+    ]);
     const resolver = new SubscriptionResolver({
       plans: {
         get: (criteria) => withSystemContext(() => plans.get(criteria)),
       },
       subscriptions,
-      usage: {
-        summarize: summarizeUsageMetric,
-      },
+      usage,
     });
-    const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
-    const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+
+    // Load the subscription/plan pair once and reuse it: passing it back via
+    // `context` stops resolveTenantEntitlements from re-querying the current
+    // subscription and its plan, and TenantUsageMeter collapses the
+    // per-threshold usage lookups into batched windowed queries (smrt#1573).
+    const context = await resolver.loadEntitlementContext(activeTenantId);
+    const snapshot = await resolver.resolveTenantEntitlements(activeTenantId, { context });
+
+    const subscription = context.subscription ?? null;
     const stripeCustomerId = readOptionalString(subscription?.stripeCustomerId);
-    const plan = snapshot.planId
-      ? await withSystemContext(() => plans.get({ id: snapshot.planId }))
-      : null;
-    const currentPlan = await resolveDisplayPlan(plans, plan);
+    const currentPlan = await resolveDisplayPlan(plans, context.plan ?? null);
 
     return {
       tenantId: activeTenantId,
