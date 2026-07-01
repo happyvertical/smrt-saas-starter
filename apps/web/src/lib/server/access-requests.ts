@@ -91,9 +91,9 @@ async function createOperatorService(
 
 /**
  * Best-effort reactions to access-request lifecycle transitions. On graduation
- * we send the new user a welcome magic link so they can sign in immediately.
- * Delivery must never break the (already-committed) transition, so any failure
- * is logged and swallowed.
+ * into a tenant we send the new user a welcome magic link so they can sign in
+ * immediately. Delivery must never break the (already-committed) transition, so
+ * any failure is logged and swallowed.
  */
 async function handleAccessRequestEvent(
   event: AccessRequestEvent,
@@ -101,6 +101,13 @@ async function handleAccessRequestEvent(
 ): Promise<void> {
   console.info(`[access-request] ${event.type} ${event.accessRequest?.email ?? ""}`);
   if (event.type !== "access-request.graduated") {
+    return;
+  }
+  // A user graduated without a tenant has no membership, so they cannot sign in
+  // yet (signInWithEmail requires an active membership) — a sign-in link would
+  // just burn its single use on a guaranteed-failed verify. Only send once a
+  // membership exists (new- or existing-tenant graduation).
+  if (!event.membership) {
     return;
   }
   const email = event.user?.email ?? event.accessRequest?.email;

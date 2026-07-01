@@ -71,6 +71,11 @@ export class InMemoryRateLimiter {
  * 5 submissions per 10 minutes per key (checked for both the client IP and the
  * submitted email). Deliberately generous — it stops trivial floods without
  * blocking real prospects; hard abuse control belongs at the edge (see above).
+ *
+ * Caveat: behind a reverse proxy / ingress, `getClientAddress()` returns the
+ * proxy IP unless adapter-node is given `ADDRESS_HEADER`/`XFF_DEPTH`, so the
+ * per-IP bucket collapses to per-proxy (coarse). The per-email bucket stays
+ * meaningful regardless, and edge/ingress limiting remains the real control.
  */
 export const requestAccessRateLimiter = new InMemoryRateLimiter({
   limit: 5,

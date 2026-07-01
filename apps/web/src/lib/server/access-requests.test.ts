@@ -58,12 +58,15 @@ function makeGraduate(result: AnyRecord, event?: AnyRecord) {
 
 let currentGraduate: (id: string, opts: AnyRecord) => Promise<AnyRecord>;
 
-function graduatedEvent(email: string) {
+function graduatedEvent(email: string, opts: { withMembership?: boolean } = {}) {
+  const withMembership = opts.withMembership ?? true;
   return {
     type: "access-request.graduated",
     accessRequest: { id: "ar", email, status: "graduated" },
     at: new Date("2026-07-01T00:00:00.000Z"),
     user: { email },
+    // A tenant graduation attaches a membership; user-only graduation does not.
+    ...(withMembership ? { membership: { id: "m-1" }, tenant: { id: "t", slug: "s" } } : {}),
   };
 }
 
@@ -157,14 +160,19 @@ describe("graduateAccessRequest", () => {
     expect(mocks.seedDefaultTenantSubscription).not.toHaveBeenCalled();
   });
 
-  it("graduates a user only when no tenant is given", async () => {
+  it("graduates a user only (no tenant) and sends NO welcome link", async () => {
     const accessRequest = { id: "ar-4", email: "grad@example.com", status: "graduated" };
-    currentGraduate = makeGraduate({ accessRequest, user: { email: "grad@example.com" } });
+    currentGraduate = makeGraduate(
+      { accessRequest, user: { email: "grad@example.com" } },
+      graduatedEvent("grad@example.com", { withMembership: false }),
+    );
 
     await graduateAccessRequest(operator, "ar-4", { origin });
 
     expect(graduateOpts?.tenant).toBe("none");
     expect(mocks.seedDefaultTenantSubscription).not.toHaveBeenCalled();
+    // No membership → the user cannot sign in yet, so no magic link is burned.
+    expect(mocks.generateWelcomeMagicLink).not.toHaveBeenCalled();
   });
 
   it("prefers an existing tenant over a new-tenant name", async () => {
