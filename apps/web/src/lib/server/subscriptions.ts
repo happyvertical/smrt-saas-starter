@@ -46,17 +46,22 @@ export async function getBillingOverview(tenantId?: string | null): Promise<Bill
         get: (criteria) => withSystemContext(() => plans.get(criteria)),
       },
       subscriptions,
-      usage: {
-        summarize: summarizeUsageMetric,
-      },
+      // Keep the single-metric summarizer: it wraps the optional `_smrt_ai_usage`
+      // table so a missing table falls back instead of throwing. The batching
+      // TenantUsageMeter can't be passed directly until it guards that table
+      // upstream (smrt#1722); once it does, switch to SubscriptionResolver.create.
+      usage: { summarize: summarizeUsageMetric },
     });
-    const snapshot = await resolver.resolveTenantEntitlements(activeTenantId);
-    const subscription = await subscriptions.findCurrentForTenant(activeTenantId);
+
+    // Load the subscription/plan pair once and reuse it: passing it back via
+    // `context` stops resolveTenantEntitlements from re-querying the current
+    // subscription and its plan after resolution (smrt#1573).
+    const context = await resolver.loadEntitlementContext(activeTenantId);
+    const snapshot = await resolver.resolveTenantEntitlements(activeTenantId, { context });
+
+    const subscription = context.subscription ?? null;
     const stripeCustomerId = readOptionalString(subscription?.stripeCustomerId);
-    const plan = snapshot.planId
-      ? await withSystemContext(() => plans.get({ id: snapshot.planId }))
-      : null;
-    const currentPlan = await resolveDisplayPlan(plans, plan);
+    const currentPlan = await resolveDisplayPlan(plans, context.plan ?? null);
 
     return {
       tenantId: activeTenantId,
