@@ -11,7 +11,7 @@ This repo is preconfigured for agent-assisted development.
 - Playwright MCP for local UI verification
 - Svelte docs MCP for SvelteKit/Svelte 5 work
 
-Both HappyVertical MCP commands authenticate to GitHub Packages with `gh auth token` and set `GH_PACKAGES_TOKEN`, `GITHUB_PACKAGES_TOKEN`, and `NODE_AUTH_TOKEN`.
+Both HappyVertical MCP servers launch with plain `npx` — their packages are on public npm, so no token is required.
 
 The HappyVertical MCP pins in `.mcp.json` must match the pnpm catalog;
 `pnpm deps:check` (part of `pnpm check`) fails on drift. These dev-time
@@ -54,7 +54,6 @@ change.
 ## Local Validation
 
 ```sh
-token="$(gh auth token)"
-GH_PACKAGES_TOKEN="$token" GITHUB_PACKAGES_TOKEN="$token" NODE_AUTH_TOKEN="$token" pnpm install
+pnpm install   # @happyvertical/* resolve from public npm — no token needed
 pnpm check
 ```

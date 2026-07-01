@@ -24,8 +24,8 @@ The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to a
 
 The batched/reusable entitlement resolver from
 [smrt#1573](https://github.com/happyvertical/smrt/issues/1573) (`SubscriptionResolver.create`,
-`loadEntitlementContext`, `EntitlementResolutionContext`, `TenantUsageMeter`) is now
-available and back-compatible; adopting it in `getBillingOverview` is tracked separately.
+`loadEntitlementContext`, `EntitlementResolutionContext`, `TenantUsageMeter`) is adopted in
+`getBillingOverview` (loads the subscription/plan context once and batches threshold usage).
 The bump migrates cleanly (`db:smoke`) and passes `pnpm check` and e2e.
 
 ## Process
@@ -42,6 +42,22 @@ When starter work hits an upstream bug or a missing public API in a
    work in the meantime.
 4. When the fix is released, bump the package version, validate with
    `pnpm check`, and move the entry to the completed sections below.
+
+## Resolved
+
+### `@happyvertical/*` packages now publish to public npm
+
+Was: SMRT/SDK packages published only to GitHub Packages (`npm.pkg.github.com`), which
+requires a token for every read, so a public `pnpm install` needed `gh auth token`.
+Filed as [smrt#1563](https://github.com/happyvertical/smrt/issues/1563) /
+[sdk#1046](https://github.com/happyvertical/sdk/issues/1046); the incomplete-migration
+strays were caught in [sdk#1051](https://github.com/happyvertical/sdk/issues/1051)
+(missing `documents`) and [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)
+(a release gate so a package can't ship with dependency ranges that don't resolve on npm).
+
+Now: the packages publish to `registry.npmjs.org`, `.npmrc` routes the `@happyvertical`
+scope there, and the token is gone — a clean `pnpm install` needs no auth. See
+**Consumed Versions** above.
 
 ## Open Blockers
 
