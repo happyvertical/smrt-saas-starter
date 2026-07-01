@@ -4,20 +4,29 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT (`@happyvertical/smrt-*`): **0.28.0**
-- SDK (`@happyvertical/*`): **0.74.5**
+- SMRT (`@happyvertical/smrt-*`): **0.37.1**
+- SDK (`@happyvertical/*`): **0.74.11**
 
-The 0.27.12 → 0.28.0 SMRT bump pulled in many upstream fixes (core persisted-object
-id-conflict fix, jobs liveness-based recovery, config SSG secret-leak fix, smrt-svelte
-design-token migration). The relevant API change for the starter —
-[smrt#1454](https://github.com/happyvertical/smrt/pull/1454) polymorphic subscriber
-(`subscriberKind` / `subscriberExternalId` on `TenantSubscription` and
-`TenantUsageMetric`) — is **additive and back-compatible**: the starter's tenant-only
-path (`resolveTenantEntitlements`, `findCurrentForTenant`, `recordUsage`,
-`summarizeUsage`) is unchanged, and the new columns default to the tenant shape. No
-starter code changes were required; the bump migrates cleanly (`db:smoke`) and passes
-`pnpm check` and e2e. SDK 0.74.5 adds `@happyvertical/sql` `acquireSession()` and a
-session-release rollback fix — no starter changes.
+These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
+`@happyvertical` scope to npmjs and **no GitHub token is required** to install. This
+completes the publish migration tracked in [smrt#1563](https://github.com/happyvertical/smrt/issues/1563)
+/ [sdk#1046](https://github.com/happyvertical/sdk/issues/1046) (and the straggler fixes
+[sdk#1051](https://github.com/happyvertical/sdk/issues/1051) / [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)).
+
+The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to absorb:
+
+- The Svelte UI runtime was extracted into a new **`@happyvertical/smrt-ui`** package;
+  `ThemeProvider` now lives at `@happyvertical/smrt-ui/theme` (was `@happyvertical/smrt-svelte`).
+  `smrt-ui` is added as a direct dependency.
+- The collection `db` option tightened to require the full `DatabaseInterface`; the
+  starter's invitation flow re-widens its narrowed `DbLike` at the boundary
+  (`apps/web/src/lib/server/accounts.ts`).
+
+The batched/reusable entitlement resolver from
+[smrt#1573](https://github.com/happyvertical/smrt/issues/1573) (`SubscriptionResolver.create`,
+`loadEntitlementContext`, `EntitlementResolutionContext`, `TenantUsageMeter`) is now
+available and back-compatible; adopting it in `getBillingOverview` is tracked separately.
+The bump migrates cleanly (`db:smoke`) and passes `pnpm check` and e2e.
 
 ## Process
 

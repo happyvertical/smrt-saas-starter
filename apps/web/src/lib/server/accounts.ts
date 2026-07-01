@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { MagicLinkError, MagicLinkService } from "@happyvertical/smrt-users";
 import { getAppDatabase } from "$lib/server/db";
 import {
+  type DbOverride,
   redeemTenantOwnerInvitationToken,
   toAccountFlowMessage,
   validateTenantOwnerInvitationToken,
@@ -249,7 +250,9 @@ export async function onboardTenant(input: {
 
 async function validateAccountInvitation(token: string, email: string, db: DbLike): Promise<void> {
   try {
-    await validateTenantOwnerInvitationToken(token, { email, db });
+    // `db` is the live SMRT database/transaction (DbLike is a local narrowing of it);
+    // the invitation API expects the full DatabaseInterface, so re-widen at the boundary.
+    await validateTenantOwnerInvitationToken(token, { email, db: db as unknown as DbOverride });
   } catch (error) {
     const message = toAccountFlowMessage(error);
     if (message) {
@@ -266,7 +269,11 @@ async function redeemAccountInvitation(
   db: DbLike,
 ): Promise<void> {
   try {
-    await redeemTenantOwnerInvitationToken(token, { email, acceptedByUserId, db });
+    await redeemTenantOwnerInvitationToken(token, {
+      email,
+      acceptedByUserId,
+      db: db as unknown as DbOverride,
+    });
   } catch (error) {
     const message = toAccountFlowMessage(error);
     if (message) {
