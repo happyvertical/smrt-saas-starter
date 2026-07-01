@@ -2,19 +2,13 @@
   "mcpServers": {
     "smrt-dev-mcp": {
       "type": "stdio",
-      "command": "bash",
-      "args": [
-        "-lc",
-        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/smrt-dev-mcp@0.37.1"
-      ]
+      "command": "npx",
+      "args": ["-y", "@happyvertical/smrt-dev-mcp@0.37.1"]
     },
     "happyvertical-sdk-mcp": {
       "type": "stdio",
-      "command": "bash",
-      "args": [
-        "-lc",
-        "TOKEN=\"$(gh auth token 2>/dev/null)\" GH_PACKAGES_TOKEN=\"$TOKEN\" GITHUB_PACKAGES_TOKEN=\"$TOKEN\" NODE_AUTH_TOKEN=\"$TOKEN\" exec npx -y @happyvertical/sdk-mcp@0.74.11"
-      ]
+      "command": "npx",
+      "args": ["-y", "@happyvertical/sdk-mcp@0.74.11"]
     },
     "playwright": {
       "type": "stdio",
