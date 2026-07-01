@@ -4,7 +4,7 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT (`@happyvertical/smrt-*`): **0.37.2**
+- SMRT (`@happyvertical/smrt-*`): **0.37.3**
 - SDK (`@happyvertical/*`): **0.74.11**
 
 These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
@@ -23,9 +23,15 @@ The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to a
   (`apps/web/src/lib/server/accounts.ts`).
 
 The batched/reusable entitlement resolver from
-[smrt#1573](https://github.com/happyvertical/smrt/issues/1573) (`SubscriptionResolver.create`,
-`loadEntitlementContext`, `EntitlementResolutionContext`, `TenantUsageMeter`) is adopted in
-`getBillingOverview` (loads the subscription/plan context once and batches threshold usage).
+[smrt#1573](https://github.com/happyvertical/smrt/issues/1573) (`loadEntitlementContext`,
+`EntitlementResolutionContext`, `TenantUsageMeter`) is adopted in `getBillingOverview`: it
+loads the subscription/plan context once and passes the batching `TenantUsageMeter`
+(`summarizeBatch`) to the resolver so all thresholds are evaluated per window in a single
+query. Passing the meter directly required
+[smrt#1722](https://github.com/happyvertical/smrt/issues/1722) — the meter now guards the
+optional `_smrt_ai_usage` table (a missing table counts AI usage as zero instead of
+throwing) — which shipped in `smrt-subscriptions@0.37.3`, so the local single-metric
+`summarizeUsageMetric` safe-reader workaround was removed from `apps/web/src/lib/server/usage.ts`.
 The bump migrates cleanly (`db:smoke`) and passes `pnpm check` and e2e.
 
 The 0.37.2 bump adds the **`AccessRequest`** primitive
