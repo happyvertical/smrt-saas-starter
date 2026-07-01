@@ -28,17 +28,18 @@ export const actions: Actions = {
     // multi-replica / production deployments MUST also rate-limit at the
     // edge/ingress (the in-memory limiter is not shared across replicas). See
     // $lib/server/rate-limit.ts.
+    //
+    // Check the IP budget first and STOP if it is exhausted — otherwise a single
+    // blocked IP could keep incrementing arbitrary victims' email buckets and
+    // lock those users out by email. The email dimension is only counted for
+    // requests the IP budget still allows.
     const ipLimit = requestAccessRateLimiter.check(`ip:${getClientAddress()}`);
+    if (!ipLimit.ok) {
+      return tooManyRequests({ email, name, company, message }, ipLimit.retryAfterSeconds);
+    }
     const emailLimit = requestAccessRateLimiter.check(`email:${email.toLowerCase()}`);
-    if (!ipLimit.ok || !emailLimit.ok) {
-      const retryAfter = Math.max(ipLimit.retryAfterSeconds, emailLimit.retryAfterSeconds);
-      return fail(429, {
-        email,
-        name,
-        company,
-        message,
-        error: `Too many requests. Please try again in ${retryAfter} seconds.`,
-      });
+    if (!emailLimit.ok) {
+      return tooManyRequests({ email, name, company, message }, emailLimit.retryAfterSeconds);
     }
 
     try {
@@ -54,6 +55,16 @@ export const actions: Actions = {
     return { submitted: true, email };
   },
 };
+
+function tooManyRequests(
+  fields: { email: string; name: string; company: string; message: string },
+  retryAfterSeconds: number,
+) {
+  return fail(429, {
+    ...fields,
+    error: `Too many requests. Please try again in ${retryAfterSeconds} seconds.`,
+  });
+}
 
 function readFormString(form: FormData, key: string): string {
   const value = form.get(key);

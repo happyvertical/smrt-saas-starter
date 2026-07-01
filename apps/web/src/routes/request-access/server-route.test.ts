@@ -86,6 +86,27 @@ describe("POST /request-access default action", () => {
     expect(status(blocked)).toBe(429);
   });
 
+  it("does not spend a victim's email quota once the IP is blocked", async () => {
+    const ip = "grief-ip";
+    const victim = "victim-quota@example.com";
+
+    // Exhaust the IP budget with throwaway emails (5 successful submits).
+    for (let i = 0; i < 5; i += 1) {
+      const ok = await actions.default(makeEvent({ email: `junk${i}@example.com` }, ip));
+      expect(ok).toEqual({ submitted: true, email: `junk${i}@example.com` });
+    }
+
+    // The now-blocked IP hammering the victim's email must NOT touch the email
+    // bucket — every attempt is rejected on the IP dimension alone.
+    for (let i = 0; i < 8; i += 1) {
+      expect(status(await actions.default(makeEvent({ email: victim }, ip)))).toBe(429);
+    }
+
+    // The victim can still submit from a clean IP: their quota was never spent.
+    const ok = await actions.default(makeEvent({ email: victim }, "clean-ip-quota"));
+    expect(ok).toEqual({ submitted: true, email: victim });
+  });
+
   it("surfaces a friendly domain error from the service", async () => {
     routeMocks.submitAccessRequest.mockRejectedValue(new Error("boom"));
     routeMocks.toAccessRequestMessage.mockReturnValue("Enter a valid email address.");

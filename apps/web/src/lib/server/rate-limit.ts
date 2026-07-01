@@ -38,23 +38,34 @@ export class InMemoryRateLimiter {
    */
   check(key: string, now: number = Date.now()): RateLimitResult {
     const bucket = this.#buckets.get(key);
-    if (!bucket || bucket.resetAt <= now) {
-      this.#sweep(now);
-      this.#buckets.set(key, { count: 1, resetAt: now + this.#windowMs });
+    if (bucket && bucket.resetAt > now) {
+      if (bucket.count >= this.#limit) {
+        return {
+          ok: false,
+          retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
+        };
+      }
+      bucket.count += 1;
       return { ok: true, retryAfterSeconds: 0 };
     }
-    if (bucket.count >= this.#limit) {
-      return {
-        ok: false,
-        retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
-      };
+    // A new key grows the map, so cap it first; an expired bucket restarts in
+    // place (same key) and needs no eviction.
+    if (!bucket) {
+      this.#evictIfFull(now);
     }
-    bucket.count += 1;
+    this.#buckets.set(key, { count: 1, resetAt: now + this.#windowMs });
     return { ok: true, retryAfterSeconds: 0 };
   }
 
-  /** Drop expired buckets once the map grows large, to bound memory. */
-  #sweep(now: number): void {
+  /**
+   * Hard-bound the map to `maxKeys` before inserting a new key. First reclaim
+   * expired buckets; if the map is still full — a flood of live, unique keys
+   * (e.g. attacker-supplied emails) with nothing to reclaim — evict the
+   * oldest-inserted buckets (FIFO, O(1) each) so the map can never grow past the
+   * cap. Evicting a live bucket just resets that key's window early, which is
+   * acceptable for a best-effort limiter whose real backstop is edge/ingress.
+   */
+  #evictIfFull(now: number): void {
     if (this.#buckets.size < this.#maxKeys) {
       return;
     }
@@ -62,6 +73,13 @@ export class InMemoryRateLimiter {
       if (bucket.resetAt <= now) {
         this.#buckets.delete(key);
       }
+    }
+    while (this.#buckets.size >= this.#maxKeys) {
+      const oldest = this.#buckets.keys().next().value;
+      if (oldest === undefined) {
+        break;
+      }
+      this.#buckets.delete(oldest);
     }
   }
 }
