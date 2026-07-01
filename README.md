@@ -26,8 +26,11 @@ Kubernetes deployment — wired together and ready to fork.
 - **Multi-tenancy** — tenant isolation via `smrt-users` memberships; tenant
   resolution by subdomain, switch cookie, or (opt-in) trusted header. Selecting
   a tenant never grants access on its own — every handler authorizes explicitly.
-- **Authentication** — OIDC through `@happyvertical/auth` (HappyVertical IDP /
-  Kanidm), plus a local dev-auth fallback so you can sign in immediately.
+- **Authentication & onboarding** — OIDC through `@happyvertical/auth` (HappyVertical
+  IDP / Kanidm), plus a local dev-auth fallback so you can sign in immediately. Three
+  signup modes: **public**, **invite-only**, or **request-access** (a waitlist — the
+  SMRT `AccessRequest` primitive; visitors request access at `/request-access` and a
+  super user approves + graduates them from `/app/admin`).
 - **Subscriptions & billing** — Stripe-backed checkout, customer portal, and
   webhook sync via `@happyvertical/accounting`; plans, features, and thresholds
   via `@happyvertical/smrt-subscriptions`.

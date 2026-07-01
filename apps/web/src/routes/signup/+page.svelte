@@ -17,11 +17,16 @@
       <h1>Create a tenant workspace</h1>
     </header>
 
-    {#if data.signupMode === "invite-only" && !data.canSignup}
+    {#if !data.canSignup}
       <p class="notice">
-        Signup is invite-only. Use an invitation link from a starter super user to create a
-        workspace.
+        {#if data.signupMode === "request-access"}
+          Open signup is closed. Request access and a starter super user will follow up.
+        {:else}
+          Signup is invite-only. Use an invitation link from a starter super user to create a
+          workspace.
+        {/if}
       </p>
+      <a class="cta" href="/request-access">Request access →</a>
     {/if}
 
     {#if data.invitationError}
@@ -160,5 +165,12 @@
     background: #ecfdf3;
     color: #067647;
     padding: 0.75rem;
+  }
+
+  .cta {
+    justify-self: start;
+    color: #155eef;
+    font-weight: 700;
+    text-decoration: none;
   }
 </style>

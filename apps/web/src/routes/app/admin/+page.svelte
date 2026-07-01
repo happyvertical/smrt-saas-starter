@@ -2,6 +2,10 @@
   let { data, form } = $props();
 
   const inviteRows = $derived(data.invitations ?? []);
+  const accessRows = $derived(data.accessRequests ?? []);
+  const currentMode = $derived(
+    form?.kind === "signupMode" && form.signupMode ? form.signupMode : data.signupMode,
+  );
 </script>
 
 <svelte:head>
@@ -25,12 +29,7 @@
 
       <form method="POST" action="?/setSignupMode" class="mode-form">
         <label class="choice">
-          <input
-            type="radio"
-            name="signupMode"
-            value="public"
-            checked={(form?.kind === "signupMode" ? form.signupMode : data.signupMode) !== "invite-only"}
-          />
+          <input type="radio" name="signupMode" value="public" checked={currentMode === "public"} />
           <span>
             <strong>Public</strong>
             <small>Anyone can create a tenant workspace.</small>
@@ -41,11 +40,23 @@
             type="radio"
             name="signupMode"
             value="invite-only"
-            checked={(form?.kind === "signupMode" ? form.signupMode : data.signupMode) === "invite-only"}
+            checked={currentMode === "invite-only"}
           />
           <span>
             <strong>Invite only</strong>
             <small>New tenant workspaces require a super-user invite.</small>
+          </span>
+        </label>
+        <label class="choice">
+          <input
+            type="radio"
+            name="signupMode"
+            value="request-access"
+            checked={currentMode === "request-access"}
+          />
+          <span>
+            <strong>Request access</strong>
+            <small>Visitors join a waitlist; a super user approves and graduates them.</small>
           </span>
         </label>
         <button type="submit">Save access mode</button>
@@ -115,6 +126,60 @@
         </div>
       {:else}
         <div class="empty">No tenant owner invitations yet.</div>
+      {/each}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Access requests</h2>
+    {#if form?.kind === "approveAccessRequest" || form?.kind === "declineAccessRequest" || form?.kind === "graduateAccessRequest"}
+      {#if form.message}
+        <p class="notice error">{form.message}</p>
+      {:else if form.success}
+        <p class="notice success">
+          {#if form.kind === "graduateAccessRequest"}
+            Graduated {form.email} into a user.
+          {:else if form.kind === "approveAccessRequest"}
+            Approved {form.email}.
+          {:else}
+            Declined {form.email}.
+          {/if}
+        </p>
+      {/if}
+    {/if}
+
+    <div class="table" role="table" aria-label="Access requests">
+      <div class="row access header" role="row">
+        <span role="columnheader">Email</span>
+        <span role="columnheader">Name</span>
+        <span role="columnheader">Requested</span>
+        <span role="columnheader">Actions</span>
+      </div>
+      {#each accessRows as request (request.id)}
+        <div class="row access" role="row">
+          <span role="cell">{request.email}</span>
+          <span role="cell">{request.name || "—"}</span>
+          <span role="cell">
+            {request.requestedAt ? new Date(request.requestedAt).toLocaleDateString() : "—"}
+          </span>
+          <span role="cell" class="actions">
+            <form method="POST" action="?/approveAccessRequest">
+              <input type="hidden" name="id" value={request.id} />
+              <button class="secondary" type="submit">Approve</button>
+            </form>
+            <form method="POST" action="?/declineAccessRequest">
+              <input type="hidden" name="id" value={request.id} />
+              <button class="secondary" type="submit">Decline</button>
+            </form>
+            <form method="POST" action="?/graduateAccessRequest" class="graduate">
+              <input type="hidden" name="id" value={request.id} />
+              <input name="tenantName" placeholder="New tenant (blank = user only)" />
+              <button type="submit">Graduate</button>
+            </form>
+          </span>
+        </div>
+      {:else}
+        <div class="empty">No open access requests.</div>
       {/each}
     </div>
   </section>
@@ -281,12 +346,39 @@
     color: var(--smrt-color-on-surface-variant, #5e6470);
   }
 
+  .row.access {
+    grid-template-columns: minmax(9rem, 1.4fr) minmax(6rem, 1fr) minmax(6rem, 0.7fr) minmax(15rem, 2.2fr);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .actions form {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+  }
+
+  .actions .graduate input {
+    min-height: 2rem;
+    min-width: 11rem;
+    border: 1px solid var(--smrt-color-outline, #cbd3dc);
+    border-radius: 6px;
+    padding: 0 0.5rem;
+    font: inherit;
+  }
+
   @media (max-width: 760px) {
     .grid {
       grid-template-columns: 1fr;
     }
 
-    .row {
+    .row,
+    .row.access {
       grid-template-columns: 1fr;
     }
 

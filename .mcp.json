@@ -3,7 +3,7 @@
     "smrt-dev-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@happyvertical/smrt-dev-mcp@0.37.1"]
+      "args": ["-y", "@happyvertical/smrt-dev-mcp@0.37.2"]
     },
     "happyvertical-sdk-mcp": {
       "type": "stdio",

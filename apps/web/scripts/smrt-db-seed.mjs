@@ -1,8 +1,8 @@
 import { resolveDatabase } from "@happyvertical/smrt-core";
+import { AccessRequestService } from "@happyvertical/smrt-users";
 
 import "@happyvertical/smrt-saas-objects";
 import "@happyvertical/smrt-subscriptions";
-import "@happyvertical/smrt-users";
 
 import starterData from "../src/lib/server/starter-data.json" with { type: "json" };
 
@@ -213,6 +213,16 @@ try {
     });
   }
 
+  // One demo access request so the admin triage queue is non-empty. The service
+  // de-dups open REQUESTED rows by email, so re-running the seed is idempotent.
+  const accessRequests = await AccessRequestService.create({ db });
+  const demoAccessRequest = await accessRequests.createAccessRequest({
+    email: "waitlist@example.com",
+    name: "Waitlist Demo",
+    source: "seed",
+    context: { message: "Seeded demo access request for the admin triage queue." },
+  });
+
   console.log(
     JSON.stringify(
       {
@@ -225,6 +235,7 @@ try {
         usageMetrics: starterData.usageSeeds.length,
         promptOverrides: starterData.promptOverrides.length,
         languageOverrides: starterData.languageOverrides.length,
+        accessRequestEmail: demoAccessRequest.email,
         windowStart: window.start.toISOString(),
         windowEnd: window.end.toISOString(),
       },

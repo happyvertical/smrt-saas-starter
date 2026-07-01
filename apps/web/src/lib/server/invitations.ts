@@ -11,7 +11,7 @@ import {
 import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import { getSmrtConfig } from "$lib/server/smrt";
 
-export type SignupAccessMode = "public" | "invite-only";
+export type SignupAccessMode = "public" | "invite-only" | "request-access";
 
 export interface TenantOwnerInvitationSummary {
   id: string;
@@ -158,7 +158,13 @@ export function toAccountFlowMessage(error: unknown): string | null {
 }
 
 function normalizeSignupAccessMode(value: string | null | undefined): SignupAccessMode {
-  return value === "invite-only" ? "invite-only" : "public";
+  if (value === "invite-only") {
+    return "invite-only";
+  }
+  if (value === "request-access") {
+    return "request-access";
+  }
+  return "public";
 }
 
 async function getAppSettingCollection() {

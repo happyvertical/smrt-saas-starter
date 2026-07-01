@@ -44,11 +44,14 @@ export const actions: Actions = {
     const invitationToken = readFormString(form, "invitationToken").trim();
     const signupMode = await getSignupAccessMode();
 
-    if (signupMode === "invite-only" && !invitationToken) {
+    if (signupMode !== "public" && !invitationToken) {
       return fail(403, {
         email,
         tenantName,
-        message: "Signup is invite-only. Use an invitation link to create a workspace.",
+        message:
+          signupMode === "request-access"
+            ? "Open signup is closed. Request access and an operator will follow up."
+            : "Signup is invite-only. Use an invitation link to create a workspace.",
       });
     }
 

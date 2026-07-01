@@ -48,6 +48,7 @@ const requiredTables = [
   "sites",
   "starter_app_settings",
   "starter_invitations",
+  "access_requests",
   "tags",
   "memberships",
   "roles",
