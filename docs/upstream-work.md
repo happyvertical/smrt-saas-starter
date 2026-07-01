@@ -32,8 +32,12 @@ The 0.37.2 bump adds the **`AccessRequest`** primitive
 ([smrt#1713](https://github.com/happyvertical/smrt/pull/1713), `@happyvertical/smrt-users`):
 a "request access / waitlist" flow. The starter adopts it in
 `apps/web/src/lib/server/access-requests.ts` (a wrapper over `AccessRequestService`) — a
-public `/request-access` form, a third `request-access` signup mode, and super-user triage
-(approve / decline / graduate into a new tenant+owner) on `/app/admin`. The model registers
+public `/request-access` form (rate-limited per-IP/per-email by
+`apps/web/src/lib/server/rate-limit.ts`, a per-instance in-memory limiter that expects
+edge/ingress rate limiting in multi-replica deploys), a third `request-access` signup mode,
+and super-user triage (approve / decline / graduate into a new tenant+owner, an existing
+tenant, or user-only) on `/app/admin`. Graduation sends the new user a best-effort welcome
+magic link (reusing the `MagicLinkService` flow in `accounts.ts`). The model registers
 automatically, so `access_requests` migrates with the normal flow.
 
 ## Process

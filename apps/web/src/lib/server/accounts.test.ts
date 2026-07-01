@@ -28,7 +28,9 @@ vi.mock("$lib/server/db", () => ({
 
 import {
   type AccountFlowError,
+  generateWelcomeMagicLink,
   inviteTenantMember,
+  listTenants,
   onboardTenant,
   requestSignInLink,
   signInWithEmail,
@@ -278,5 +280,53 @@ describe("account onboarding flows", () => {
       ["slug", "context"],
       expect.objectContaining({ tenant_id: tenantId, role_id: memberRoleId }),
     );
+  });
+
+  it("generates a welcome magic link for a graduated user", async () => {
+    await expect(
+      generateWelcomeMagicLink({ email: " Grad@Example.com ", origin: "http://localhost:5173" }),
+    ).resolves.toMatchObject({
+      email: "grad@example.com",
+      verificationUrl: "http://localhost:5173/login/verify?token=signed-token",
+    });
+    // Unlike requestSignInLink, it does not require an existing membership row.
+    expect(accountMocks.magicLinkGenerate).toHaveBeenCalledWith("grad@example.com");
+    expect(accountMocks.query).not.toHaveBeenCalled();
+  });
+
+  it("threads a non-default returnTo into the welcome link", async () => {
+    await expect(
+      generateWelcomeMagicLink({
+        email: "grad@example.com",
+        origin: "http://localhost:5173",
+        returnTo: "/app/settings",
+      }),
+    ).resolves.toMatchObject({
+      verificationUrl:
+        "http://localhost:5173/login/verify?token=signed-token&returnTo=%2Fapp%2Fsettings",
+    });
+  });
+
+  it("returns null when local magic-link delivery is disabled", async () => {
+    vi.stubEnv("SMRT_STARTER_AUTH_INLINE_LINKS", "false");
+    await expect(
+      generateWelcomeMagicLink({ email: "grad@example.com", origin: "http://localhost:5173" }),
+    ).resolves.toBeNull();
+    expect(accountMocks.magicLinkGenerate).not.toHaveBeenCalled();
+  });
+
+  it("lists active tenants mapped to id/slug/name", async () => {
+    accountMocks.query.mockResolvedValueOnce({
+      rows: [
+        { id: "t-1", slug: "acme", name: "Acme" },
+        { id: "t-2", slug: "globex", name: "Globex" },
+      ],
+    });
+
+    await expect(listTenants()).resolves.toEqual([
+      { id: "t-1", slug: "acme", name: "Acme" },
+      { id: "t-2", slug: "globex", name: "Globex" },
+    ]);
+    expect(accountMocks.query).toHaveBeenCalledWith(expect.stringContaining("FROM tenants"));
   });
 });
