@@ -1,8 +1,8 @@
 import { resolveDatabase } from "@happyvertical/smrt-core";
+import { TenantUsageMetricCollection } from "@happyvertical/smrt-subscriptions";
 import { AccessRequestService } from "@happyvertical/smrt-users";
 
 import "@happyvertical/smrt-saas-objects";
-import "@happyvertical/smrt-subscriptions";
 
 import starterData from "../src/lib/server/starter-data.json" with { type: "json" };
 
@@ -160,6 +160,19 @@ try {
     });
   }
 
+  // AI token usage now lives in the `_smrt_ai_usage` system table (see the
+  // aiUsageSeeds loop below), which is what billing thresholds read via
+  // `summarizeTenantAiUsage`. Earlier revisions seeded `ai.*` rows into
+  // `_smrt_tenant_usage_metrics`; remove any that linger from a prior seed so
+  // the billing threshold and the usage screen don't double-count AI tokens.
+  // The app never persists `ai.*` into this table, so this only clears seed
+  // artifacts for the demo tenant.
+  await db.query(
+    `DELETE FROM _smrt_tenant_usage_metrics
+       WHERE tenant_id = ? AND metric_key LIKE 'ai.%'`,
+    demoTenant.id,
+  );
+
   for (const metric of starterData.usageSeeds) {
     await db.upsert("_smrt_tenant_usage_metrics", ["slug", "context"], {
       id: metric.id,
@@ -177,6 +190,35 @@ try {
         seededBy: "smrt-saas-starter",
         demo: true,
       }),
+    });
+  }
+
+  // `_smrt_ai_usage` is a framework system table, not a registered object
+  // schema, so `db:migrate` does not create it. It is bootstrapped lazily the
+  // first time a SMRT class initializes against the database. This seed writes
+  // AI usage rows with raw `db.upsert`, so instantiate a collection first to
+  // trigger the system-table bootstrap and guarantee the table exists on a
+  // fresh database.
+  await TenantUsageMetricCollection.create({ db });
+
+  for (const aiUsage of starterData.aiUsageSeeds) {
+    await db.upsert("_smrt_ai_usage", ["id"], {
+      id: aiUsage.id,
+      provider: aiUsage.provider,
+      model: aiUsage.model,
+      operation: aiUsage.operation,
+      prompt_tokens: aiUsage.promptTokens,
+      completion_tokens: aiUsage.completionTokens,
+      total_tokens: aiUsage.totalTokens,
+      estimated_cost: aiUsage.estimatedCost,
+      duration: aiUsage.durationMs,
+      class_name: aiUsage.className ?? null,
+      tenant_id: demoTenant.id,
+      tags: JSON.stringify({
+        seededBy: "smrt-saas-starter",
+        demo: true,
+      }),
+      created_at: now.toISOString(),
     });
   }
 
@@ -233,6 +275,7 @@ try {
         appSettings: starterData.appSettings.length,
         subscriptionPlan: demoPlan.planKey,
         usageMetrics: starterData.usageSeeds.length,
+        aiUsageMetrics: starterData.aiUsageSeeds.length,
         promptOverrides: starterData.promptOverrides.length,
         languageOverrides: starterData.languageOverrides.length,
         accessRequestEmail: demoAccessRequest.email,

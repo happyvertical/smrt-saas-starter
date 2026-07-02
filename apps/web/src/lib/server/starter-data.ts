@@ -108,6 +108,18 @@ export interface StarterData {
     quantity: number;
     source: string;
   }>;
+  aiUsageSeeds: Array<{
+    id: string;
+    provider: string;
+    model: string;
+    operation: string;
+    className: string | null;
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    estimatedCost: number;
+    durationMs: number;
+  }>;
   prompts: StarterPromptSeed[];
   promptOverrides: StarterPromptOverrideSeed[];
   languageStrings: StarterLanguageStringSeed[];

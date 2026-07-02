@@ -228,25 +228,37 @@
   ],
   "usageSeeds": [
     {
-      "id": "00000000-0000-4000-8000-000000000301",
-      "slug": "demo-ai-tokens-total-seed-a",
-      "metricKey": "ai.tokens.total",
-      "quantity": 18000,
-      "source": "smrt-ai-usage"
-    },
-    {
-      "id": "00000000-0000-4000-8000-000000000302",
-      "slug": "demo-ai-tokens-total-seed-b",
-      "metricKey": "ai.tokens.total",
-      "quantity": 24500,
-      "source": "smrt-ai-usage"
-    },
-    {
       "id": "00000000-0000-4000-8000-000000000303",
       "slug": "demo-mcp-calls-seed",
       "metricKey": "mcp.calls",
       "quantity": 128,
       "source": "smrt-app-mcp"
+    }
+  ],
+  "aiUsageSeeds": [
+    {
+      "id": "00000000-0000-4000-8000-000000000311",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "operation": "chat",
+      "className": "AgentChat",
+      "promptTokens": 12000,
+      "completionTokens": 6000,
+      "totalTokens": 18000,
+      "estimatedCost": 0.13,
+      "durationMs": 1450
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000312",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "operation": "chat",
+      "className": "AgentChat",
+      "promptTokens": 16000,
+      "completionTokens": 8500,
+      "totalTokens": 24500,
+      "estimatedCost": 0.18,
+      "durationMs": 1820
     }
   ],
   "prompts": [

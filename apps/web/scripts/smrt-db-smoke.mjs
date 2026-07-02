@@ -237,6 +237,42 @@ try {
     throw new Error("Seeded MCP usage was not included in threshold evaluation");
   }
 
+  // AI token usage is seeded into the `_smrt_ai_usage` system table (the source
+  // billing thresholds read via `summarizeTenantAiUsage`), not into
+  // `_smrt_tenant_usage_metrics`. Prove the seed landed there and that no stale
+  // `ai.*` metric rows remain, which would double-count against the AI tokens
+  // threshold and the usage screen.
+  const aiUsageSummary = await withTenant({ tenantId: demoTenant.id }, () =>
+    usageMetrics.summarizeTenantAiUsage({
+      tenantId: demoTenant.id,
+      window: getCurrentMonthWindow(),
+    }),
+  );
+  const seededAiTokenUsage = starterData.aiUsageSeeds.reduce(
+    (total, metric) => total + metric.totalTokens,
+    0,
+  );
+  if (aiUsageSummary.totalTokens !== seededAiTokenUsage) {
+    throw new Error(
+      `Seeded AI token usage was not recorded in _smrt_ai_usage (expected ${seededAiTokenUsage}, found ${aiUsageSummary.totalTokens})`,
+    );
+  }
+
+  const strayAiMetricResult = await db.query(
+    `
+      SELECT COUNT(*)::int AS stray_count
+      FROM _smrt_tenant_usage_metrics
+      WHERE tenant_id = ? AND metric_key LIKE 'ai.%'
+    `,
+    demoTenant.id,
+  );
+  const strayAiMetrics = Number(strayAiMetricResult.rows[0]?.stray_count ?? 0);
+  if (strayAiMetrics > 0) {
+    throw new Error(
+      `Found ${strayAiMetrics} stale ai.* rows in _smrt_tenant_usage_metrics; AI usage must live in _smrt_ai_usage to avoid double-counting`,
+    );
+  }
+
   const promptOverrideResult = await db.query(
     `
       SELECT COUNT(*)::int AS override_count
@@ -294,6 +330,8 @@ try {
         enabledFeatures: entitlements.featureKeys.length,
         mcpUsage: mcpEvaluation.usage.quantity,
         seededMcpUsage,
+        aiTokenUsage: aiUsageSummary.totalTokens,
+        seededAiTokenUsage,
         promptOverrides,
         languageOverrides,
       },
@@ -303,6 +341,12 @@ try {
   );
 } finally {
   await db.close?.();
+}
+
+function getCurrentMonthWindow(now = new Date()) {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return { start, end };
 }
 
 function registerStarterExperienceDefinitions() {
