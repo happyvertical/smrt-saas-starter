@@ -4,7 +4,7 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT (`@happyvertical/smrt-*`): **0.37.3**
+- SMRT (`@happyvertical/smrt-*`): **0.37.5**
 - SDK (`@happyvertical/*`): **0.74.11**
 
 These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
@@ -77,43 +77,30 @@ Now: the packages publish to `registry.npmjs.org`, `.npmrc` routes the `@happyve
 scope there, and the token is gone — a clean `pnpm install` needs no auth. See
 **Consumed Versions** above.
 
+### SMRT: Field metadata lost in vite-bundled production servers
+
+Was: SMRT package dists self-registered field metadata at import time via
+`ObjectRegistry.registerPackageManifest(new URL("./manifest.json", import.meta.url))`.
+When Vite bundled package code into SvelteKit server chunks, `import.meta.url`
+resolved to `build/server/chunks/manifest.json` (nonexistent), so registration
+silently no-opped: `create()`/`save()` dropped declared plain fields
+(`users.email`, `sessions.expires_at`/`user_agent`/`ip_address` — #1506) and
+WHERE validation rejected declared fields (`TenantUsageMetric.metricKey`,
+`TenantSubscription.subscriberKind` — #1507). Filed as
+[smrt#1506](https://github.com/happyvertical/smrt/issues/1506) /
+[smrt#1507](https://github.com/happyvertical/smrt/issues/1507).
+
+Now: fixed in `@happyvertical/smrt-*@0.37.5` via
+[smrt#1747](https://github.com/happyvertical/smrt/pull/1747), which inlines each
+package manifest into its `__smrt-register__` module at build time
+(`registerPackageManifest(JSON.parse(...))`), so the bundled chunk carries its
+field metadata inline and no runtime file lookup is needed. The local workaround
+(`apps/web/scripts/generate-runtime-manifest.mjs`, its `pnpm build` step, and the
+`build/server/manifest.json` guard in `scripts/smoke-runtime-images.mjs`) is removed.
+
 ## Open Blockers
 
-### SMRT: Field metadata is lost in vite-bundled production servers
-
-Status: open upstream as [happyvertical/smrt#1506](https://github.com/happyvertical/smrt/issues/1506)
-and [happyvertical/smrt#1507](https://github.com/happyvertical/smrt/issues/1507).
-Discovered downstream in smrtsaas (the first starter-derived app with a real
-authenticated production user); reproduced on `@happyvertical/smrt-*@0.28.x`.
-
-Root cause (verified against the built server tree): SMRT package dists
-self-register field metadata at import time via
-`ObjectRegistry.registerPackageManifest(new URL("./manifest.json", import.meta.url))`.
-When Vite bundles package code into SvelteKit server chunks,
-`import.meta.url` points at `build/server/chunks/<chunk>.js`, so the lookup
-resolves to `build/server/chunks/manifest.json`, which does not exist, and
-registration becomes a silent no-op. Plain fields vanish from the registry
-while relationship fields (registered through the decorator path) survive.
-That one failure explains both production bugs:
-
-- `create()`/`save()` silently drop declared plain-field values
-  (`users.email`, `sessions.expires_at`/`user_agent`/`ip_address`) — #1506.
-- WHERE validation only knows base fields and rejects declared fields
-  (`TenantUsageMetric.metricKey`, `TenantSubscription.subscriberKind`) — #1507.
-
-Script mode (`db:smoke`) and dev mode are unaffected because packages load
-unbundled from `node_modules`, where `./manifest.json` resolves correctly.
-
-Workaround in this repo (remove once upstream fixes bundled registration):
-`apps/web/scripts/generate-runtime-manifest.mjs` merges every runtime package
-manifest plus the app-local manifest into `build/server/manifest.json` during
-`pnpm build`. smrt-core's upward-search recovery in `registerPackageManifest`
-finds that file from the chunks directory. `scripts/smoke-runtime-images.mjs`
-guards the file's presence in the web image.
-
-The proper upstream fix belongs in smrt-core/the package build (for example,
-inlining field definitions into the registration call instead of resolving a
-file next to `import.meta.url`).
+_None._
 
 ## SDK: Stripe In `@happyvertical/accounting`
 
