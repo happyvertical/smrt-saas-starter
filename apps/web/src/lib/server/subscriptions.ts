@@ -7,12 +7,12 @@ import {
   SubscriptionPlanCollection,
   SubscriptionResolver,
   TenantSubscriptionCollection,
+  TenantUsageMeter,
 } from "@happyvertical/smrt-subscriptions";
 import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getCurrentMonthWindow, isUuid, readFeatureLabel } from "$lib/server/starter-data";
 import { withActiveTenant } from "$lib/server/tenant-context";
-import { summarizeUsageMetric } from "$lib/server/usage";
 
 export interface StarterFeatureGrant extends PlanFeatureGrant {
   label: string;
@@ -41,16 +41,17 @@ export interface BillingOverview {
 export async function getBillingOverview(tenantId?: string | null): Promise<BillingOverview> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
     const { plans, subscriptions } = await createSubscriptionCollections();
+    const usage = await TenantUsageMeter.create(getSmrtConfig("TenantUsageMetric"));
     const resolver = new SubscriptionResolver({
       plans: {
         get: (criteria) => withSystemContext(() => plans.get(criteria)),
       },
       subscriptions,
-      // Keep the single-metric summarizer: it wraps the optional `_smrt_ai_usage`
-      // table so a missing table falls back instead of throwing. The batching
-      // TenantUsageMeter can't be passed directly until it guards that table
-      // upstream (smrt#1722); once it does, switch to SubscriptionResolver.create.
-      usage: { summarize: summarizeUsageMetric },
+      // Pass the batching usage meter directly: it exposes summarizeBatch (so the
+      // resolver evaluates all thresholds per window in one query) and guards the
+      // optional `_smrt_ai_usage` table internally (smrt#1722, shipped in
+      // smrt-subscriptions 0.37.3), so the local single-metric safe reader is gone.
+      usage,
     });
 
     // Load the subscription/plan pair once and reuse it: passing it back via

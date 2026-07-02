@@ -143,35 +143,6 @@ export function getUsageWindow(thresholdWindow: ThresholdWindow = "month", now =
   return getWindowForThreshold(thresholdWindow, now);
 }
 
-export async function summarizeUsageMetric(options: {
-  tenantId: string;
-  metricKey: string;
-  window: { start: Date; end: Date };
-}): Promise<UsageSummary> {
-  return await withActiveTenant(options.tenantId, async (activeTenantId) => {
-    const usageMetrics = await TenantUsageMetricCollection.create(
-      getSmrtConfig("TenantUsageMetric"),
-    );
-    const tenantUsage = await usageMetrics.summarizeUsage({
-      ...options,
-      tenantId: activeTenantId,
-    });
-    if (!options.metricKey.startsWith("ai.")) {
-      return tenantUsage;
-    }
-
-    const aiSummary = await safeSummarizeTenantAiUsage(activeTenantId, options.window);
-    if (!aiSummary) {
-      return tenantUsage;
-    }
-
-    return {
-      ...tenantUsage,
-      quantity: tenantUsage.quantity + readAiMetricQuantity(options.metricKey, aiSummary),
-    };
-  });
-}
-
 async function getAiUsageSummaries(tenantId: string): Promise<UsageSummary[]> {
   const window = getCurrentMonthWindow();
   const aiSummary = await safeSummarizeTenantAiUsage(tenantId, window);
@@ -229,26 +200,6 @@ export function mergeUsageSummaries(
     windowEnd: summary.windowEnd,
   }));
   return summarizeUsageRecords(records, tenantId);
-}
-
-function readAiMetricQuantity(
-  metricKey: string,
-  summary: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-    estimatedCost: number;
-    requestCount: number;
-  },
-) {
-  const quantities: Record<string, number> = {
-    "ai.tokens.prompt": summary.promptTokens,
-    "ai.tokens.completion": summary.completionTokens,
-    "ai.tokens.total": summary.totalTokens,
-    "ai.cost.estimated": summary.estimatedCost,
-    "ai.requests": summary.requestCount,
-  };
-  return quantities[metricKey] ?? 0;
 }
 
 function dateFromRow(value: unknown): Date {
