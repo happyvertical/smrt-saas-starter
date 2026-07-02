@@ -18,12 +18,14 @@ function run(command, args) {
 
 const webSmoke = `
 set -eu
-# Guard for happyvertical/smrt#1507: the bundled server resolves SMRT field
-# metadata from build/server/manifest.json (written by the web build step).
-# Without it, the production server drops declared fields on create() and
-# rejects them in WHERE validation.
-test -s build/server/manifest.json
-node -e 'const m = require("./build/server/manifest.json"); const n = Object.keys(m.objects ?? {}).length; if (n < 100) { console.error("runtime manifest has only " + n + " objects"); process.exit(1); } console.log("runtime manifest ok: " + n + " objects");'
+# Guard for happyvertical/smrt#1506 & #1507 (fixed upstream in smrt 0.37.5 via
+# smrt#1747): SMRT packages now inline their field metadata into the bundled
+# __smrt-register__ chunks at build time (registerPackageManifest(JSON.parse(...))),
+# so the production server registers declared fields with no runtime manifest.json
+# lookup. A regression (stale smrt, or a bundler change that strips the inline)
+# would drop declared fields on create() and reject them in WHERE validation.
+# Assert the inlined registration survived bundling into the server chunks.
+grep -rq 'registerPackageManifest(JSON.parse' build/server/chunks || { echo "smoke: inlined SMRT field manifest missing from build/server/chunks (smrt#1506/#1507 regression)"; exit 1; }
 node build/index.js >/tmp/smrt-web.log 2>&1 &
 pid=$!
 sleep 3

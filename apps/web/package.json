@@ -22,7 +22,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "dev": "vite dev --host 0.0.0.0",
-    "build": "vite build && node scripts/generate-runtime-manifest.mjs",
+    "build": "vite build",
     "db:migrate": "node scripts/smrt-db-migrate.mjs",
     "db:seed": "node scripts/smrt-db-seed.mjs",
     "db:smoke": "node scripts/smrt-db-smoke.mjs",
