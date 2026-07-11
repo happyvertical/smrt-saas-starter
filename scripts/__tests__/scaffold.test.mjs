@@ -41,6 +41,10 @@ describe("starter scaffold", () => {
       /CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' \|\| 'ubuntu-latest'/,
     );
     assert.match(pullRequest, /runtime-candidate\.json/);
+    assert.ok(
+      pullRequest.indexOf("Upload generated context") <
+        pullRequest.indexOf("      - name: Typecheck"),
+    );
     assert.match(postgres, /cleanup-ci-postgres\.mjs/);
     assert.match(deploy, /promote-candidate/);
     assert.match(deploy, /ref: \$\{\{ inputs\.source_sha \|\| github\.sha \}\}/);

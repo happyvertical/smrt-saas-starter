@@ -132,6 +132,23 @@ jobs:
       - name: Verify generated context provenance
         if: steps.context.outcome == 'success'
         run: pnpm ci:context:verify
+      - name: Upload generated context
+        if: steps.context.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: generated-context
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            .ci/generated-context/
+            apps/web/.smrt/
+            apps/web/build/
+            apps/web/src/routes/api/generated/
+            apps/worker/dist/
+            packages/app-objects/dist/
+            packages/mobile-contract/dist/
+            packages/mobile-contract/generated/
       - name: Typecheck
         if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true'
         run: pnpm typecheck
@@ -150,24 +167,6 @@ jobs:
         run: |
           pnpm turbo run test --filter="...[$BASE_SHA]" --concurrency=2
           node --test scripts/__tests__/*.test.mjs
-      - name: Upload generated context
-        if: steps.context.outcome == 'success'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: generated-context
-          retention-days: 7
-          if-no-files-found: error
-          include-hidden-files: true
-          path: |
-            .ci/generated-context/
-            apps/web/.smrt/
-            apps/web/build/
-            apps/web/src/routes/api/generated/
-            apps/worker/dist/
-            packages/app-objects/dist/
-            packages/mobile-contract/dist/
-            packages/mobile-contract/generated/
-
   postgres-shared:
     name: Isolated PostgreSQL (shared lane)
     needs: [scope, generated]

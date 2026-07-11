@@ -82,6 +82,12 @@ if (staticJob.includes("setup-environment") || staticJob.includes("pnpm install"
   throw new Error("Static checks must not install workspace dependencies");
 }
 
+if (
+  pullRequest.indexOf("Upload generated context") > pullRequest.indexOf("      - name: Typecheck")
+) {
+  throw new Error("Generated context must be uploaded before later validation can mutate it");
+}
+
 for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {
   const source = await readFile(join(workflowsDir, file), "utf8");
   for (const forbidden of ["pnpm check", "docker/build-push-action"]) {
