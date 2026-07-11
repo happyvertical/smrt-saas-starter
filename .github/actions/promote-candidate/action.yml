@@ -13,6 +13,11 @@ inputs:
     required: false
     default: ""
 
+outputs:
+  app-version:
+    description: Source commit baked into the promoted web image
+    value: ${{ steps.candidate-meta.outputs.source-commit }}
+
 runs:
   using: composite
   steps:
@@ -25,7 +30,8 @@ runs:
         SOURCE_SHA: ${{ inputs.source-sha }}
       run: |
         if [ -n "$EXPLICIT_RUN_ID" ]; then
-          run_id="$EXPLICIT_RUN_ID"
+          run_ids=("$EXPLICIT_RUN_ID")
+          candidate_source_sha=""
         else
           mapfile -t run_ids < <(gh run list \
             --workflow on-pull-request.yml \
@@ -34,27 +40,71 @@ runs:
             --limit 20 \
             --json databaseId \
             --jq '.[].databaseId')
-          if [ "${#run_ids[@]}" -ne 1 ]; then
-            echo "Expected exactly one successful candidate run for $SOURCE_SHA; found ${#run_ids[@]}"
-            exit 1
+          candidate_source_sha="$SOURCE_SHA"
+          if [ "${#run_ids[@]}" -eq 0 ]; then
+            mapfile -t pr_heads < <(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA/pulls" \
+              --jq '.[] | select(.merged_at != null) | .head.sha' | sort -u)
+            if [ "${#pr_heads[@]}" -ne 1 ]; then
+              echo "Expected one merged PR for $SOURCE_SHA; found ${#pr_heads[@]}"
+              exit 1
+            fi
+            candidate_source_sha="${pr_heads[0]}"
+            mapfile -t run_ids < <(gh run list \
+              --workflow on-pull-request.yml \
+              --commit "$candidate_source_sha" \
+              --status success \
+              --limit 20 \
+              --json databaseId \
+              --jq '.[].databaseId')
           fi
-          run_id="${run_ids[0]}"
         fi
-        echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
 
-    - name: Download candidate manifest
-      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-      with:
-        name: runtime-candidate
-        path: .ci/candidate
-        run-id: ${{ steps.candidate-run.outputs.run-id }}
-        github-token: ${{ github.token }}
+        tested_tree=$(git rev-parse 'HEAD^{tree}')
+        matching_runs=()
+        for candidate_run_id in "${run_ids[@]}"; do
+          destination=".ci/candidates/$candidate_run_id"
+          if ! gh run download "$candidate_run_id" \
+            --name runtime-candidate --dir "$destination"; then
+            continue
+          fi
+          artifact_tree=$(CANDIDATE_PATH="$destination/runtime-candidate.json" node -e '
+            const { readFileSync } = require("node:fs");
+            const candidate = JSON.parse(readFileSync(process.env.CANDIDATE_PATH, "utf8"));
+            process.stdout.write(candidate.testedTree || "");
+          ')
+          if [ "$artifact_tree" = "$tested_tree" ]; then
+            matching_runs+=("$candidate_run_id")
+          fi
+        done
+        if [ "${#matching_runs[@]}" -ne 1 ]; then
+          echo "Expected exactly one verified candidate for tree $tested_tree; found ${#matching_runs[@]}"
+          exit 1
+        fi
+        run_id="${matching_runs[0]}"
+        mkdir -p .ci/candidate
+        cp ".ci/candidates/$run_id/runtime-candidate.json" .ci/candidate/runtime-candidate.json
+        echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+        echo "candidate-source-sha=$candidate_source_sha" >> "$GITHUB_OUTPUT"
 
     - name: Verify candidate provenance
+      id: candidate-meta
       shell: bash
       env:
-        SOURCE_SHA: ${{ inputs.source-sha }}
-      run: node scripts/verify-runtime-candidate.mjs .ci/candidate/runtime-candidate.json "$SOURCE_SHA"
+        CANDIDATE_SOURCE_SHA: ${{ steps.candidate-run.outputs.candidate-source-sha }}
+      run: |
+        tested_tree=$(git rev-parse 'HEAD^{tree}')
+        if [ -n "$CANDIDATE_SOURCE_SHA" ]; then
+          node scripts/verify-runtime-candidate.mjs \
+            .ci/candidate/runtime-candidate.json "$CANDIDATE_SOURCE_SHA" "$tested_tree"
+        else
+          node scripts/verify-runtime-candidate.mjs \
+            .ci/candidate/runtime-candidate.json "" "$tested_tree"
+        fi
+        source_commit=$(node -p \
+          "JSON.parse(require('node:fs').readFileSync('.ci/candidate/runtime-candidate.json')).sourceCommit")
+        echo "source-commit=$source_commit" >> "$GITHUB_OUTPUT"
 
     - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
       with:
@@ -98,6 +148,7 @@ runs:
         SOURCE_SHA: ${{ inputs.source-sha }}
       run: |
         node scripts/update-manifest-digests.mjs \
-          --candidate .ci/candidate/runtime-candidate.json "$ENVIRONMENT" "$SOURCE_SHA"
+          --candidate .ci/candidate/runtime-candidate.json \
+          "$ENVIRONMENT" "${{ steps.candidate-meta.outputs.source-commit }}"
         node scripts/check-manifests.mjs
         node scripts/render-manifests.mjs

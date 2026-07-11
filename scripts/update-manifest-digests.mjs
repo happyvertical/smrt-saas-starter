@@ -5,17 +5,23 @@ import { validateRuntimeCandidate } from "./runtime-candidate-lib.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 let [environment, webDigest, workerDigest] = process.argv.slice(2);
+let webImageName = "ghcr.io/happyvertical/smrt-saas-starter-web";
+let workerImageName = "ghcr.io/happyvertical/smrt-saas-starter-worker";
 const environments = new Set(["dev", "staging", "production"]);
 const digestPattern = /^sha256:[a-f0-9]{64}$/;
 
 if (environment === "--candidate") {
-  const [, candidatePath, candidateEnvironment, expectedCommit] = process.argv.slice(2);
+  const [, candidatePath, candidateEnvironment, expectedSourceCommit] = process.argv.slice(2);
   const candidate = validateRuntimeCandidate(JSON.parse(await readFile(candidatePath, "utf8")), {
-    expectedCommit,
+    expectedSourceCommit,
   });
   environment = candidateEnvironment;
-  webDigest = candidate.images.find((image) => image.name.endsWith("-web"))?.digest;
-  workerDigest = candidate.images.find((image) => image.name.endsWith("-worker"))?.digest;
+  const webImage = candidate.images.find((image) => image.name.endsWith("-web"));
+  const workerImage = candidate.images.find((image) => image.name.endsWith("-worker"));
+  webImageName = webImage.name;
+  workerImageName = workerImage.name;
+  webDigest = webImage.digest;
+  workerDigest = workerImage.digest;
 }
 
 if (!environments.has(environment)) {
@@ -34,8 +40,8 @@ for (const [name, digest] of [
 }
 
 const images = new Map([
-  ["ghcr.io/happyvertical/smrt-saas-starter-web", webDigest],
-  ["ghcr.io/happyvertical/smrt-saas-starter-worker", workerDigest],
+  [webImageName, webDigest],
+  [workerImageName, workerDigest],
 ]);
 
 function updateImageDigest(text, imageName, digest) {

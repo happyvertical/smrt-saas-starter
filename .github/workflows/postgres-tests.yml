@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 8 * * *"
+    - cron: "15 * * * *"
 
 concurrency:
   group: postgres-registry
@@ -16,7 +17,7 @@ permissions:
 jobs:
   postgres-shared:
     name: Registered PostgreSQL Suites (shared lane)
-    if: vars.CI_POSTGRES_ENABLED == 'true'
+    if: (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 8 * * *') && vars.CI_POSTGRES_ENABLED == 'true'
     runs-on: arc-happyvertical-node
     timeout-minutes: 30
     steps:
@@ -32,7 +33,7 @@ jobs:
 
   postgres-fallback:
     name: Registered PostgreSQL Suites (service fallback)
-    if: vars.CI_POSTGRES_ENABLED != 'true'
+    if: (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 8 * * *') && vars.CI_POSTGRES_ENABLED != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -61,7 +62,7 @@ jobs:
 
   cleanup:
     name: Remove Abandoned CI Databases
-    if: vars.CI_POSTGRES_ENABLED == 'true'
+    if: always() && vars.CI_POSTGRES_ENABLED == 'true'
     needs: postgres-shared
     runs-on: arc-happyvertical-node
     steps:

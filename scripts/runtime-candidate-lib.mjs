@@ -1,9 +1,18 @@
 const digestPattern = /^sha256:[a-f0-9]{64}$/;
 
-export function createRuntimeCandidate({ sourceCommit, web, worker, platforms = ["linux/amd64"] }) {
+export function createRuntimeCandidate({
+  sourceCommit,
+  testedCommit,
+  testedTree,
+  web,
+  worker,
+  platforms = ["linux/amd64"],
+}) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceCommit,
+    testedCommit,
+    testedTree,
     images: [
       { name: web.name, digest: web.digest, platforms, verification: "passed" },
       { name: worker.name, digest: worker.digest, platforms, verification: "passed" },
@@ -11,13 +20,29 @@ export function createRuntimeCandidate({ sourceCommit, web, worker, platforms = 
   };
 }
 
-export function validateRuntimeCandidate(candidate, { expectedCommit } = {}) {
-  if (candidate?.schemaVersion !== 1) throw new Error("Unsupported runtime-candidate schema");
+export function validateRuntimeCandidate(
+  candidate,
+  { expectedSourceCommit, expectedTestedTree } = {},
+) {
+  if (candidate?.schemaVersion !== 2) throw new Error("Unsupported runtime-candidate schema");
   if (!/^[a-f0-9]{40}$/.test(candidate.sourceCommit ?? "")) {
     throw new Error("Candidate sourceCommit must be a full Git commit SHA");
   }
-  if (expectedCommit && candidate.sourceCommit !== expectedCommit) {
-    throw new Error(`Candidate commit ${candidate.sourceCommit} does not match ${expectedCommit}`);
+  if (!/^[a-f0-9]{40}$/.test(candidate.testedCommit ?? "")) {
+    throw new Error("Candidate testedCommit must be a full Git commit SHA");
+  }
+  if (!/^[a-f0-9]{40}$/.test(candidate.testedTree ?? "")) {
+    throw new Error("Candidate testedTree must be a full Git tree SHA");
+  }
+  if (expectedSourceCommit && candidate.sourceCommit !== expectedSourceCommit) {
+    throw new Error(
+      `Candidate source commit ${candidate.sourceCommit} does not match ${expectedSourceCommit}`,
+    );
+  }
+  if (expectedTestedTree && candidate.testedTree !== expectedTestedTree) {
+    throw new Error(
+      `Candidate tested tree ${candidate.testedTree} does not match ${expectedTestedTree}`,
+    );
   }
   if (!Array.isArray(candidate.images) || candidate.images.length !== 2) {
     throw new Error("Candidate must contain exactly the web and worker images");

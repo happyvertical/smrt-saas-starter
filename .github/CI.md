@@ -75,11 +75,14 @@ limited.
 ## Deployment artifacts
 
 Image-affecting validation builds web and worker candidates once, smokes the
-exact pushed digests, and uploads a schema-versioned manifest containing source
-commit, image, platforms, digest, and verification result. Deployment locates
-exactly one successful candidate for the commit, rejects stale/duplicate or
-unverified manifests, retags the immutable digests, and updates the environment
-overlay without rebuilding or repeating `pnpm check`.
+exact pushed digests, and uploads a schema-versioned manifest containing the PR
+source commit, tested workflow commit and Git tree, image, platforms, digest,
+and verification result. Deployment checks out the exact triggering commit and
+locates exactly one successful candidate whose tested tree matches it. This
+allows a conventional merge commit to promote a PR candidate only when the
+resulting source tree is identical, while rejecting stale, ambiguous, or
+unverified manifests. Promotion retags the immutable digests and updates the
+environment overlay without rebuilding or repeating `pnpm check`.
 
 `Emergency Recovery Build` is explicitly gated by the `EMERGENCY_BUILD`
 confirmation. Its run ID can be supplied to a manual deployment. Keep this path

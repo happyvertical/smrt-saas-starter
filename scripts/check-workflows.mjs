@@ -65,6 +65,8 @@ for (const phrase of [
   "artifacts/production-e2e/",
   "Smoke exact candidate digests",
   "runtime-candidate.json",
+  "tested_tree=$(git rev-parse 'HEAD^{tree}')",
+  "- 'scripts/prepare-runtime.mjs'",
   "name: Required CI",
   "if: always()",
 ]) {
@@ -86,8 +88,12 @@ for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]
   }
   for (const phrase of [
     "actions: read",
+    "pull-requests:",
     "./.github/actions/promote-candidate",
     "candidate_run_id",
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: literal GitHub Actions expression
+    "ref: ${{ inputs.source_sha || github.sha }}",
+    '- "scripts/prepare-runtime.mjs"',
   ]) {
     if (!source.includes(phrase)) throw new Error(`${file} must include: ${phrase}`);
   }

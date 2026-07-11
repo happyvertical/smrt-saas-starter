@@ -6,6 +6,8 @@ import { createRuntimeCandidate, validateRuntimeCandidate } from "./runtime-cand
 
 const [
   sourceCommit,
+  testedCommit,
+  testedTree,
   webName,
   webDigest,
   workerName,
@@ -14,6 +16,8 @@ const [
 ] = process.argv.slice(2);
 const candidate = createRuntimeCandidate({
   sourceCommit,
+  testedCommit,
+  testedTree,
   web: { name: webName, digest: webDigest },
   worker: { name: workerName, digest: workerDigest },
 });

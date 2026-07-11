@@ -311,9 +311,12 @@ for each branch replaces them with the immutable digest returned by GHCR.
 
 Pull-request or merge-group validation builds each deployable image once and
 smokes the exact GHCR digest. The `runtime-candidate` artifact records the
-source commit, platforms, image names, digests, and successful verification.
-Dev, staging, and production workflows download that manifest, verify that it
-matches the commit, and promote the immutable digests without rebuilding.
+source commit, tested workflow commit and Git tree, platforms, image names,
+digests, and successful verification. Dev, staging, and production workflows
+check out the exact triggering commit, resolve its PR candidate when necessary,
+and require the tested tree to match before promoting immutable digests without
+rebuilding. A merge that changes the tested source tree must be validated again
+instead of reusing the PR artifact.
 
 To roll back, restore the previous web and worker digests in the target
 `manifests/overlays/<environment>/kustomization.yaml` and let GitOps reconcile

@@ -26,6 +26,10 @@ describe("starter scaffold", () => {
     const pullRequest = await readFile(join(root, ".github/workflows/on-pull-request.yml"), "utf8");
     const postgres = await readFile(join(root, ".github/workflows/postgres-tests.yml"), "utf8");
     const deploy = await readFile(join(root, ".github/workflows/deploy-dev.yml"), "utf8");
+    const promotion = await readFile(
+      join(root, ".github/actions/promote-candidate/action.yml"),
+      "utf8",
+    );
     const ciDocs = await readFile(join(root, ".github/CI.md"), "utf8");
     const isolation = await readFile(join(root, "scripts/run-with-ci-postgres.mjs"), "utf8");
     const context = await readFile(join(root, "scripts/verify-ci-context.mjs"), "utf8");
@@ -35,7 +39,11 @@ describe("starter scaffold", () => {
     assert.match(pullRequest, /runtime-candidate\.json/);
     assert.match(postgres, /cleanup-ci-postgres\.mjs/);
     assert.match(deploy, /promote-candidate/);
+    assert.match(deploy, /ref: \$\{\{ inputs\.source_sha \|\| github\.sha \}\}/);
     assert.doesNotMatch(deploy, /docker\/build-push-action/);
+    assert.match(promotion, /commits\/\$SOURCE_SHA\/pulls/);
+    assert.match(promotion, /HEAD\^\{tree\}/);
+    assert.match(promotion, /Expected exactly one verified candidate for tree/);
     assert.match(isolation, /GITHUB_RUN_ATTEMPT/);
     assert.match(isolation, /dropdb/);
     assert.match(isolation, /--force/);

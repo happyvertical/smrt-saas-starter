@@ -71,9 +71,13 @@ jobs:
             node scripts/smoke-runtime-images.mjs
       - name: Record recovery candidate manifest
         run: |
+          tested_tree=$(git rev-parse 'HEAD^{tree}')
           node scripts/write-runtime-candidate.mjs \
-            "$SOURCE_SHA" "$WEB_IMAGE" "${{ steps.web.outputs.digest }}" \
+            "$SOURCE_SHA" "$SOURCE_SHA" "$tested_tree" \
+            "$WEB_IMAGE" "${{ steps.web.outputs.digest }}" \
             "$WORKER_IMAGE" "${{ steps.worker.outputs.digest }}"
+          node scripts/verify-runtime-candidate.mjs \
+            .ci/runtime-candidate.json "$SOURCE_SHA" "$tested_tree"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: runtime-candidate
