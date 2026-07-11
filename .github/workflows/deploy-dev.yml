@@ -2,96 +2,54 @@ name: Deploy Dev
 
 on:
   push:
-    branches:
-      - dev
-    paths-ignore:
-      - manifests/overlays/dev/kustomization.yaml
+    branches: [dev]
+    paths-ignore: [manifests/overlays/dev/kustomization.yaml]
   workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Commit SHA to deploy
+        required: true
+      candidate_run_id:
+        description: Explicit recovery-build run ID
+        required: false
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
 
 permissions:
+  actions: read
   contents: write
   packages: write
-
-env:
-  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
-  WEB_IMAGE: ghcr.io/${{ github.repository }}-web
-  WORKER_IMAGE: ghcr.io/${{ github.repository }}-worker
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
     environment: dev
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_DB: smrt_saas
-          POSTGRES_PASSWORD: localdev
-          POSTGRES_USER: smrt_saas
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
     env:
-      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
+      SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
-          ref: dev
-      - uses: Azure/setup-kubectl@v5.1.0
-      - uses: ./.github/actions/setup-environment
-      - name: Validate dev
-        run: pnpm check
-      - name: Prepare runtime trees
-        run: pnpm runtime:prepare
-      - uses: docker/login-action@v4.2.0
+          ref: ${{ inputs.source_sha || 'dev' }}
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-      - uses: docker/setup-buildx-action@v4.1.0
-      - name: Build and push web image
-        id: build-web
-        uses: docker/build-push-action@v7.2.0
+          node-version: "24.18.0"
+      - uses: Azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
+      - uses: ./.github/actions/promote-candidate
         with:
-          context: .
-          file: apps/web/Dockerfile
-          push: true
-          build-args: |
-            APP_VERSION=${{ github.sha }}
-          tags: |
-            ${{ env.WEB_IMAGE }}:dev-${{ github.sha }}
-            ${{ env.WEB_IMAGE }}:dev-latest
-      - name: Build and push worker image
-        id: build-worker
-        uses: docker/build-push-action@v7.2.0
-        with:
-          context: .
-          file: apps/worker/Dockerfile
-          push: true
-          tags: |
-            ${{ env.WORKER_IMAGE }}:dev-${{ github.sha }}
-            ${{ env.WORKER_IMAGE }}:dev-latest
-      - name: Update dev manifests
-        run: |
-          node scripts/update-manifest-digests.mjs dev \
-            "${{ steps.build-web.outputs.digest }}" \
-            "${{ steps.build-worker.outputs.digest }}"
-          pnpm manifests:check
-          pnpm manifests:render
-      - name: Commit dev manifest digests
+          environment: dev
+          source-sha: ${{ env.SOURCE_SHA }}
+          candidate-run-id: ${{ inputs.candidate_run_id }}
+      - name: Commit dev manifest digest
         run: |
           if git diff --quiet -- manifests/overlays/dev/kustomization.yaml; then
             echo "No dev manifest digest changes."
             exit 0
           fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add manifests/overlays/dev/kustomization.yaml
           git commit -m "chore(deploy): update dev image digests [skip ci]"
-          git push
+          git push origin HEAD:dev

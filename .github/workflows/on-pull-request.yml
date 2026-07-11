@@ -1,53 +1,244 @@
-name: Pull Request
+name: Pull Request Validation
 
 on:
   pull_request:
-    branches:
-      - dev
-      - staging
-      - main
-    types: [opened, synchronize, reopened]
+    branches: [dev, staging, main]
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
+  pull-requests: read
   packages: read
 
 env:
-  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  TURBO_API: ${{ vars.TURBO_API }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
 jobs:
-  check:
+  scope:
+    name: Detect Validation Scope
     runs-on: ubuntu-latest
+    outputs:
+      context: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.context }}
+      postgres: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.postgres }}
+      e2e: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.e2e }}
+      mobile: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.mobile }}
+      runtime: ${{ github.event_name == 'merge_group' && 'true' || steps.filter.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Detect affected validation families
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        with:
+          filters: |
+            context:
+              - 'apps/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            postgres:
+              - 'apps/web/scripts/smrt-db-*.mjs'
+              - 'apps/web/src/lib/server/**'
+              - 'packages/app-objects/**'
+              - 'scripts/run-with-ci-postgres.mjs'
+              - '.github/workflows/**'
+            e2e:
+              - 'apps/web/**'
+              - 'packages/app-objects/**'
+              - 'packages/app-ui/**'
+              - 'pnpm-lock.yaml'
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/mobile-contract/**'
+              - 'pnpm-lock.yaml'
+            runtime:
+              - 'apps/web/**'
+              - 'apps/worker/**'
+              - 'packages/app-objects/**'
+              - 'packages/app-ui/**'
+              - 'scripts/*runtime*.mjs'
+              - '**/Dockerfile*'
+              - 'pnpm-lock.yaml'
+
+  static:
+    name: Static, Security, and Template Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "24.18.0"
+      - name: Read pnpm version
+        id: pnpm
+        run: |
+          version=$(node -p 'require("./package.json").packageManager.split("@")[1]')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: ${{ steps.pnpm.outputs.version }}
+          run_install: false
+      - name: Format
+        run: pnpm dlx @biomejs/biome@2.4.16 check --formatter-enabled=true --linter-enabled=false .
+      - name: Lint
+        run: pnpm dlx @biomejs/biome@2.4.16 check --formatter-enabled=false --linter-enabled=true .
+      - name: Dependency alignment
+        run: node scripts/check-dependencies.mjs
+      - name: Workflow validation
+        run: node scripts/check-workflows.mjs
+      - name: Manifest validation
+        run: node scripts/check-manifests.mjs
+      - name: SOPS validation
+        run: node scripts/check-sops.mjs
+      - name: Template validation
+        run: node scripts/validate-scaffold.mjs
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
+
+  generated:
+    name: Build, Typecheck, and SQLite Tests
+    needs: scope
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || (vars.CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' || 'arc-happyvertical') }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-environment
+      - name: Build and generate reusable context
+        id: context
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        run: pnpm ci:context:prepare
+        env:
+          TURBO_FORCE: "true"
+      - name: Build affected dependency closures
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true' && needs.scope.outputs.context != 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: pnpm turbo run build --filter="...[$BASE_SHA]" --concurrency=2
+      - name: Verify generated context provenance
+        if: steps.context.outcome == 'success'
+        run: pnpm ci:context:verify
+      - name: Typecheck
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true'
+        run: pnpm typecheck
+      - name: Typecheck affected dependency closures
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: pnpm turbo run typecheck --filter="...[$BASE_SHA]" --concurrency=2
+      - name: SQLite and unit tests
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true'
+        run: pnpm test:sqlite
+      - name: Test affected dependency closures
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pnpm turbo run test --filter="...[$BASE_SHA]" --concurrency=2
+          node --test scripts/__tests__/*.test.mjs
+      - name: Upload generated context
+        if: steps.context.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: generated-context
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            .ci/generated-context/
+            apps/web/.smrt/
+            apps/web/build/
+            apps/web/src/routes/api/generated/
+            apps/worker/dist/
+            packages/app-objects/dist/
+            packages/mobile-contract/dist/
+            packages/mobile-contract/generated/
+
+  postgres-shared:
+    name: Isolated PostgreSQL (shared lane)
+    needs: [scope, generated]
+    if: needs.scope.outputs.postgres == 'true' && vars.CI_POSTGRES_ENABLED == 'true'
+    runs-on: arc-happyvertical-node
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: ./.github/actions/setup-environment
+      - name: Restore generated context
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: generated-context
+          path: .
+      - name: Verify generated context provenance
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        run: pnpm ci:context:verify
+      - name: Build database dependency when context is not required
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true' && needs.scope.outputs.context != 'true'
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
+      - name: Run production-sensitive schema, migration, UUID, relationship, and query checks
+        run: pnpm test:postgres
+        env:
+          CI_POSTGRES_BASE_URL_FILE: /var/run/ci-services/postgres/url
+          TURBO_FORCE: "true"
+
+  postgres-fallback:
+    name: Isolated PostgreSQL (service fallback)
+    needs: [scope, generated]
+    if: needs.scope.outputs.postgres == 'true' && vars.CI_POSTGRES_ENABLED != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:18-alpine
         env:
-          POSTGRES_DB: smrt_saas
+          POSTGRES_DB: postgres
           POSTGRES_PASSWORD: localdev
-          POSTGRES_USER: smrt_saas
-        ports:
-          - 5432:5432
+          POSTGRES_USER: smrt_ci
+        ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
+          --health-cmd "pg_isready -U smrt_ci -d postgres"
           --health-interval 5s
           --health-timeout 5s
-          --health-retries 36
-    env:
-      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
+          --health-retries 12
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: ./.github/actions/setup-environment
-      - name: Validate
-        run: pnpm check
+      - name: Restore generated context
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: generated-context
+          path: .
+      - name: Verify generated context provenance
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        run: pnpm ci:context:verify
+      - name: Build database dependency when context is not required
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true' && needs.scope.outputs.context != 'true'
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
+      - name: Run production-sensitive schema, migration, UUID, relationship, and query checks
+        run: pnpm test:postgres
+        env:
+          CI_POSTGRES_BASE_URL: postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres
+          TURBO_FORCE: "true"
 
   e2e:
+    name: Production Image E2E
+    needs: [scope, generated]
+    if: needs.scope.outputs.e2e == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: ./.github/actions/setup-environment
       - name: Install Playwright browsers
         run: pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
@@ -55,7 +246,7 @@ jobs:
         run: pnpm test:e2e:production
       - name: Upload production E2E diagnostics
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: production-e2e-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -65,16 +256,20 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  mobile-android:
+  mobile:
+    name: Mobile Contract and Android
+    needs: [scope]
+    if: needs.scope.outputs.mobile == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
-      - uses: gradle/actions/wrapper-validation@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: gradle/actions/wrapper-validation@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60 # v6
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
         with:
           distribution: temurin
           java-version: "21"
-      - uses: android-actions/setup-android@v4
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
       - uses: ./.github/actions/setup-environment
       - name: Install Android SDK components
         run: |
@@ -83,11 +278,134 @@ jobs:
       - name: Validate Android shell
         run: pnpm mobile:validate:android
 
-  runtime:
+  candidate:
+    name: Deployment Candidate
+    needs: [scope, generated]
+    if: needs.scope.outputs.runtime == 'true' && (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: arc-happyvertical
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      WEB_IMAGE: ghcr.io/${{ github.repository }}-web
+      WORKER_IMAGE: ghcr.io/${{ github.repository }}-worker
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: ./.github/actions/setup-environment
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: generated-context
+          path: .
+      - name: Verify generated context provenance
+        run: pnpm ci:context:verify
+      - name: Prepare runtime trees without rebuilding
+        run: pnpm runtime:prepare
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - name: Build and push web candidate
+        id: web
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          platforms: linux/amd64
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: ${{ env.WEB_IMAGE }}:candidate-${{ github.sha }}
+      - name: Build and push worker candidate
+        id: worker
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ env.WORKER_IMAGE }}:candidate-${{ github.sha }}
+      - name: Smoke exact candidate digests
+        run: |
+          docker pull "$WEB_IMAGE@${{ steps.web.outputs.digest }}"
+          docker pull "$WORKER_IMAGE@${{ steps.worker.outputs.digest }}"
+          WEB_IMAGE_TAG="$WEB_IMAGE@${{ steps.web.outputs.digest }}" \
+          WORKER_IMAGE_TAG="$WORKER_IMAGE@${{ steps.worker.outputs.digest }}" \
+            node scripts/smoke-runtime-images.mjs
+      - name: Record verified candidate manifest
+        run: |
+          node scripts/write-runtime-candidate.mjs \
+            "$GITHUB_SHA" "$WEB_IMAGE" "${{ steps.web.outputs.digest }}" \
+            "$WORKER_IMAGE" "${{ steps.worker.outputs.digest }}"
+          node scripts/verify-runtime-candidate.mjs .ci/runtime-candidate.json "$GITHUB_SHA"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: runtime-candidate
+          path: .ci/runtime-candidate.json
+          retention-days: 14
+          if-no-files-found: error
+
+  required-ci:
+    name: Required CI
+    if: always()
+    needs: [scope, static, generated, postgres-shared, postgres-fallback, e2e, mobile, candidate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: Azure/setup-kubectl@v5.1.0
-      - uses: ./.github/actions/setup-environment
-      - name: Validate runtime artifacts
-        run: pnpm runtime:check
+      - name: Verify expected job set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SAME_REPOSITORY: ${{ github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository }}
+          SCOPE: ${{ needs.scope.result }}
+          STATIC: ${{ needs.static.result }}
+          GENERATED: ${{ needs.generated.result }}
+          POSTGRES_REQUIRED: ${{ needs.scope.outputs.postgres }}
+          POSTGRES_ENABLED: ${{ vars.CI_POSTGRES_ENABLED }}
+          POSTGRES_SHARED: ${{ needs.postgres-shared.result }}
+          POSTGRES_FALLBACK: ${{ needs.postgres-fallback.result }}
+          E2E_REQUIRED: ${{ needs.scope.outputs.e2e }}
+          E2E: ${{ needs.e2e.result }}
+          MOBILE_REQUIRED: ${{ needs.scope.outputs.mobile }}
+          MOBILE: ${{ needs.mobile.result }}
+          CANDIDATE_REQUIRED: ${{ needs.scope.outputs.runtime }}
+          CANDIDATE: ${{ needs.candidate.result }}
+        run: |
+          require_success() {
+            if [ "$2" != "success" ]; then
+              echo "$1 must succeed, got: $2"
+              exit 1
+            fi
+          }
+          require_optional() {
+            if [ "$2" = "true" ]; then
+              require_success "$1" "$3"
+            elif [ "$3" != "skipped" ]; then
+              echo "$1 should be skipped, got: $3"
+              exit 1
+            fi
+          }
+
+          require_success "Scope detection" "$SCOPE"
+          require_success "Static checks" "$STATIC"
+          require_success "Build/typecheck/tests" "$GENERATED"
+          if [ "$POSTGRES_REQUIRED" = "true" ]; then
+            if [ "$POSTGRES_ENABLED" = "true" ]; then
+              require_success "Shared PostgreSQL" "$POSTGRES_SHARED"
+              require_optional "PostgreSQL fallback" "false" "$POSTGRES_FALLBACK"
+            else
+              require_optional "Shared PostgreSQL" "false" "$POSTGRES_SHARED"
+              require_success "PostgreSQL fallback" "$POSTGRES_FALLBACK"
+            fi
+          else
+            require_optional "Shared PostgreSQL" "false" "$POSTGRES_SHARED"
+            require_optional "PostgreSQL fallback" "false" "$POSTGRES_FALLBACK"
+          fi
+          require_optional "Browser E2E" "$E2E_REQUIRED" "$E2E"
+          require_optional "Mobile" "$MOBILE_REQUIRED" "$MOBILE"
+          if [ "$CANDIDATE_REQUIRED" = "true" ] && [ "$SAME_REPOSITORY" = "true" ]; then
+            require_success "Deployment candidate" "$CANDIDATE"
+          elif [ "$CANDIDATE" != "skipped" ]; then
+            echo "Deployment candidate should be skipped, got: $CANDIDATE"
+            exit 1
+          fi
+          echo "Required CI passed for $EVENT_NAME"

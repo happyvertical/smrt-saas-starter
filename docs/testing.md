@@ -1,10 +1,22 @@
 # Testing Strategy
 
+The hosted CI layout, runner selection, rollout gates, PostgreSQL isolation,
+generated-context reuse, and required-check installation are documented in
+[`.github/CI.md`](../.github/CI.md). The commands below remain the local source
+of truth.
+
 The starter validates in layers. Narrow layers run constantly during
 development; the full gate runs before every push (`pnpm check`, enforced by
 the pre-push hook and CI). Layers that need heavy local toolchains or a
 running browser stay out of `pnpm check` and are listed with their own
 triggers below.
+
+CI keeps `pnpm check` available but reports format, lint, typecheck, SQLite
+tests, build, workflow, manifest, SOPS, template, PostgreSQL, E2E, mobile, and
+deployment-candidate confidence separately. Use `pnpm test:sqlite` for the fast
+portable suite. Use `CI_POSTGRES_BASE_URL=postgresql://... pnpm test:postgres`
+for production-sensitive schema, migration, UUID, relationship, and query
+behavior; the wrapper always creates and force-drops a unique database.
 
 ## Layers
 

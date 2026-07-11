@@ -1,0 +1,82 @@
+name: Emergency Recovery Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full commit SHA to rebuild
+        required: true
+      confirmation:
+        description: Type EMERGENCY_BUILD to authorize the temporary recovery path
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  recovery:
+    if: inputs.confirmation == 'EMERGENCY_BUILD'
+    runs-on: arc-happyvertical
+    timeout-minutes: 40
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      WEB_IMAGE: ghcr.io/${{ github.repository }}-web
+      WORKER_IMAGE: ghcr.io/${{ github.repository }}-worker
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ inputs.source_sha }}
+      - uses: ./.github/actions/setup-environment
+      - name: Rebuild generated context
+        run: pnpm ci:context:prepare
+        env:
+          CI_SOURCE_SHA: ${{ env.SOURCE_SHA }}
+          TURBO_FORCE: "true"
+      - name: Verify rebuilt context
+        run: pnpm ci:context:verify
+      - name: Prepare runtime trees
+        run: pnpm runtime:prepare
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - name: Build web recovery candidate
+        id: web
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          platforms: linux/amd64
+          build-args: APP_VERSION=${{ env.SOURCE_SHA }}
+          tags: ${{ env.WEB_IMAGE }}:recovery-${{ env.SOURCE_SHA }}
+      - name: Build worker recovery candidate
+        id: worker
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ env.WORKER_IMAGE }}:recovery-${{ env.SOURCE_SHA }}
+      - name: Smoke exact recovery digests
+        run: |
+          docker pull "$WEB_IMAGE@${{ steps.web.outputs.digest }}"
+          docker pull "$WORKER_IMAGE@${{ steps.worker.outputs.digest }}"
+          WEB_IMAGE_TAG="$WEB_IMAGE@${{ steps.web.outputs.digest }}" \
+          WORKER_IMAGE_TAG="$WORKER_IMAGE@${{ steps.worker.outputs.digest }}" \
+            node scripts/smoke-runtime-images.mjs
+      - name: Record recovery candidate manifest
+        run: |
+          node scripts/write-runtime-candidate.mjs \
+            "$SOURCE_SHA" "$WEB_IMAGE" "${{ steps.web.outputs.digest }}" \
+            "$WORKER_IMAGE" "${{ steps.worker.outputs.digest }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: runtime-candidate
+          path: .ci/runtime-candidate.json
+          retention-days: 14
+          if-no-files-found: error

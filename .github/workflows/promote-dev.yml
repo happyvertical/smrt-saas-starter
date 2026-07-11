@@ -4,50 +4,30 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: read
+  contents: read
   pull-requests: write
-
-env:
-  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
 
 jobs:
   promote:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_DB: smrt_saas
-          POSTGRES_PASSWORD: localdev
-          POSTGRES_USER: smrt_saas
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
           ref: dev
-      - uses: Azure/setup-kubectl@v5.1.0
-      - uses: ./.github/actions/setup-environment
-      - name: Validate dev before promotion
-        run: pnpm check
-      - name: Render deploy manifests
-        run: pnpm manifests:render
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "24.18.0"
+      - uses: Azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
+      - name: Verify deploy manifests before promotion
+        run: |
+          node scripts/check-manifests.mjs
+          node scripts/render-manifests.mjs
       - name: Open dev to staging PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr create \
-            --base staging \
-            --head dev \
+          gh pr create --base staging --head dev \
             --title "chore: promote dev to staging" \
-            --body "Automated promotion from dev to staging." \
+            --body "Automated promotion of the verified dev candidate." \
           || gh pr list --base staging --head dev --json url --jq '.[0].url'

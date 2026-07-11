@@ -1,0 +1,75 @@
+name: Nightly PostgreSQL Validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+concurrency:
+  group: postgres-registry
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  postgres-shared:
+    name: Registered PostgreSQL Suites (shared lane)
+    if: vars.CI_POSTGRES_ENABLED == 'true'
+    runs-on: arc-happyvertical-node
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: ./.github/actions/setup-environment
+      - name: Build registered database dependency closure
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
+      - name: Run full PostgreSQL registry without cache
+        run: pnpm test:postgres
+        env:
+          CI_POSTGRES_BASE_URL_FILE: /var/run/ci-services/postgres/url
+          TURBO_FORCE: "true"
+
+  postgres-fallback:
+    name: Registered PostgreSQL Suites (service fallback)
+    if: vars.CI_POSTGRES_ENABLED != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U smrt_ci -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: ./.github/actions/setup-environment
+      - name: Build registered database dependency closure
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
+      - name: Run full PostgreSQL registry without cache
+        run: pnpm test:postgres
+        env:
+          CI_POSTGRES_BASE_URL: postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres
+          TURBO_FORCE: "true"
+
+  cleanup:
+    name: Remove Abandoned CI Databases
+    if: vars.CI_POSTGRES_ENABLED == 'true'
+    needs: postgres-shared
+    runs-on: arc-happyvertical-node
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "24.18.0"
+      - name: Drop databases older than six hours
+        run: node scripts/cleanup-ci-postgres.mjs
+        env:
+          CI_POSTGRES_BASE_URL_FILE: /var/run/ci-services/postgres/url

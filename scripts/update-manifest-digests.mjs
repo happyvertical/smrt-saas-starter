@@ -1,15 +1,26 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateRuntimeCandidate } from "./runtime-candidate-lib.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const [environment, webDigest, workerDigest] = process.argv.slice(2);
+let [environment, webDigest, workerDigest] = process.argv.slice(2);
 const environments = new Set(["dev", "staging", "production"]);
 const digestPattern = /^sha256:[a-f0-9]{64}$/;
 
+if (environment === "--candidate") {
+  const [, candidatePath, candidateEnvironment, expectedCommit] = process.argv.slice(2);
+  const candidate = validateRuntimeCandidate(JSON.parse(await readFile(candidatePath, "utf8")), {
+    expectedCommit,
+  });
+  environment = candidateEnvironment;
+  webDigest = candidate.images.find((image) => image.name.endsWith("-web"))?.digest;
+  workerDigest = candidate.images.find((image) => image.name.endsWith("-worker"))?.digest;
+}
+
 if (!environments.has(environment)) {
   throw new Error(
-    "Usage: node scripts/update-manifest-digests.mjs <dev|staging|production> <webDigest> <workerDigest>",
+    "Usage: node scripts/update-manifest-digests.mjs <environment> <webDigest> <workerDigest> | --candidate <path> <environment> <commit>",
   );
 }
 

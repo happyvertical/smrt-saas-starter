@@ -5,10 +5,10 @@
   "description": "Canonical HappyVertical SMRT multi-tenant SaaS starter, reference app, and ecosystem demo.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.11.0",
   "engines": {
-    "node": ">=24.0.0",
-    "pnpm": ">=10.0.0"
+    "node": ">=24.18.0",
+    "pnpm": ">=11.11.0"
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
@@ -18,6 +18,8 @@
     "lint:fix": "biome lint --write .",
     "typecheck": "turbo run typecheck",
     "test": "pnpm -r --if-present test && node --test scripts/__tests__/*.test.mjs",
+    "test:sqlite": "pnpm test",
+    "test:postgres": "node scripts/run-with-ci-postgres.mjs --suite db-smoke -- pnpm db:smoke",
     "test:e2e": "pnpm -r --if-present test:e2e",
     "test:e2e:production": "pnpm build && pnpm runtime:prepare && node scripts/run-production-e2e.mjs",
     "build": "turbo run build",
@@ -36,7 +38,10 @@
     "manifests:render": "node scripts/render-manifests.mjs",
     "sops:check": "node scripts/check-sops.mjs",
     "validate": "node scripts/validate-scaffold.mjs",
-    "check": "pnpm deps:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm db:smoke && pnpm workflows:check && pnpm manifests:check && pnpm sops:check && pnpm validate",
+    "check:static": "pnpm deps:check && pnpm format:check && pnpm lint && pnpm workflows:check && pnpm manifests:check && pnpm sops:check && pnpm validate",
+    "check": "pnpm check:static && pnpm typecheck && pnpm test:sqlite && pnpm build && pnpm db:smoke",
+    "ci:context:prepare": "pnpm build && pnpm mobile:generate && node scripts/prepare-ci-context.mjs",
+    "ci:context:verify": "node scripts/verify-ci-context.mjs",
     "runtime:prepare": "node scripts/prepare-runtime.mjs",
     "images:build": "node scripts/build-runtime-images.mjs",
     "images:smoke": "node scripts/smoke-runtime-images.mjs",

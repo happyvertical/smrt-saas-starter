@@ -22,6 +22,29 @@ describe("starter scaffold", () => {
     assert.match(mergeMain, /main/);
   });
 
+  it("ships the required-check, database-isolation, and artifact-promotion contract", async () => {
+    const pullRequest = await readFile(join(root, ".github/workflows/on-pull-request.yml"), "utf8");
+    const postgres = await readFile(join(root, ".github/workflows/postgres-tests.yml"), "utf8");
+    const deploy = await readFile(join(root, ".github/workflows/deploy-dev.yml"), "utf8");
+    const ciDocs = await readFile(join(root, ".github/CI.md"), "utf8");
+    const isolation = await readFile(join(root, "scripts/run-with-ci-postgres.mjs"), "utf8");
+    const context = await readFile(join(root, "scripts/verify-ci-context.mjs"), "utf8");
+
+    assert.match(pullRequest, /merge_group:/);
+    assert.match(pullRequest, /name: Required CI/);
+    assert.match(pullRequest, /runtime-candidate\.json/);
+    assert.match(postgres, /cleanup-ci-postgres\.mjs/);
+    assert.match(deploy, /promote-candidate/);
+    assert.doesNotMatch(deploy, /docker\/build-push-action/);
+    assert.match(isolation, /GITHUB_RUN_ATTEMPT/);
+    assert.match(isolation, /dropdb/);
+    assert.match(isolation, /--force/);
+    assert.match(context, /input hash does not match/);
+    assert.match(context, /output hash does not match/);
+    assert.match(ciDocs, /ten successful representative/);
+    assert.match(ciDocs, /Rollback/);
+  });
+
   it("requires subscription and usage packages in the web app", async () => {
     const pkg = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
     assert.equal(pkg.dependencies["@happyvertical/smrt-saas-objects"], "workspace:*");

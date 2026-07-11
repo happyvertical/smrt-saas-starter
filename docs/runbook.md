@@ -307,6 +307,21 @@ for each branch replaces them with the immutable digest returned by GHCR.
 
 ## Deployment Secrets
 
+### Candidate provenance and rollback
+
+Pull-request or merge-group validation builds each deployable image once and
+smokes the exact GHCR digest. The `runtime-candidate` artifact records the
+source commit, platforms, image names, digests, and successful verification.
+Dev, staging, and production workflows download that manifest, verify that it
+matches the commit, and promote the immutable digests without rebuilding.
+
+To roll back, restore the previous web and worker digests in the target
+`manifests/overlays/<environment>/kustomization.yaml` and let GitOps reconcile
+that commit. Do not rebuild an old source revision: rollback must use the
+previously verified digest. During the first two successful promotions only,
+the audited `Emergency Recovery Build` workflow may rebuild a full commit after
+typing `EMERGENCY_BUILD`; pass its run ID to a manual environment deployment.
+
 Before applying manifests, replace placeholder values in
 `manifests/base/app.secret.yaml` with real values and encrypt them with SOPS.
 Do not commit decrypted secret values. Use Warden for human-readable source

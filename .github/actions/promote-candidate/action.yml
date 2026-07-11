@@ -1,0 +1,103 @@
+name: Promote runtime candidate
+description: Verify and retag an immutable CI candidate, then update the environment manifest.
+
+inputs:
+  environment:
+    description: dev, staging, or production
+    required: true
+  source-sha:
+    description: Commit whose verified candidate will be promoted
+    required: true
+  candidate-run-id:
+    description: Optional explicit recovery workflow run ID
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Locate unique successful candidate run
+      id: candidate-run
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        EXPLICIT_RUN_ID: ${{ inputs.candidate-run-id }}
+        SOURCE_SHA: ${{ inputs.source-sha }}
+      run: |
+        if [ -n "$EXPLICIT_RUN_ID" ]; then
+          run_id="$EXPLICIT_RUN_ID"
+        else
+          mapfile -t run_ids < <(gh run list \
+            --workflow on-pull-request.yml \
+            --commit "$SOURCE_SHA" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[].databaseId')
+          if [ "${#run_ids[@]}" -ne 1 ]; then
+            echo "Expected exactly one successful candidate run for $SOURCE_SHA; found ${#run_ids[@]}"
+            exit 1
+          fi
+          run_id="${run_ids[0]}"
+        fi
+        echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+
+    - name: Download candidate manifest
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        name: runtime-candidate
+        path: .ci/candidate
+        run-id: ${{ steps.candidate-run.outputs.run-id }}
+        github-token: ${{ github.token }}
+
+    - name: Verify candidate provenance
+      shell: bash
+      env:
+        SOURCE_SHA: ${{ inputs.source-sha }}
+      run: node scripts/verify-runtime-candidate.mjs .ci/candidate/runtime-candidate.json "$SOURCE_SHA"
+
+    - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+    - name: Promote immutable image digests
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        SOURCE_SHA: ${{ inputs.source-sha }}
+      run: |
+        node --input-type=module <<'NODE' > .ci/candidate/images.env
+        import { readFileSync } from 'node:fs';
+        const candidate = JSON.parse(readFileSync('.ci/candidate/runtime-candidate.json', 'utf8'));
+        for (const image of candidate.images) {
+          const key = image.name.endsWith('-web') ? 'WEB' : 'WORKER';
+          console.log(`${key}_IMAGE=${image.name}`);
+          console.log(`${key}_DIGEST=${image.digest}`);
+        }
+        NODE
+        source .ci/candidate/images.env
+        docker buildx imagetools create \
+          --tag "$WEB_IMAGE:$ENVIRONMENT-$SOURCE_SHA" \
+          --tag "$WEB_IMAGE:$ENVIRONMENT-latest" \
+          "$WEB_IMAGE@$WEB_DIGEST"
+        docker buildx imagetools create \
+          --tag "$WORKER_IMAGE:$ENVIRONMENT-$SOURCE_SHA" \
+          --tag "$WORKER_IMAGE:$ENVIRONMENT-latest" \
+          "$WORKER_IMAGE@$WORKER_DIGEST"
+        docker buildx imagetools inspect "$WEB_IMAGE@$WEB_DIGEST" >/dev/null
+        docker buildx imagetools inspect "$WORKER_IMAGE@$WORKER_DIGEST" >/dev/null
+
+    - name: Update deployment manifest from candidate
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        SOURCE_SHA: ${{ inputs.source-sha }}
+      run: |
+        node scripts/update-manifest-digests.mjs \
+          --candidate .ci/candidate/runtime-candidate.json "$ENVIRONMENT" "$SOURCE_SHA"
+        node scripts/check-manifests.mjs
+        node scripts/render-manifests.mjs

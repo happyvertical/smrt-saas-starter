@@ -5,6 +5,7 @@ build/
 .svelte-kit/
 .smrt/
 .runtime/
+.ci/
 coverage/
 test-results/
 playwright-report/
