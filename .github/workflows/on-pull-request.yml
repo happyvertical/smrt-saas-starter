@@ -120,12 +120,12 @@ jobs:
       - uses: ./.github/actions/setup-environment
       - name: Build and generate reusable context
         id: context
-        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true'
+        if: github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.context == 'true' || needs.scope.outputs.runtime == 'true'
         run: pnpm ci:context:prepare
         env:
           TURBO_FORCE: "true"
       - name: Build affected dependency closures
-        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true' && needs.scope.outputs.context != 'true'
+        if: github.event_name == 'pull_request' && vars.CI_MERGE_QUEUE_ENABLED == 'true' && needs.scope.outputs.context != 'true' && needs.scope.outputs.runtime != 'true'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: pnpm turbo run build --filter="...[$BASE_SHA]" --concurrency=2

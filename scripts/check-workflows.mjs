@@ -57,6 +57,7 @@ for (const phrase of [
   "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
   "runs-on: ubuntu-latest",
   "Build and generate reusable context",
+  "needs.scope.outputs.context == 'true' || needs.scope.outputs.runtime == 'true'",
   "vars.CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' || 'ubuntu-latest'",
   "pnpm ci:context:verify",
   "pnpm test:sqlite",

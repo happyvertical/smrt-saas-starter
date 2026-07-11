@@ -41,6 +41,10 @@ describe("starter scaffold", () => {
       /CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' \|\| 'ubuntu-latest'/,
     );
     assert.match(pullRequest, /runtime-candidate\.json/);
+    assert.match(
+      pullRequest,
+      /needs\.scope\.outputs\.context == 'true' \|\| needs\.scope\.outputs\.runtime == 'true'/,
+    );
     assert.ok(
       pullRequest.indexOf("Upload generated context") <
         pullRequest.indexOf("      - name: Typecheck"),

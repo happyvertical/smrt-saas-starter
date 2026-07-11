@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { updateImageDigest } from "./manifest-digests-lib.mjs";
 import { validateRuntimeCandidate } from "./runtime-candidate-lib.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -39,60 +40,16 @@ for (const [name, digest] of [
   }
 }
 
-const images = new Map([
-  [webImageName, webDigest],
-  [workerImageName, workerDigest],
-]);
-
-function updateImageDigest(text, imageName, digest) {
-  const lines = text.split("\n");
-  const updated = [];
-  let found = false;
-
-  for (let index = 0; index < lines.length; ) {
-    const line = lines[index];
-
-    if (line === `  - name: ${imageName}`) {
-      found = true;
-      const block = [line];
-      index += 1;
-
-      while (index < lines.length && !lines[index].startsWith("  - name: ")) {
-        if (lines[index] !== "" && !lines[index].startsWith("    ")) {
-          break;
-        }
-        block.push(lines[index]);
-        index += 1;
-      }
-
-      const digestIndex = block.findIndex((entry) => entry.trim().startsWith("digest:"));
-      if (digestIndex >= 0) {
-        block[digestIndex] = `    digest: ${digest}`;
-      } else {
-        const tagIndex = block.findIndex((entry) => entry.trim().startsWith("newTag:"));
-        block.splice(tagIndex >= 0 ? tagIndex + 1 : 1, 0, `    digest: ${digest}`);
-      }
-
-      updated.push(...block);
-      continue;
-    }
-
-    updated.push(line);
-    index += 1;
-  }
-
-  if (!found) {
-    throw new Error(`Overlay is missing image entry: ${imageName}`);
-  }
-
-  return updated.join("\n");
-}
+const images = [
+  { role: "web", name: webImageName, digest: webDigest },
+  { role: "worker", name: workerImageName, digest: workerDigest },
+];
 
 const overlayPath = join(root, "manifests", "overlays", environment, "kustomization.yaml");
 let text = await readFile(overlayPath, "utf8");
 
-for (const [imageName, digest] of images) {
-  text = updateImageDigest(text, imageName, digest);
+for (const image of images) {
+  text = updateImageDigest(text, image);
 }
 
 await writeFile(overlayPath, text);

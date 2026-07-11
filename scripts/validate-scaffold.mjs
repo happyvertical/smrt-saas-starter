@@ -49,6 +49,7 @@ const requiredFiles = [
   "scripts/build-runtime-images.mjs",
   "scripts/smoke-runtime-images.mjs",
   "scripts/render-manifests.mjs",
+  "scripts/manifest-digests-lib.mjs",
   "scripts/update-manifest-digests.mjs",
   "scripts/wait-for-deploy.mjs",
   "scripts/run-with-ci-postgres.mjs",
