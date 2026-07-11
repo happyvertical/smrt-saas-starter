@@ -111,7 +111,7 @@ jobs:
   generated:
     name: Build, Typecheck, and SQLite Tests
     needs: scope
-    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || (vars.CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' || 'arc-happyvertical') }}
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || (vars.CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' || 'ubuntu-latest') }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7

@@ -36,6 +36,10 @@ describe("starter scaffold", () => {
 
     assert.match(pullRequest, /merge_group:/);
     assert.match(pullRequest, /name: Required CI/);
+    assert.match(
+      pullRequest,
+      /CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' \|\| 'ubuntu-latest'/,
+    );
     assert.match(pullRequest, /runtime-candidate\.json/);
     assert.match(postgres, /cleanup-ci-postgres\.mjs/);
     assert.match(deploy, /promote-candidate/);
