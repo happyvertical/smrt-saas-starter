@@ -225,6 +225,7 @@ jobs:
       always() &&
       (github.event_name == 'merge_group' ||
       (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null))))
     needs: [lifecycle, check, e2e, mobile-android, runtime]
@@ -310,7 +311,10 @@ jobs:
 
   required-ci:
     name: Required CI
-    if: always()
+    if: >-
+      always() &&
+      (github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository)
     needs: [validation-gate, metadata-gate]
     runs-on: arc-happyvertical
     permissions:
