@@ -31,7 +31,13 @@ concurrency:
       'lifecycle' ||
       'validation'
     }}
-  cancel-in-progress: true
+  cancel-in-progress: >-
+    ${{ !(
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+      !contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
+      !(github.event.action == 'edited' && github.event.changes.base != null))
+    ) }}
 
 permissions:
   contents: read
@@ -267,7 +273,7 @@ jobs:
               exit 1
             fi
             latest=$(printf '%s\n' "$checks" | jq -r \
-              '[.check_runs[] | select(.name == "Required CI" and .status == "completed" and .conclusion != "cancelled")] | sort_by(.completed_at) | reverse | .[0].conclusion // "missing"')
+              '[.check_runs[] | select(.name == "Required CI" and .status == "completed")] | sort_by(.completed_at) | reverse | .[0].conclusion // "missing"')
             if [ "$latest" != success ]; then
               echo "::error::Latest completed Required CI for $head_sha must pass, got: $latest"
               exit 1
