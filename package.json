@@ -5,10 +5,10 @@
   "description": "Canonical HappyVertical SMRT multi-tenant SaaS starter, reference app, and ecosystem demo.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.13.0",
   "engines": {
-    "node": ">=24.0.0",
-    "pnpm": ">=10.0.0"
+    "node": ">=24.18.0",
+    "pnpm": ">=11.13.0"
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
@@ -50,22 +50,22 @@
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || echo 'Skipping lefthook install (not in git repository)'"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
+    "@biomejs/biome": "2.5.3",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@playwright/test": "^1.58.2",
     "@sveltejs/adapter-node": "^5.5.4",
-    "@sveltejs/kit": "^2.55.0",
-    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "@sveltejs/kit": "2.69.3",
+    "@sveltejs/vite-plugin-svelte": "7.2.0",
     "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "^4.1.5",
-    "lefthook": "^2.1.6",
+    "@vitest/coverage-v8": "4.1.10",
+    "lefthook": "2.1.10",
     "playwright": "^1.58.2",
-    "svelte": "^5.56.4",
+    "svelte": "5.56.5",
     "svelte-check": "^4.0.0",
-    "turbo": "^2.9.6",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.5"
+    "turbo": "2.10.5",
+    "typescript": "5.9.3",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
   }
 }
