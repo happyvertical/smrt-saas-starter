@@ -15,6 +15,7 @@ import {
   seedDefaultTenantSubscription,
 } from "$lib/server/accounts";
 import { getAppDatabase } from "$lib/server/db";
+import { ensureUserProfileInTransaction } from "$lib/server/profile-identity";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { isSuperUserEmail, type SuperUserContext } from "$lib/server/super-users";
 
@@ -73,10 +74,15 @@ async function createPublicService() {
 // this hook is defense-in-depth bound to the verified operator.
 async function createOperatorService(
   operator: SuperUserContext,
-  options: { origin?: string } = {},
+  options: {
+    origin?: string;
+    db?: DbLike;
+    captureEvent?: (event: AccessRequestEvent) => void;
+  } = {},
 ) {
   return AccessRequestService.create({
     ...accessRequestConfig(),
+    ...(options.db ? { db: options.db } : {}),
     authorize: async ({ by }) => {
       if (!by || by !== operator.userId || !isSuperUserEmail(operator.email)) {
         throw error(403, "Super-user access is required to manage access requests.");
@@ -85,7 +91,9 @@ async function createOperatorService(
     // Lifecycle hook — best-effort, never on the critical path. A throw here is
     // swallowed by the service (it won't roll back an already-persisted
     // transition), and we guard again inside the handler.
-    onEvent: (event) => handleAccessRequestEvent(event, options),
+    onEvent: options.captureEvent
+      ? (event) => options.captureEvent?.(event)
+      : (event) => handleAccessRequestEvent(event, options),
   });
 }
 
@@ -195,24 +203,54 @@ export async function graduateAccessRequest(
   input: GraduateAccessRequestInput = {},
 ): Promise<AccessRequestSummary> {
   const origin = input.origin?.trim() || undefined;
-  const service = await createOperatorService(operator, { origin });
   const tenant = resolveGraduateTenantOption(input);
+  const db = (await getAppDatabase()) as DbLike;
+  const transaction = db.transaction?.bind(db);
+  if (!transaction) {
+    throw new Error("Access-request graduation requires transaction support");
+  }
+  let graduatedEvent: AccessRequestEvent | null = null;
   const result = await withSystemContext(() =>
-    service.graduateAccessRequest(id, {
-      by: operator.userId,
-      allowFromRequested: true,
-      tenant,
+    transaction(async (tx) => {
+      // Capture the service's real transition event, but do not deliver it
+      // until every starter-owned write has committed successfully. An
+      // idempotent read of an already-graduated request emits no event.
+      const service = await createOperatorService(operator, {
+        db: tx,
+        captureEvent: (event) => {
+          graduatedEvent = event;
+        },
+      });
+      const graduated = await service.graduateAccessRequest(id, {
+        by: operator.userId,
+        allowFromRequested: true,
+        tenant,
+      });
+      if (!graduated.user.id) {
+        throw new Error("Graduated access request did not produce a user id");
+      }
+
+      // A brand-new tenant needs the same default subscription a normal signup
+      // gets. Existing tenants already have one and must never be re-seeded.
+      if (isNewTenantOption(tenant) && graduated.tenant?.id && graduated.tenant?.slug) {
+        await seedDefaultTenantSubscription(tx, {
+          id: graduated.tenant.id,
+          slug: graduated.tenant.slug,
+        });
+      }
+
+      const profile = await ensureUserProfileInTransaction(tx, {
+        userId: graduated.user.id,
+        email: graduated.user.email,
+        name: graduated.accessRequest.name,
+      });
+      graduated.user.profileId = profile.profileId;
+      return graduated;
     }),
   );
 
-  // A brand-new tenant needs the same default subscription a normal signup gets
-  // (onboardTenant seeds it) — otherwise the graduated tenant hits /app billing +
-  // entitlement resolution with no subscription row. An EXISTING tenant already
-  // has one, so never re-seed it. Reuse the shared seeder for the new-tenant case.
-  if (isNewTenantOption(tenant) && result.tenant?.id && result.tenant?.slug) {
-    const db = (await getAppDatabase()) as DbLike;
-    const seedTenant = { id: result.tenant.id, slug: result.tenant.slug };
-    await withSystemContext(() => seedDefaultTenantSubscription(db, seedTenant));
+  if (graduatedEvent) {
+    await handleAccessRequestEvent(graduatedEvent, { origin });
   }
 
   return serializeAccessRequest(result.accessRequest);

@@ -1,6 +1,6 @@
 {
   "name": "@happyvertical/smrt-saas-worker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Background worker for SMRT SaaS starter jobs.",
   "type": "module",

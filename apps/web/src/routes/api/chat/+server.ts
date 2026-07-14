@@ -5,7 +5,7 @@ import { requirePermission, starterPermissions } from "$lib/server/authz";
 export const GET: RequestHandler = async ({ locals }) => {
   const membership = await requirePermission(locals, starterPermissions.chatUse);
   const tenantId = membership.tenantId;
-  const state = await getTenantChatState(tenantId).catch(mapTenantChatError);
+  const state = await getTenantChatState(tenantId, membership.profileId).catch(mapTenantChatError);
   return json(state);
 };
 
@@ -15,7 +15,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const tenantId = membership.tenantId;
   const message = typeof body.message === "string" ? body.message : "";
 
-  const result = await sendTenantChatMessage(tenantId, message).catch(mapTenantChatError);
+  const result = await sendTenantChatMessage(tenantId, membership.profileId, message).catch(
+    mapTenantChatError,
+  );
 
   return json(result);
 };

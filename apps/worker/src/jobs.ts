@@ -352,7 +352,9 @@ export async function createSmrtSubscriptionReconciliationStore(
             canceled_at,
             metadata
           FROM _smrt_tenant_subscriptions
-          WHERE external_provider = 'stripe'
+          WHERE subscriber_kind = 'tenant'
+            AND subscriber_external_id = ''
+            AND external_provider = 'stripe'
             AND stripe_subscription_id IS NOT NULL
             AND stripe_subscription_id <> ''
           ORDER BY updated_at ASC
@@ -407,7 +409,9 @@ export async function createSmrtUsageAuditStore(
         `
           SELECT DISTINCT tenant_id
           FROM _smrt_tenant_subscriptions
-          WHERE status IN ('active', 'trialing', 'past_due')
+          WHERE subscriber_kind = 'tenant'
+            AND subscriber_external_id = ''
+            AND status IN ('active', 'trialing', 'past_due')
           ORDER BY tenant_id ASC
           LIMIT ?
         `,

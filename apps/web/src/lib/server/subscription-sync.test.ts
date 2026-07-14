@@ -1,5 +1,16 @@
 import type { StripeWebhookEvent } from "@happyvertical/smrt-saas-objects";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const dbMocks = vi.hoisted(() => ({
+  getAppDatabase: vi.fn(),
+  query: vi.fn(),
+  upsert: vi.fn(),
+}));
+
+vi.mock("$lib/server/db", () => ({
+  getAppDatabase: dbMocks.getAppDatabase,
+}));
+
 import {
   normalizeStripeSubscriptionUpdate,
   type SubscriptionSyncPlan,
@@ -16,6 +27,79 @@ const growthPlan: SubscriptionSyncPlan = {
 };
 
 describe("Stripe subscription sync", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    dbMocks.getAppDatabase.mockResolvedValue({
+      query: dbMocks.query,
+      upsert: dbMocks.upsert,
+    });
+    dbMocks.query.mockImplementation(async (sql: string) => ({
+      rows: sql.includes("FROM _smrt_subscription_plans")
+        ? [{ id: growthPlan.id, plan_key: growthPlan.planKey }]
+        : [],
+    }));
+    dbMocks.upsert.mockResolvedValue(undefined);
+  });
+
+  it("scopes the production database store to the tenant subscriber identity", async () => {
+    const event = stripeEvent("checkout.session.completed", {
+      id: "cs_test",
+      object: "checkout.session",
+      mode: "subscription",
+      customer: "cus_test",
+      subscription: "sub_test",
+      client_reference_id: tenantId,
+      metadata: {
+        tenantId,
+        planId: growthPlan.id,
+      },
+    });
+
+    await expect(syncStripeBillingEvent(event)).resolves.toMatchObject({
+      action: "created",
+      tenantId,
+      planId: growthPlan.id,
+    });
+
+    expect(dbMocks.query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringMatching(
+        /stripe_subscription_id = \?[\s\S]*subscriber_kind = \?[\s\S]*subscriber_external_id = \?/,
+      ),
+      "sub_test",
+      "tenant",
+      "",
+    );
+    expect(dbMocks.query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringMatching(
+        /tenant_id = \?[\s\S]*subscriber_kind = \?[\s\S]*subscriber_external_id = \?/,
+      ),
+      tenantId,
+      "tenant",
+      "",
+    );
+    expect(dbMocks.query).toHaveBeenNthCalledWith(
+      3,
+      expect.stringMatching(
+        /stripe_customer_id = \?[\s\S]*subscriber_kind = \?[\s\S]*subscriber_external_id = \?/,
+      ),
+      "cus_test",
+      "tenant",
+      "",
+    );
+    expect(dbMocks.upsert).toHaveBeenCalledWith(
+      "_smrt_tenant_subscriptions",
+      ["tenant_id", "subscriber_kind", "subscriber_external_id"],
+      expect.objectContaining({
+        tenant_id: tenantId,
+        subscriber_kind: "tenant",
+        subscriber_external_id: "",
+        plan_id: growthPlan.id,
+      }),
+    );
+  });
+
   it("creates a tenant subscription from checkout completion metadata", async () => {
     const store = new MemorySubscriptionStore([growthPlan]);
     const event = stripeEvent("checkout.session.completed", {

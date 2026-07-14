@@ -7,6 +7,11 @@ import {
   toAccountFlowMessage,
   validateTenantOwnerInvitationToken,
 } from "$lib/server/invitations";
+import {
+  ensureUserProfile,
+  ensureUserProfileInTransaction,
+  type ProfileIdentityDatabase,
+} from "$lib/server/profile-identity";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getCurrentMonthWindow, starterData } from "$lib/server/starter-data";
 
@@ -60,18 +65,7 @@ export interface TenantSummary {
   name: string;
 }
 
-export interface DbLike {
-  query: (
-    sql: string,
-    ...values: unknown[]
-  ) => Promise<{ rows: Record<string, unknown>[]; rowCount?: number }>;
-  upsert: (
-    table: string,
-    conflictColumns: string[],
-    data: Record<string, unknown>,
-  ) => Promise<unknown>;
-  transaction?: <T>(callback: (tx: DbLike) => Promise<T>) => Promise<T>;
-}
+export type DbLike = ProfileIdentityDatabase;
 
 const userStatusActive = "active";
 const tenantStatusActive = "active";
@@ -145,7 +139,7 @@ export async function verifySignInLink(token: string): Promise<AccountSessionTar
   const magicLinks = await createMagicLinkService();
   try {
     const result = await magicLinks.verify(trimmedToken);
-    return await signInWithEmail(result.email);
+    return await signInWithEmail(result.email, { reuseExistingProfile: true });
   } catch (error) {
     if (error instanceof MagicLinkError) {
       throw new AccountFlowError(400, error.message);
@@ -154,13 +148,25 @@ export async function verifySignInLink(token: string): Promise<AccountSessionTar
   }
 }
 
-export async function signInWithEmail(emailInput: string): Promise<AccountSessionTarget> {
+export async function signInWithEmail(
+  emailInput: string,
+  options: { reuseExistingProfile?: boolean } = {},
+): Promise<AccountSessionTarget> {
   const email = normalizeEmail(emailInput);
   const db = (await getAppDatabase()) as DbLike;
   const user = await findUserByEmail(db, email);
   if (!user) {
     throw new AccountFlowError(404, "No active user exists for that email.");
   }
+
+  await ensureUserProfile(
+    {
+      userId: readRequiredString(user, "id"),
+      email,
+      ...(options.reuseExistingProfile ? { reuseExistingProfile: true } : {}),
+    },
+    { db },
+  );
 
   const membership = await findFirstActiveMembershipForUser(db, readRequiredString(user, "id"));
   if (!membership) {
@@ -232,8 +238,14 @@ export async function onboardTenant(input: {
       updated_at: now,
       profile_id: null,
       email,
+      email_key: email,
       status: userStatusActive,
       last_login_at: now,
+    });
+
+    await ensureUserProfileInTransaction(tx, {
+      userId,
+      email,
     });
 
     await tx.upsert("memberships", ["slug", "context"], {
@@ -267,7 +279,7 @@ export async function onboardTenant(input: {
  * Seed the default (`starter`) subscription for a tenant. Shared by the signup
  * onboarding path and access-request graduation so both produce the same
  * billing/entitlement state (`getBillingOverview` expects a subscription row).
- * Idempotent on `tenant_id`.
+ * Idempotent on the SMRT polymorphic subscriber identity.
  */
 export async function seedDefaultTenantSubscription(
   db: DbLike,
@@ -276,26 +288,32 @@ export async function seedDefaultTenantSubscription(
   const now = new Date().toISOString();
   const window = getCurrentMonthWindow();
   const starterPlan = await findSubscriptionPlan(db, defaultPlanKey);
-  await db.upsert("_smrt_tenant_subscriptions", ["tenant_id"], {
-    id: randomUUID(),
-    slug: `${tenant.slug}-${defaultPlanKey}`,
-    context: tenant.id,
-    updated_at: now,
-    tenant_id: tenant.id,
-    plan_id: readRequiredString(starterPlan, "id"),
-    status: "active",
-    started_at: window.start.toISOString(),
-    current_period_start: window.start.toISOString(),
-    current_period_end: window.end.toISOString(),
-    trial_ends_at: null,
-    cancel_at_period_end: false,
-    canceled_at: null,
-    external_provider: "stripe",
-    stripe_customer_id: "",
-    stripe_subscription_id: "",
-    stripe_checkout_session_id: "",
-    metadata: JSON.stringify({ createdBy: "smrt-saas-starter", planKey: defaultPlanKey }),
-  });
+  await db.upsert(
+    "_smrt_tenant_subscriptions",
+    ["tenant_id", "subscriber_kind", "subscriber_external_id"],
+    {
+      id: randomUUID(),
+      slug: `${tenant.slug}-${defaultPlanKey}`,
+      context: tenant.id,
+      updated_at: now,
+      tenant_id: tenant.id,
+      subscriber_kind: "tenant",
+      subscriber_external_id: "",
+      plan_id: readRequiredString(starterPlan, "id"),
+      status: "active",
+      started_at: window.start.toISOString(),
+      current_period_start: window.start.toISOString(),
+      current_period_end: window.end.toISOString(),
+      trial_ends_at: null,
+      cancel_at_period_end: false,
+      canceled_at: null,
+      external_provider: "stripe",
+      stripe_customer_id: "",
+      stripe_subscription_id: "",
+      stripe_checkout_session_id: "",
+      metadata: JSON.stringify({ createdBy: "smrt-saas-starter", planKey: defaultPlanKey }),
+    },
+  );
 }
 
 /**
@@ -393,6 +411,7 @@ export async function inviteTenantMember(input: {
   const now = new Date().toISOString();
   const user = (await findUserByEmail(db, email)) ?? (await createInvitedUser(db, email, now));
   const userId = readRequiredString(user, "id");
+  await ensureUserProfile({ userId, email }, { db });
   const existingMembership = await findMembershipByUserAndTenant(db, userId, input.tenantId);
   const role = await ensureSystemRole(db, roleSlug);
 
@@ -572,6 +591,7 @@ async function createInvitedUser(db: DbLike, email: string, now: string) {
     updated_at: now,
     profile_id: null,
     email,
+    email_key: email,
     status: userStatusActive,
     last_login_at: null,
   };
@@ -636,7 +656,7 @@ async function findUserByEmail(db: DbLike, email: string) {
     `
       SELECT id, email
       FROM users
-      WHERE lower(email) = ? AND status = 'active'
+      WHERE email_key = ? AND status = 'active'
       LIMIT 1
     `,
     email,

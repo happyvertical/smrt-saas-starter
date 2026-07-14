@@ -179,7 +179,7 @@ export async function completeMobileAuth(
       redirectUri,
     });
     const identity = await resolveExternalIdentity(auth, authResult);
-    const target = await signInWithEmail(identity.email);
+    const target = await signInWithEmail(identity.email, { reuseExistingProfile: true });
     const session = await createMobileSession(target, {
       providerId: provider.id,
       providerType: provider.type,
@@ -369,7 +369,7 @@ async function resolveExternalIdentity(auth: AuthInterface, authResult: AuthResu
   const profile = await auth.getProfile(authResult.accessToken).catch(() => null);
   const email = normalizeOptionalString(profile?.email);
   if (email) {
-    if (profile?.emailVerified === false) {
+    if (profile?.emailVerified !== true) {
       throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
     }
     return {
@@ -383,7 +383,7 @@ async function resolveExternalIdentity(auth: AuthInterface, authResult: AuthResu
     .catch(() => null);
   const claimsEmail = normalizeOptionalString(claims?.email);
   if (claimsEmail) {
-    if (claims?.email_verified === false) {
+    if (claims?.email_verified !== true) {
       throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
     }
     return {

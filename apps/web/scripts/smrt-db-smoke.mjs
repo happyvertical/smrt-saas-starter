@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { loadConfig } from "@happyvertical/smrt-config";
 import { resolveDatabase } from "@happyvertical/smrt-core";
 import { defineLanguageString, resolveLanguageString } from "@happyvertical/smrt-languages";
+import { AuditLogCollection, ProfileCollection } from "@happyvertical/smrt-profiles";
 import { definePrompt, resolvePrompt } from "@happyvertical/smrt-prompts";
 import {
   SubscriptionPlanCollection,
@@ -10,7 +11,12 @@ import {
   TenantUsageMetricCollection,
 } from "@happyvertical/smrt-subscriptions";
 import { enableTenancy, withSystemContext, withTenant } from "@happyvertical/smrt-tenancy";
+import { UserCollection } from "@happyvertical/smrt-users";
 import { registerSmrtRuntimePackages } from "../smrt-packages.mjs";
+import {
+  backfillMissingUserProfiles,
+  ensureUserProfileWithDatabase,
+} from "../src/lib/server/profile-identity-core.ts";
 
 import "@happyvertical/smrt-saas-objects";
 
@@ -26,6 +32,7 @@ const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas";
 
 const requiredTables = [
+  "_smrt_backfills",
   "_smrt_schema_migrations",
   "_smrt_jobs",
   "_smrt_subscription_plans",
@@ -41,6 +48,10 @@ const requiredTables = [
   "_smrt_language_overrides",
   "accounts",
   "messages",
+  "oidc_identities",
+  "oidc_profile_email_reservations",
+  "audit_logs",
+  "profile_types",
   "profiles",
   "projects",
   "_smrt_prompt_overrides",
@@ -136,10 +147,22 @@ try {
 
   const ownerMembershipResult = await db.query(
     `
-      SELECT memberships.id AS membership_id, roles.slug AS role_slug, users.email AS user_email
+      SELECT
+        memberships.id AS membership_id,
+        roles.slug AS role_slug,
+        users.email AS user_email,
+        users.profile_id AS profile_id,
+        profiles._meta_type AS profile_meta_type,
+        profiles.tenant_id AS profile_tenant_id,
+        (
+          SELECT COUNT(*)::int
+          FROM users AS profile_owners
+          WHERE profile_owners.profile_id = users.profile_id
+        ) AS profile_owner_count
       FROM memberships
       INNER JOIN roles ON roles.id = memberships.role_id
       INNER JOIN users ON users.id = memberships.user_id
+      INNER JOIN profiles ON profiles.id = users.profile_id
       WHERE memberships.tenant_id = ?
         AND users.email = ?
         AND memberships.status = 'active'
@@ -155,6 +178,55 @@ try {
   if (ownerMembership.role_slug !== "owner") {
     throw new Error(`Seeded demo owner has unexpected role ${ownerMembership.role_slug}`);
   }
+  if (!ownerMembership.profile_id) {
+    throw new Error("Seeded demo owner is not linked to a Profile");
+  }
+  if (ownerMembership.profile_meta_type !== "@happyvertical/smrt-profiles:Person") {
+    throw new Error(
+      `Seeded demo owner has unexpected profile type ${ownerMembership.profile_meta_type}`,
+    );
+  }
+  if (ownerMembership.profile_tenant_id !== null) {
+    throw new Error("Seeded demo owner Profile is not global");
+  }
+  if (Number(ownerMembership.profile_owner_count) !== 1) {
+    throw new Error("Seeded demo owner Profile must belong to exactly one User");
+  }
+
+  const profiles = await ProfileCollection.create({ db });
+  const demoOwnerProfile = await withSystemContext(() =>
+    profiles.get({ id: ownerMembership.profile_id }),
+  );
+  if (!demoOwnerProfile) {
+    throw new Error("Seeded demo owner Profile could not be loaded through smrt-profiles");
+  }
+  const auditLogs = await AuditLogCollection.create({ db });
+  const auditLog = await withTenant({ tenantId: demoTenant.id }, () =>
+    auditLogs.record({
+      profile: demoOwnerProfile,
+      action: "starter.db-smoke",
+      resourceType: "Tenant",
+      resourceId: demoTenant.id,
+      source: "ci",
+      metadata: { seededBy: "smrt-saas-starter-db-smoke" },
+    }),
+  );
+  const auditLogResult = await db.query(
+    `SELECT profile_id, tenant_id
+       FROM audit_logs
+      WHERE id = ?`,
+    auditLog.id,
+  );
+  if (
+    auditLogResult.rows[0]?.profile_id !== ownerMembership.profile_id ||
+    auditLogResult.rows[0]?.tenant_id !== demoTenant.id
+  ) {
+    throw new Error("Canonical AuditLog did not persist the demo owner Profile identity");
+  }
+  await db.query(`DELETE FROM audit_logs WHERE id = ?`, auditLog.id);
+  const profileIdentitySmoke = await verifyProfileIdentityBackfill(db, demoTenant);
+  const oidcHappyPath = await verifyOidcHappyPath(db, demoTenant);
+  const oidcProfileOnlyCollisionCode = await verifyOidcProfileOnlyCollision(db, demoTenant);
 
   const activePlansResult = await db.query(`
     SELECT COUNT(*)::int AS active_count
@@ -196,6 +268,8 @@ try {
       SELECT stripe_customer_id
       FROM _smrt_tenant_subscriptions
       WHERE tenant_id = ?
+        AND subscriber_kind = 'tenant'
+        AND subscriber_external_id = ''
       LIMIT 1
     `,
     demoTenant.id,
@@ -334,6 +408,10 @@ try {
         seededAiTokenUsage,
         promptOverrides,
         languageOverrides,
+        profileBackfillUsers: profileIdentitySmoke.backfilledUsers,
+        concurrentProfileId: profileIdentitySmoke.concurrentProfileId,
+        oidcProfileId: oidcHappyPath.profileId,
+        oidcProfileOnlyCollisionCode,
       },
       null,
       2,
@@ -341,6 +419,359 @@ try {
   );
 } finally {
   await db.close?.();
+}
+
+async function verifyProfileIdentityBackfill(db, demoTenant) {
+  const concurrentUser = {
+    id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1",
+    slug: "smoke-concurrent-profile-user",
+    email: "smoke-concurrent-profile@example.test",
+  };
+  const legacyUser = {
+    id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2",
+    slug: "smoke-legacy-profile-user",
+    email: "smoke-legacy-profile@example.test",
+  };
+  const users = [concurrentUser, legacyUser];
+  await cleanupProfileIdentitySmoke(db, users);
+
+  try {
+    const now = new Date().toISOString();
+    for (const user of users) {
+      await db.upsert("users", ["slug", "context"], {
+        id: user.id,
+        slug: user.slug,
+        context: "",
+        updated_at: now,
+        profile_id: null,
+        email: user.email,
+        email_key: user.email,
+        status: "active",
+        last_login_at: null,
+      });
+    }
+
+    const concurrentResults = await withTenant({ tenantId: demoTenant.id }, () =>
+      Promise.all([
+        ensureUserProfileWithDatabase(db, {
+          userId: concurrentUser.id,
+          email: concurrentUser.email,
+          name: "Concurrent Smoke User",
+          reuseExistingProfile: true,
+        }),
+        ensureUserProfileWithDatabase(db, {
+          userId: concurrentUser.id,
+          email: concurrentUser.email,
+          name: "Concurrent Smoke User",
+          reuseExistingProfile: true,
+        }),
+      ]),
+    );
+    if (concurrentResults[0].profileId !== concurrentResults[1].profileId) {
+      throw new Error("Concurrent Profile reconciliation created different identities");
+    }
+
+    const concurrentIdentity = await readSmokeIdentity(db, concurrentUser);
+    if (
+      concurrentIdentity.profile_id !== concurrentResults[0].profileId ||
+      concurrentIdentity.profile_count !== 1 ||
+      concurrentIdentity.owner_count !== 1 ||
+      concurrentIdentity.tenant_id !== null ||
+      concurrentIdentity._meta_type !== "@happyvertical/smrt-profiles:Person"
+    ) {
+      throw new Error("Concurrent Profile reconciliation did not persist one global Person owner");
+    }
+
+    const backfilledUsers = await backfillMissingUserProfiles(db);
+    if (backfilledUsers !== 1) {
+      throw new Error(`Expected one legacy User backfill, reconciled ${backfilledUsers}`);
+    }
+    const repeatedBackfillUsers = await backfillMissingUserProfiles(db);
+    if (repeatedBackfillUsers !== 0) {
+      throw new Error(`Profile backfill was not idempotent (${repeatedBackfillUsers} repeated)`);
+    }
+
+    const legacyIdentity = await readSmokeIdentity(db, legacyUser);
+    if (
+      !legacyIdentity.profile_id ||
+      legacyIdentity.profile_count !== 1 ||
+      legacyIdentity.owner_count !== 1 ||
+      legacyIdentity.tenant_id !== null ||
+      legacyIdentity._meta_type !== "@happyvertical/smrt-profiles:Person"
+    ) {
+      throw new Error("Legacy Profile backfill did not persist one global Person owner");
+    }
+
+    const profiles = await ProfileCollection.create({ db });
+    const actor = await withSystemContext(() => profiles.get({ id: legacyIdentity.profile_id }));
+    if (!actor) {
+      throw new Error("Reconciled legacy Person could not be loaded through ProfileCollection");
+    }
+    const auditLogs = await AuditLogCollection.create({ db });
+    const auditLog = await withTenant({ tenantId: demoTenant.id }, () =>
+      auditLogs.record({
+        profile: actor,
+        action: "starter.profile-backfill-smoke",
+        resourceType: "User",
+        resourceId: legacyUser.id,
+        source: "ci",
+        metadata: { seededBy: "smrt-saas-starter-db-smoke" },
+      }),
+    );
+    const auditRow = await db.query(
+      `SELECT profile_id, tenant_id FROM audit_logs WHERE id = ?`,
+      auditLog.id,
+    );
+    if (
+      auditRow.rows[0]?.profile_id !== legacyIdentity.profile_id ||
+      auditRow.rows[0]?.tenant_id !== demoTenant.id
+    ) {
+      throw new Error("Reconciled legacy Person could not write a canonical tenant AuditLog");
+    }
+
+    return {
+      backfilledUsers,
+      concurrentProfileId: concurrentResults[0].profileId,
+    };
+  } finally {
+    await cleanupProfileIdentitySmoke(db, users);
+  }
+}
+
+async function readSmokeIdentity(db, user) {
+  const result = await db.query(
+    `
+      SELECT
+        users.profile_id,
+        profiles.tenant_id,
+        profiles._meta_type,
+        (
+          SELECT COUNT(*)::int FROM profiles AS matching_profiles
+          WHERE matching_profiles.email_key = users.email_key
+        ) AS profile_count,
+        (
+          SELECT COUNT(*)::int FROM users AS profile_owners
+          WHERE profile_owners.profile_id = users.profile_id
+        ) AS owner_count
+      FROM users
+      LEFT JOIN profiles ON profiles.id = users.profile_id
+      WHERE users.id = ?
+      LIMIT 1
+    `,
+    user.id,
+  );
+  const row = result.rows[0];
+  return {
+    ...row,
+    profile_count: Number(row?.profile_count ?? 0),
+    owner_count: Number(row?.owner_count ?? 0),
+  };
+}
+
+async function cleanupProfileIdentitySmoke(db, users) {
+  await db.query(
+    `DELETE FROM audit_logs WHERE action = ? AND resource_id = ?`,
+    "starter.profile-backfill-smoke",
+    users[1].id,
+  );
+  await db.query(`DELETE FROM users WHERE id IN (?, ?)`, users[0].id, users[1].id);
+  await db.query(
+    `DELETE FROM profiles WHERE slug IN (?, ?) AND context = ''`,
+    `starter-person-${users[0].id}`,
+    `starter-person-${users[1].id}`,
+  );
+}
+
+async function verifyOidcHappyPath(db, demoTenant) {
+  const identity = {
+    email: "smoke-oidc-happy@example.test",
+    issuer: "https://idp.example.test/oauth2/openid/starter",
+    subject: "smoke-oidc-happy-subject",
+  };
+  await cleanupOidcHappyPath(db, identity);
+
+  try {
+    const users = await UserCollection.create({ db });
+    const claims = {
+      email: identity.email,
+      email_verified: true,
+      iss: identity.issuer,
+      name: "OIDC Happy Path",
+      sub: identity.subject,
+    };
+    const first = await withTenant({ tenantId: demoTenant.id }, () =>
+      users.getOrCreateFromOidc(claims, "happyvertical"),
+    );
+    const second = await withTenant({ tenantId: demoTenant.id }, () =>
+      users.getOrCreateFromOidc(claims, "happyvertical"),
+    );
+    if (
+      !first.user.id ||
+      !first.profile.id ||
+      !first.oidcIdentity.id ||
+      second.user.id !== first.user.id ||
+      second.profile.id !== first.profile.id ||
+      second.oidcIdentity.id !== first.oidcIdentity.id
+    ) {
+      throw new Error("Repeated OIDC provisioning did not reuse one stable identity");
+    }
+
+    const persisted = await db.query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM users WHERE email_key = ?) AS user_count,
+         (SELECT COUNT(*)::int FROM profiles WHERE email_key = ?) AS profile_count,
+         (SELECT COUNT(*)::int FROM oidc_identities WHERE issuer = ? AND subject = ?) AS identity_count`,
+      identity.email,
+      identity.email,
+      identity.issuer,
+      identity.subject,
+    );
+    if (
+      Number(persisted.rows[0]?.user_count ?? 0) !== 1 ||
+      Number(persisted.rows[0]?.profile_count ?? 0) !== 1 ||
+      Number(persisted.rows[0]?.identity_count ?? 0) !== 1
+    ) {
+      throw new Error("OIDC happy path did not persist exactly one User, Person, and identity");
+    }
+
+    const auditLogs = await AuditLogCollection.create({ db });
+    const auditLog = await withTenant({ tenantId: demoTenant.id }, () =>
+      auditLogs.record({
+        profile: first.profile,
+        action: "starter.oidc-happy-smoke",
+        resourceType: "User",
+        resourceId: first.user.id,
+        source: "ci",
+        metadata: { seededBy: "smrt-saas-starter-db-smoke" },
+      }),
+    );
+    const auditRow = await db.query(
+      `SELECT profile_id, tenant_id FROM audit_logs WHERE id = ?`,
+      auditLog.id,
+    );
+    if (
+      auditRow.rows[0]?.profile_id !== first.profile.id ||
+      auditRow.rows[0]?.tenant_id !== demoTenant.id
+    ) {
+      throw new Error("OIDC-provisioned Person could not write a canonical tenant AuditLog");
+    }
+
+    return { profileId: first.profile.id };
+  } finally {
+    await cleanupOidcHappyPath(db, identity);
+  }
+}
+
+async function cleanupOidcHappyPath(db, identity) {
+  await db.query(`DELETE FROM audit_logs WHERE action = ?`, "starter.oidc-happy-smoke");
+  const profileResult = await db.query(
+    `SELECT profile_id FROM users WHERE email_key = ? LIMIT 1`,
+    identity.email,
+  );
+  const profileId = profileResult.rows[0]?.profile_id;
+  await db.query(
+    `DELETE FROM oidc_identities WHERE issuer = ? AND subject = ?`,
+    identity.issuer,
+    identity.subject,
+  );
+  await db.query(`DELETE FROM users WHERE email_key = ?`, identity.email);
+  await db.query(`DELETE FROM oidc_profile_email_reservations WHERE email_key = ?`, identity.email);
+  if (profileId) {
+    await db.query(`DELETE FROM profiles WHERE id = ?`, profileId);
+  }
+}
+
+async function verifyOidcProfileOnlyCollision(db, demoTenant) {
+  const collision = {
+    email: "smoke-oidc-profile-only@example.test",
+    issuer: "https://idp.example.test/oauth2/openid/starter",
+    profileId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee3",
+    slug: "smoke-oidc-profile-only",
+    subject: "smoke-profile-only-collision",
+  };
+  await cleanupOidcProfileOnlyCollision(db, collision);
+
+  try {
+    const personType = await db.query(
+      `SELECT id FROM profile_types WHERE slug = 'person' AND tenant_id IS NULL LIMIT 1`,
+    );
+    const personTypeId = personType.rows[0]?.id;
+    if (!personTypeId) {
+      throw new Error("OIDC collision smoke requires the global Person ProfileType");
+    }
+    await db.upsert("profiles", ["slug", "context", "_meta_type"], {
+      id: collision.profileId,
+      slug: collision.slug,
+      context: demoTenant.id,
+      _meta_type: "@happyvertical/smrt-profiles:Person",
+      _meta_data: { seededBy: "smrt-saas-starter-db-smoke" },
+      updated_at: new Date().toISOString(),
+      tenant_id: demoTenant.id,
+      type_id: personTypeId,
+      email: collision.email,
+      email_key: collision.email,
+      name: "Tenant-scoped collision",
+    });
+
+    const users = await UserCollection.create({ db });
+    let rejectionCode = null;
+    try {
+      await withTenant({ tenantId: demoTenant.id }, () =>
+        users.getOrCreateFromOidc(
+          {
+            email: collision.email,
+            email_verified: true,
+            iss: collision.issuer,
+            sub: collision.subject,
+          },
+          "happyvertical",
+        ),
+      );
+    } catch (error) {
+      rejectionCode =
+        typeof error === "object" && error !== null && "code" in error ? String(error.code) : null;
+    }
+    if (rejectionCode !== "tenant_scoped") {
+      throw new Error(
+        `Expected Profile-only OIDC collision to fail as tenant_scoped, received ${rejectionCode ?? "no error"}`,
+      );
+    }
+
+    const leakedIdentity = await db.query(
+      `SELECT COUNT(*)::int AS count
+         FROM oidc_identities
+        WHERE issuer = ? AND subject = ?`,
+      collision.issuer,
+      collision.subject,
+    );
+    const leakedUser = await db.query(
+      `SELECT COUNT(*)::int AS count FROM users WHERE email_key = ?`,
+      collision.email,
+    );
+    if (
+      Number(leakedIdentity.rows[0]?.count ?? 0) !== 0 ||
+      Number(leakedUser.rows[0]?.count ?? 0) !== 0
+    ) {
+      throw new Error("Rejected Profile-only OIDC collision persisted a User or identity");
+    }
+    return rejectionCode;
+  } finally {
+    await cleanupOidcProfileOnlyCollision(db, collision);
+  }
+}
+
+async function cleanupOidcProfileOnlyCollision(db, collision) {
+  await db.query(
+    `DELETE FROM oidc_identities WHERE issuer = ? AND subject = ?`,
+    collision.issuer,
+    collision.subject,
+  );
+  await db.query(`DELETE FROM users WHERE email_key = ?`, collision.email);
+  await db.query(
+    `DELETE FROM oidc_profile_email_reservations WHERE email_key = ?`,
+    collision.email,
+  );
+  await db.query(`DELETE FROM profiles WHERE id = ?`, collision.profileId);
 }
 
 function getCurrentMonthWindow(now = new Date()) {

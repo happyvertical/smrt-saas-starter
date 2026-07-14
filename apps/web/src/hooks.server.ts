@@ -11,9 +11,13 @@ import {
 import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { resolveMembershipContext } from "$lib/server/authz";
-import { loadStarterExperienceConfig } from "$lib/server/experience";
+import { ensureUserProfile } from "$lib/server/profile-identity";
 import { getSmrtConfig } from "$lib/server/smrt";
+import { loadStarterConfig } from "$lib/server/starter-config";
+import { starterData } from "$lib/server/starter-data";
 import { resolveTenant } from "$lib/server/tenancy";
+
+let demoProfileEnsurePromise: Promise<void> | null = null;
 
 enableTenancy();
 
@@ -31,7 +35,7 @@ if (process.env.E2E_AUTH_SECRET?.trim() && process.env.NODE_ENV === "production"
 // The smrt config must be registered before any request handler runs;
 // without this, routes that do not cross the MCP/chat modules (e.g. OIDC
 // login) resolve an empty package config in the production build.
-await loadStarterExperienceConfig();
+await loadStarterConfig();
 
 const tenancyHandle = createSvelteKitHandle({
   resolveTenantId: async (event) => {
@@ -79,6 +83,13 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
   }
 
   if (shouldResolveMembership(event.url.pathname)) {
+    const user = readAuthenticatedUser(event.locals.user);
+    if (user && !user.profileId) {
+      await ensureUserProfile(user);
+    } else if (isDevFallbackRequest(event.locals.user)) {
+      await ensureDemoProfile();
+    }
+
     const membership = await resolveMembershipContext(event.locals);
     event.locals.membership = membership;
     if (membership) {
@@ -89,6 +100,46 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
 
   return resolve(event);
 };
+
+function readAuthenticatedUser(
+  user: unknown,
+): { userId: string; email?: string; profileId?: string } | null {
+  if (!user || typeof user !== "object") {
+    return null;
+  }
+  const row = user as Record<string, unknown>;
+  const userId = typeof row.id === "string" ? row.id : row.userId;
+  const email = typeof row.email === "string" ? row.email : undefined;
+  const profileId =
+    typeof row.profileId === "string"
+      ? row.profileId
+      : typeof row.profile_id === "string"
+        ? row.profile_id
+        : undefined;
+  return typeof userId === "string" && userId ? { userId, email, profileId } : null;
+}
+
+function ensureDemoProfile(): Promise<void> {
+  if (!demoProfileEnsurePromise) {
+    demoProfileEnsurePromise = ensureUserProfile({
+      userId: starterData.demoTenant.ownerUser.id,
+      email: starterData.demoTenant.ownerUser.email,
+      name: starterData.demoTenant.ownerProfile.name,
+    })
+      .then(() => undefined)
+      .catch((error) => {
+        demoProfileEnsurePromise = null;
+        throw error;
+      });
+  }
+  return demoProfileEnsurePromise;
+}
+
+function isDevFallbackRequest(user: unknown): boolean {
+  return (
+    !user && process.env.SMRT_STARTER_DEV_AUTH !== "false" && process.env.NODE_ENV !== "production"
+  );
+}
 
 const appHandle: Handle = sequence(
   tenancyHandle,

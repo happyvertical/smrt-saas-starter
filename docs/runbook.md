@@ -6,6 +6,7 @@
 pnpm install
 pnpm services:up
 pnpm db:migrate
+pnpm db:profiles:backfill
 pnpm db:seed
 pnpm db:smoke
 pnpm --filter @happyvertical/smrt-saas-web dev
@@ -13,7 +14,11 @@ pnpm --filter @happyvertical/smrt-saas-web dev
 
 `pnpm db:migrate` loads the canonical SMRT runtime package list from
 `apps/web/smrt-packages.mjs` before schema generation, so local Postgres is
-prepared for the same SMRT surface used by the web app.
+prepared for the same SMRT surface used by the web app. After schema migration,
+the command transactionally backfills SMRT's durable normalized Profile email
+keys and then User email keys. The backfills are idempotent and record readiness
+markers required by OIDC; run this from one deploy process before starting the
+new web replicas.
 
 ## Local Services
 
@@ -82,7 +87,7 @@ pnpm check
 pnpm runtime:check
 ```
 
-`pnpm db:seed` idempotently creates the demo tenant, owner membership,
+`pnpm db:seed` idempotently creates the demo tenant, Profile-backed owner identity,
 subscription plans, active Growth subscription, starter app settings, usage
 metrics, and demo prompt/language overrides.
 `pnpm check` runs the Postgres migration, seed, and smoke path. Start local
@@ -104,6 +109,61 @@ Set `SMRT_STARTER_DEV_AUTH=false` to disable that fallback and require a real
 session identity locally. Tenant switching writes the
 `smrt_starter_tenant_id` cookie and updates the SMRT session tenant when a
 session exists.
+
+Every starter login/account path requires a canonical `smrt-profiles` identity.
+Signup, member invites, access-request graduation, magic-link/mobile login,
+bearer/session requests, E2E auth, and the dev fallback use the starter
+reconciler. Upstream OIDC provisioning creates the same identity. Before
+deploying 0.1.1 over an existing database, stop or upgrade old Profile/User
+writers and check for duplicate ownership links before migration:
+
+```sql
+SELECT profile_id, COUNT(*) AS user_count
+FROM users
+WHERE profile_id IS NOT NULL
+GROUP BY profile_id
+HAVING COUNT(*) > 1;
+```
+
+Reconcile every result and normalize legacy empty-string placeholders to
+`NULL`; the 0.39.15 schema adds a unique constraint for non-null Profile
+ownership. Also reconcile duplicate normalized User emails: the User email-key
+backfill fails transactionally without changing rows while they remain.
+
+Then run the controlled, idempotent `pnpm db:profiles:backfill` command from one
+deploy process before starting web replicas or enabling OIDC. It runs the
+schema/email-key migration first, then reconciles the complete active-User set
+in one transaction. The operator-owned backfill may reuse exactly one unowned
+global Person matching a User email and creates one with a stable User-specific
+slug when absent. Any non-Person, tenant-scoped, already-owned, email-mismatched,
+or ambiguous match rolls back the whole starter Profile backfill. Repair the
+conflicts explicitly and rerun the command. Do not trigger a whole-user repair
+from a public auth request.
+
+A backfilled local User already owns its Person. SMRT 0.39.15 therefore does
+not implicitly attach a new OIDC issuer/subject to that Person by email, even
+when `email_verified: true`; the secure default rejects the first cross-provider
+attempt as `profile_owned`. Existing exact issuer/subject links remain
+idempotent. Before enabling a new provider for legacy accounts, create an
+explicit administrator-owned identity mapping or implement a separately
+verified account-link flow. An explicitly false `email_verified` claim is
+rejected; provider integrations remain responsible for a trusted token/claim
+boundary when the claim is absent.
+
+Tenant authorization returns `membership.profileId`. Load that global Person
+through `ProfileCollection`, then pass the loaded `profile` object to
+`AuditLogCollection.record({ profile, ... })` inside the tenant context.
+`membership.userId` remains the account/membership key and is not a valid
+substitute for a Profile UUID. `pnpm db:smoke` proves both a reconciled legacy
+User and the seeded demo owner can write a canonical tenant-scoped AuditLog with
+this mapping.
+
+The 0.1.0 starter keyed every agent-chat session to the shared demo User UUID.
+Version 0.1.1 starts a separate session under each caller's Person UUID. That
+old shared history cannot be assigned to individual users safely: export it if
+retention is required, then archive or delete the affected `agent_sessions` and
+rooms through the supported chat service before cutover. Do not bulk rewrite
+`participant_profile_id`; new sessions are created automatically on first use.
 
 `/signup` creates a tenant, owner user, owner membership, and active Starter
 subscription, then starts a SMRT session for that owner. `/login` uses

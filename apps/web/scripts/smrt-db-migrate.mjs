@@ -1,6 +1,7 @@
 import { ObjectRegistry, resolveDatabase } from "@happyvertical/smrt-core";
 import { migrateSmrtSchemas } from "@happyvertical/smrt-core/migrations";
 import { registerSmrtRuntimePackages } from "../smrt-packages.mjs";
+import { backfillIdentityEmailKeys } from "./identity-email-key-backfills.mjs";
 
 import "@happyvertical/smrt-saas-objects";
 
@@ -17,7 +18,7 @@ const result = await migrateSmrtSchemas({
   description: "SMRT SaaS starter schema sync",
   engineHint: "postgres",
   packageName: "smrt-saas-starter",
-  version: process.env.APP_VERSION ?? "0.1.0",
+  version: process.env.APP_VERSION ?? "0.1.1",
 });
 
 if (result.hasManualDrift) {
@@ -29,12 +30,15 @@ if (result.hasManualDrift) {
   }
   process.exitCode = 1;
 } else {
+  const { profileEmailKeys, userEmailKeys } = await backfillIdentityEmailKeys(db);
   console.log(
     JSON.stringify(
       {
         applied: result.applied,
+        profileEmailKeysUpdated: profileEmailKeys.updated,
         schemaCount: result.schemaCount,
         statements: result.statements.length,
+        userEmailKeysUpdated: userEmailKeys.updated,
       },
       null,
       2,

@@ -2,6 +2,8 @@ import type { EntitlementResolution } from "@happyvertical/smrt-subscriptions";
 import { describe, expect, it, vi } from "vitest";
 import {
   auditUsageThresholds,
+  createSmrtSubscriptionReconciliationStore,
+  createSmrtUsageAuditStore,
   type ReconcileSubscriptionRecord,
   reconcileSubscriptions,
   rollupUsage,
@@ -9,9 +11,33 @@ import {
   type SubscriptionReconciliationStore,
   type TenantUsageAuditResolver,
   type TenantUsageAuditStore,
+  type WorkerDatabase,
 } from "./jobs.js";
 
 describe("worker jobs", () => {
+  it("scopes production subscription stores to tenant subscribers", async () => {
+    const query = vi.fn(async () => ({ rows: [] }));
+    const db: WorkerDatabase = { query };
+
+    const reconciliationStore = await createSmrtSubscriptionReconciliationStore(db);
+    await reconciliationStore.listStripeSubscriptions(25);
+    expect(query).toHaveBeenLastCalledWith(
+      expect.stringMatching(
+        /subscriber_kind = 'tenant'[\s\S]*subscriber_external_id = ''[\s\S]*external_provider = 'stripe'/,
+      ),
+      25,
+    );
+
+    const usageStore = await createSmrtUsageAuditStore(db);
+    await usageStore.listTenantIdsWithSubscriptions(30);
+    expect(query).toHaveBeenLastCalledWith(
+      expect.stringMatching(
+        /subscriber_kind = 'tenant'[\s\S]*subscriber_external_id = ''[\s\S]*status IN/,
+      ),
+      30,
+    );
+  });
+
   it("reconciles changed Stripe subscription status", async () => {
     const subscriptions = [baseSubscription({ status: "active" })];
     const updates: ReconcileSubscriptionRecord[] = [];

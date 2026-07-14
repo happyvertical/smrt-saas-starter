@@ -1,4 +1,12 @@
 {
+  "identity": {
+    "personProfileType": {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "slug": "person",
+      "name": "Person",
+      "description": "Individual person profile"
+    }
+  },
   "demoTenant": {
     "id": "00000000-0000-4000-8000-000000000001",
     "slug": "demo",
@@ -7,6 +15,12 @@
     "ownerUser": {
       "id": "00000000-0000-4000-8000-000000000011",
       "slug": "demo-owner",
+      "email": "demo-owner@example.com"
+    },
+    "ownerProfile": {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "slug": "demo-owner-profile",
+      "name": "Demo Owner",
       "email": "demo-owner@example.com"
     },
     "ownerMembership": {

@@ -222,6 +222,7 @@ describe("mobile auth", () => {
     mobileAuthMocks.getProfile.mockResolvedValue({
       id: "external-user",
       email: "Owner@Example.com",
+      emailVerified: true,
     });
 
     await expect(
@@ -261,7 +262,9 @@ describe("mobile auth", () => {
         },
       ],
     });
-    expect(mobileAuthMocks.signInWithEmail).toHaveBeenCalledWith("owner@example.com");
+    expect(mobileAuthMocks.signInWithEmail).toHaveBeenCalledWith("owner@example.com", {
+      reuseExistingProfile: true,
+    });
     expect(mobileAuthMocks.createSession).toHaveBeenCalledWith(userId, tenantId, {
       ttl: 2_592_000,
       userAgent: "ios-test",
@@ -303,6 +306,50 @@ describe("mobile auth", () => {
     });
     expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
     expect(mobileAuthMocks.createSession).not.toHaveBeenCalled();
+  });
+
+  it("rejects provider profiles that omit positive email verification", async () => {
+    mobileAuthMocks.exchangeCode.mockResolvedValue({
+      accessToken: "provider-access-token",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      userId: "external-user",
+    });
+    mobileAuthMocks.getProfile.mockResolvedValue({
+      id: "external-user",
+      email: "owner@example.com",
+    });
+
+    await expect(completeMobileAuth({ request: mobileCompleteRequest() })).rejects.toMatchObject({
+      status: 401,
+      message: "Mobile auth provider did not verify that email",
+    });
+    expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    false,
+    undefined,
+  ])("rejects token fallback when email_verified is %s", async (emailVerified) => {
+    mobileAuthMocks.exchangeCode.mockResolvedValue({
+      accessToken: "provider-access-token",
+      idToken: "provider-id-token",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      userId: "external-user",
+    });
+    mobileAuthMocks.getProfile.mockResolvedValue({ id: "external-user" });
+    mobileAuthMocks.validateToken.mockResolvedValue({
+      email: "owner@example.com",
+      ...(emailVerified === undefined ? {} : { email_verified: emailVerified }),
+      sub: "external-user",
+    });
+
+    await expect(completeMobileAuth({ request: mobileCompleteRequest() })).rejects.toMatchObject({
+      status: 401,
+      message: "Mobile auth provider did not verify that email",
+    });
+    expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
   });
 
   it("bootstraps tenant dashboard state from a bearer session", async () => {
@@ -366,6 +413,15 @@ function configureHappyVerticalProvider() {
   vi.stubEnv("HAPPYVERTICAL_IDP_ISSUER", "https://idp.example.test");
   vi.stubEnv("MOBILE_OIDC_CLIENT_ID", "mobile-client");
   vi.stubEnv("MOBILE_OIDC_CLIENT_SECRET", "mobile-secret");
+}
+
+function mobileCompleteRequest() {
+  return {
+    code: "code-1",
+    state: "state-1",
+    codeVerifier: "verifier-1",
+    redirectUri: "smrtstarter://auth/callback",
+  };
 }
 
 function membership() {

@@ -67,6 +67,14 @@ export interface StarterLanguageOverrideSeed {
 }
 
 export interface StarterData {
+  identity: {
+    personProfileType: {
+      id: string;
+      slug: string;
+      name: string;
+      description: string;
+    };
+  };
   demoTenant: {
     id: string;
     slug: string;
@@ -75,6 +83,12 @@ export interface StarterData {
     ownerUser: {
       id: string;
       slug: string;
+      email: string;
+    };
+    ownerProfile: {
+      id: string;
+      slug: string;
+      name: string;
       email: string;
     };
     ownerMembership: {

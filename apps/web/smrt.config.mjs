@@ -24,6 +24,9 @@ export default {
       verbose: false,
     },
     users: {
+      // hooks.server loads this file through starter-config.ts before any auth
+      // route constructs an OIDC handler. Keep provider config in this canonical
+      // starter template rather than initializing it lazily from feature modules.
       auth: {
         oidc: {
           defaultProvider: "happyvertical",

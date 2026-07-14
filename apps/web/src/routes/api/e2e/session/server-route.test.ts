@@ -97,7 +97,9 @@ describe("POST /api/e2e/session", () => {
       tenantId: target.tenantId,
     });
     // Identity is taken from config, never the request.
-    expect(routeMocks.signInWithEmail).toHaveBeenCalledWith("e2e@example.com");
+    expect(routeMocks.signInWithEmail).toHaveBeenCalledWith("e2e@example.com", {
+      reuseExistingProfile: true,
+    });
     expect(routeMocks.startAccountSession).toHaveBeenCalledWith(event, target);
   });
 

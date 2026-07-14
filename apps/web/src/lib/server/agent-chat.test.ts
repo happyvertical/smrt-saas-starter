@@ -113,6 +113,7 @@ vi.mock("$lib/server/tenant-context", () => ({
 import { getTenantChatState, sendTenantChatMessage, TenantChatError } from "$lib/server/agent-chat";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
+const actorProfileId = "22222222-2222-4222-8222-222222222222";
 const windowStart = new Date("2026-06-01T00:00:00.000Z");
 const windowEnd = new Date("2026-07-01T00:00:00.000Z");
 const dailyWindowStart = new Date("2026-06-08T00:00:00.000Z");
@@ -205,7 +206,7 @@ describe("tenant agent chat", () => {
   });
 
   it("creates a tenant-scoped chat session with the available MCP tool allowlist", async () => {
-    await expect(getTenantChatState(tenantId)).resolves.toMatchObject({
+    await expect(getTenantChatState(tenantId, actorProfileId)).resolves.toMatchObject({
       tenantId,
       sessionId: "33333333-3333-4333-8333-333333333333",
       roomId: "44444444-4444-4444-8444-444444444444",
@@ -219,7 +220,7 @@ describe("tenant agent chat", () => {
       agentId: expect.stringMatching(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       ),
-      actorProfileId: "00000000-0000-4000-8000-000000000011",
+      actorProfileId,
       allowedTools: ["tenant.usage.summary", "tenant.subscription.summary"],
       systemPrompt: "Tenant assistant prompt",
       maxMessages: 100,
@@ -227,7 +228,9 @@ describe("tenant agent chat", () => {
   });
 
   it("routes usage questions through the usage MCP tool and records the tool exchange", async () => {
-    await expect(sendTenantChatMessage(tenantId, "show usage this month")).resolves.toMatchObject({
+    await expect(
+      sendTenantChatMessage(tenantId, actorProfileId, "show usage this month"),
+    ).resolves.toMatchObject({
       selectedTool: "tenant.usage.summary",
       messages: [
         { role: "user", messageType: "text", content: "show usage this month" },
@@ -269,7 +272,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await sendTenantChatMessage(tenantId, "hello");
+    await sendTenantChatMessage(tenantId, actorProfileId, "hello");
 
     expect(chatMocks.recordTenantUsageSignal).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -284,7 +287,7 @@ describe("tenant agent chat", () => {
     // session allowlist for this plan. The agent-runtime bridge gates tool_call
     // replies fail-closed, so the handler must short-circuit to the denial
     // message rather than attempting (and throwing on) the gated tool call.
-    const result = await sendTenantChatMessage(tenantId, "preview the prompt");
+    const result = await sendTenantChatMessage(tenantId, actorProfileId, "preview the prompt");
 
     expect(result.selectedTool).toBe("tenant.prompt.preview");
     expect(chatMocks.executeRuntimeToolForTenant).not.toHaveBeenCalled();
@@ -315,7 +318,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    const result = await sendTenantChatMessage(tenantId, "upgrade my plan");
+    const result = await sendTenantChatMessage(tenantId, actorProfileId, "upgrade my plan");
 
     expect(result.selectedTool).toBe("tenant.subscription.update");
     expect(result.messages.at(-1)).toMatchObject({
@@ -341,7 +344,9 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await expect(getTenantChatState(tenantId)).rejects.toBeInstanceOf(TenantChatError);
+    await expect(getTenantChatState(tenantId, actorProfileId)).rejects.toBeInstanceOf(
+      TenantChatError,
+    );
     expect(chatMocks.createChatService).not.toHaveBeenCalled();
   });
 
@@ -353,7 +358,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await expect(sendTenantChatMessage(tenantId, "hello")).rejects.toMatchObject({
+    await expect(sendTenantChatMessage(tenantId, actorProfileId, "hello")).rejects.toMatchObject({
       status: 429,
       message: "Tenant exceeded the chat messages threshold",
     });

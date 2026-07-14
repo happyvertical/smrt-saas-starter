@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getAppDatabase: vi.fn(),
   getSmrtConfig: vi.fn(),
   isSuperUserEmail: vi.fn(),
+  ensureUserProfileInTransaction: vi.fn(),
 }));
 
 vi.mock("@happyvertical/smrt-users", () => ({
@@ -34,6 +35,9 @@ vi.mock("$lib/server/accounts", () => ({
 vi.mock("$lib/server/db", () => ({ getAppDatabase: mocks.getAppDatabase }));
 vi.mock("$lib/server/smrt", () => ({ getSmrtConfig: mocks.getSmrtConfig }));
 vi.mock("$lib/server/super-users", () => ({ isSuperUserEmail: mocks.isSuperUserEmail }));
+vi.mock("$lib/server/profile-identity", () => ({
+  ensureUserProfileInTransaction: mocks.ensureUserProfileInTransaction,
+}));
 
 import { graduateAccessRequest } from "$lib/server/access-requests";
 
@@ -45,6 +49,7 @@ const origin = "http://localhost:5173";
 
 let capturedCreateOptions: AnyRecord | null = null;
 let graduateOpts: AnyRecord | null = null;
+let tx: AnyRecord;
 
 function makeGraduate(result: AnyRecord, event?: AnyRecord) {
   return async (_id: string, opts: AnyRecord) => {
@@ -52,7 +57,16 @@ function makeGraduate(result: AnyRecord, event?: AnyRecord) {
     if (event !== undefined) {
       await capturedCreateOptions?.onEvent?.(event);
     }
-    return result;
+    return {
+      ...result,
+      ...(event?.membership ? { membership: event.membership } : {}),
+      ...(event?.tenant && !result.tenant ? { tenant: event.tenant } : {}),
+      user: {
+        id: "user-1",
+        email: result.accessRequest.email,
+        ...result.user,
+      },
+    };
   };
 }
 
@@ -80,13 +94,22 @@ describe("graduateAccessRequest", () => {
 
     mocks.isSuperUserEmail.mockReturnValue(true);
     mocks.getSmrtConfig.mockReturnValue({});
-    mocks.getAppDatabase.mockResolvedValue({ query: vi.fn(), upsert: vi.fn() });
+    tx = { query: vi.fn(), upsert: vi.fn() };
+    mocks.getAppDatabase.mockResolvedValue({
+      ...tx,
+      transaction: vi.fn(async (callback: (db: AnyRecord) => unknown) => callback(tx)),
+    });
     mocks.withSystemContext.mockImplementation((cb: () => unknown) => cb());
     mocks.seedDefaultTenantSubscription.mockResolvedValue(undefined);
     mocks.generateWelcomeMagicLink.mockResolvedValue({
       email: "grad@example.com",
       expiresAt: new Date("2026-07-01T00:10:00.000Z"),
       verificationUrl: "http://localhost:5173/login/verify?token=welcome",
+    });
+    mocks.ensureUserProfileInTransaction.mockResolvedValue({
+      profileId: "profile-1",
+      created: true,
+      repairedDanglingLink: false,
     });
     mocks.createService.mockImplementation(async (options: AnyRecord) => {
       capturedCreateOptions = options;
@@ -113,7 +136,7 @@ describe("graduateAccessRequest", () => {
       allowFromRequested: true,
       tenant: { create: { name: "Acme" } },
     });
-    expect(mocks.seedDefaultTenantSubscription).toHaveBeenCalledWith(expect.anything(), {
+    expect(mocks.seedDefaultTenantSubscription).toHaveBeenCalledWith(tx, {
       id: "t-new",
       slug: "acme",
     });
@@ -121,6 +144,13 @@ describe("graduateAccessRequest", () => {
       email: "grad@example.com",
       origin,
     });
+    expect(mocks.ensureUserProfileInTransaction).toHaveBeenCalledWith(tx, {
+      userId: "user-1",
+      email: "grad@example.com",
+      name: undefined,
+    });
+    expect(capturedCreateOptions?.db).toBe(tx);
+    expect(capturedCreateOptions?.onEvent).toEqual(expect.any(Function));
     expect(summary).toMatchObject({ id: "ar-1", email: "grad@example.com", status: "graduated" });
   });
 
@@ -205,6 +235,35 @@ describe("graduateAccessRequest", () => {
     expect(mocks.seedDefaultTenantSubscription).toHaveBeenCalled();
   });
 
+  it("rolls back before emitting a welcome link when profile reconciliation fails", async () => {
+    const accessRequest = { id: "ar-8", email: "grad@example.com", status: "graduated" };
+    mocks.ensureUserProfileInTransaction.mockRejectedValue(new Error("ambiguous profile identity"));
+    currentGraduate = makeGraduate(
+      { accessRequest, tenant: { id: "t-new", slug: "acme" } },
+      graduatedEvent("grad@example.com"),
+    );
+
+    await expect(
+      graduateAccessRequest(operator, "ar-8", { tenantName: "Acme", origin }),
+    ).rejects.toThrow("ambiguous profile identity");
+
+    expect(capturedCreateOptions?.db).toBe(tx);
+    expect(mocks.seedDefaultTenantSubscription).toHaveBeenCalledOnce();
+    expect(mocks.seedDefaultTenantSubscription).toHaveBeenCalledWith(tx, {
+      id: "t-new",
+      slug: "acme",
+    });
+    expect(mocks.ensureUserProfileInTransaction).toHaveBeenCalledWith(tx, {
+      userId: "user-1",
+      email: "grad@example.com",
+      name: undefined,
+    });
+    expect(mocks.seedDefaultTenantSubscription.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.ensureUserProfileInTransaction.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
+    expect(mocks.generateWelcomeMagicLink).not.toHaveBeenCalled();
+  });
+
   it("skips the welcome link when no origin is provided", async () => {
     const accessRequest = { id: "ar-7", email: "grad@example.com", status: "graduated" };
     currentGraduate = makeGraduate(
@@ -213,6 +272,26 @@ describe("graduateAccessRequest", () => {
     );
 
     await graduateAccessRequest(operator, "ar-7", { tenantName: "Acme" });
+
+    expect(mocks.generateWelcomeMagicLink).not.toHaveBeenCalled();
+  });
+
+  it("does not issue another welcome link for an idempotent graduation retry", async () => {
+    const accessRequest = { id: "ar-9", email: "grad@example.com", status: "graduated" };
+    currentGraduate = makeGraduate({
+      accessRequest,
+      user: { email: "grad@example.com" },
+      membership: { id: "m-existing" },
+      tenant: { id: "t-existing", slug: "existing" },
+      created: false,
+    });
+
+    await expect(
+      graduateAccessRequest(operator, "ar-9", {
+        tenant: { tenantId: "t-existing" },
+        origin,
+      }),
+    ).resolves.toMatchObject({ id: "ar-9" });
 
     expect(mocks.generateWelcomeMagicLink).not.toHaveBeenCalled();
   });

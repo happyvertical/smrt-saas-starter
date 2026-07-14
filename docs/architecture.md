@@ -39,6 +39,37 @@ The non-production demo-owner fallback is intentionally local developer
 scaffolding. Production requests require a real SMRT session identity and an
 active membership for the selected tenant.
 
+The server loads `apps/web/smrt.config.mjs` through the lightweight
+`starter-config.ts` module before constructing any tenancy, session, or OIDC
+request handler. A process-global bootstrap marker keeps this eager registration
+idempotent across Vite HMR module re-evaluation. Prompt/language definition
+registration remains separate in `experience.ts`. The OIDC callback delegates
+Profile selection, system context, and transaction ownership to the secure
+`smrt-users` provisioning boundary, so a tenant cookie or subdomain cannot scope
+canonical identity provisioning.
+
+Starter account creation and login paths reconcile each active `smrt-users` User
+to a global `smrt-profiles` Person. New signup, member invitation, access-request
+graduation, verified magic-link/mobile login, E2E auth, normal session, and
+dev-fallback paths all cross this reconciler. Merely issuing a magic link does
+not mutate Profile ownership. Upstream OIDC provisioning creates the same
+Person-backed identity. Legacy rows are repaired by the explicit
+`pnpm db:profiles:backfill` deployment command rather than an unbounded public
+request hook.
+Reconciliation locks the User row, uses SMRT's canonical Person lookup and
+email-reservation boundary, and creates one Person with a User-specific slug
+when absent. Only a verified email boundary or the explicit operator backfill
+may adopt an existing unowned Person by email; ordinary signup, invitation, and
+graduation fail closed instead. Incompatible, owned, or ambiguous matches are
+always rejected.
+Schema migration first populates SMRT's durable normalized Profile/User email
+keys and readiness markers; all starter raw identity writers populate those
+keys after cutover.
+Membership lookup also rejects invalid, email-mismatched, competing, or
+multiply owned Profile links before
+exposing `profileId`, which is the actor id for canonical `AuditLog` and chat
+surfaces; a User id must never be substituted for it.
+
 Signup creates the tenant, owner user, owner membership, and Starter
 subscription in one transaction-backed onboarding service. A starter app
 setting controls whether signup is public or invite-only. Super users, resolved
@@ -121,8 +152,8 @@ Starter prompt and language defaults live in `apps/web/src/lib/server/starter-da
 values through SMRT prompt and language override tables. The settings page uses
 the same service as the runtime MCP `tenant.prompt.preview` tool.
 `apps/web/smrt.config.mjs` defines the default prompt AI profile and language
-package options because SMRT package config is loaded from JavaScript config
-files at runtime.
+package options. `starter-config.ts` registers that package config eagerly at
+server startup, independently of whether a prompt, chat, or MCP route is used.
 
 The seeded demo tenant includes one prompt override and one `fr-CA` language
 override so local smoke checks prove the stored tenant override layers, not only
