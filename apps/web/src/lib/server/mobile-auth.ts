@@ -368,28 +368,32 @@ async function resolveMembershipForSession(
 async function resolveExternalIdentity(auth: AuthInterface, authResult: AuthResult) {
   const profile = await auth.getProfile(authResult.accessToken).catch(() => null);
   const email = normalizeOptionalString(profile?.email);
-  if (email) {
-    if (profile?.emailVerified !== true) {
-      throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
-    }
+  if (email && profile?.emailVerified === true) {
     return {
       email: email.toLowerCase(),
       externalUserId: profile?.id ?? authResult.userId,
     };
+  }
+  if (email && profile?.emailVerified === false) {
+    throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
   }
 
   const claims = await auth
     .validateToken(authResult.idToken ?? authResult.accessToken)
     .catch(() => null);
   const claimsEmail = normalizeOptionalString(claims?.email);
-  if (claimsEmail) {
-    if (claims?.email_verified !== true) {
-      throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
-    }
+  if (
+    claimsEmail &&
+    claims?.email_verified === true &&
+    (!email || claimsEmail.toLowerCase() === email.toLowerCase())
+  ) {
     return {
       email: claimsEmail.toLowerCase(),
-      externalUserId: claims?.sub ?? authResult.userId,
+      externalUserId: claims?.sub ?? profile?.id ?? authResult.userId,
     };
+  }
+  if (email || claimsEmail) {
+    throw new MobileAuthError(401, "Mobile auth provider did not verify that email");
   }
 
   throw new MobileAuthError(401, "Mobile auth provider did not return a verified email");

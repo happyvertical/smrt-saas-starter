@@ -75,6 +75,7 @@ describe("mobile auth", () => {
       getProfile: mobileAuthMocks.getProfile,
       validateToken: mobileAuthMocks.validateToken,
     });
+    mobileAuthMocks.validateToken.mockResolvedValue(null);
     mobileAuthMocks.sessionServiceCreate.mockResolvedValue({
       createSession: mobileAuthMocks.createSession,
       loadSessionContext: mobileAuthMocks.loadSessionContext,
@@ -306,6 +307,7 @@ describe("mobile auth", () => {
     });
     expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
     expect(mobileAuthMocks.createSession).not.toHaveBeenCalled();
+    expect(mobileAuthMocks.validateToken).not.toHaveBeenCalled();
   });
 
   it("rejects provider profiles that omit positive email verification", async () => {
@@ -325,6 +327,60 @@ describe("mobile auth", () => {
       message: "Mobile auth provider did not verify that email",
     });
     expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
+  });
+
+  it("accepts a profile email when validated token claims verify the same email", async () => {
+    mobileAuthMocks.exchangeCode.mockResolvedValue({
+      accessToken: "provider-access-token",
+      idToken: "provider-id-token",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      userId: "external-user",
+    });
+    mobileAuthMocks.getProfile.mockResolvedValue({
+      id: "external-user",
+      email: "Owner@Example.com",
+    });
+    mobileAuthMocks.validateToken.mockResolvedValue({
+      email: "owner@example.com",
+      email_verified: true,
+      sub: "external-user",
+    });
+
+    await expect(completeMobileAuth({ request: mobileCompleteRequest() })).resolves.toMatchObject({
+      accessToken: "session-1",
+      user: { email: "owner@example.com" },
+    });
+    expect(mobileAuthMocks.validateToken).toHaveBeenCalledWith("provider-id-token");
+    expect(mobileAuthMocks.signInWithEmail).toHaveBeenCalledWith("owner@example.com", {
+      reuseExistingProfile: true,
+    });
+  });
+
+  it("rejects a verified token email that does not match the unverified profile email", async () => {
+    mobileAuthMocks.exchangeCode.mockResolvedValue({
+      accessToken: "provider-access-token",
+      idToken: "provider-id-token",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      userId: "external-user",
+    });
+    mobileAuthMocks.getProfile.mockResolvedValue({
+      id: "external-user",
+      email: "profile@example.com",
+    });
+    mobileAuthMocks.validateToken.mockResolvedValue({
+      email: "token@example.com",
+      email_verified: true,
+      sub: "external-user",
+    });
+
+    await expect(completeMobileAuth({ request: mobileCompleteRequest() })).rejects.toMatchObject({
+      status: 401,
+      message: "Mobile auth provider did not verify that email",
+    });
+    expect(mobileAuthMocks.signInWithEmail).not.toHaveBeenCalled();
+    expect(mobileAuthMocks.createSession).not.toHaveBeenCalled();
   });
 
   it.each([
