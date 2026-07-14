@@ -13,6 +13,7 @@ import { requirePermission, resolveMembershipContext, starterPermissions } from 
 import { DEMO_TENANT_ID, starterData } from "$lib/server/starter-data";
 
 const memberUserId = "11111111-1111-4111-8111-111111111111";
+const profileId = "22222222-2222-4222-8222-222222222222";
 const tenantId = DEMO_TENANT_ID;
 
 describe("starter authorization", () => {
@@ -32,6 +33,7 @@ describe("starter authorization", () => {
       tenantId,
       roleSlug: "owner",
       userEmail: starterData.demoTenant.ownerUser.email,
+      profileId,
       devFallback: true,
     });
     expect(membership?.permissions).toContain(starterPermissions.billingManage);
@@ -55,6 +57,7 @@ describe("starter authorization", () => {
     expect(membership).toMatchObject({
       userId: memberUserId,
       userEmail: "member@example.com",
+      profileId,
       roleSlug: "member",
       devFallback: false,
     });
@@ -66,6 +69,50 @@ describe("starter authorization", () => {
       ]),
     );
     expect(membership?.permissions).not.toContain(starterPermissions.billingManage);
+    const membershipSql = authzMocks.query.mock.calls[0]?.[0];
+    expect(membershipSql).toContain("INNER JOIN profiles ON profiles.id = users.profile_id");
+    expect(membershipSql).toContain("profiles._meta_type = '@happyvertical/smrt-profiles:Person'");
+    expect(membershipSql).toContain("profiles.email_key = users.email_key");
+    expect(membershipSql).toContain("FROM profiles AS other_profiles");
+    expect(membershipSql).toContain("NOT EXISTS");
+  });
+
+  it("fails closed when the database rejects a mismatched or competing Profile identity", async () => {
+    authzMocks.query.mockResolvedValueOnce({ rows: [] });
+
+    await expect(
+      resolveMembershipContext({
+        tenantId,
+        user: { id: memberUserId, email: "member@example.com" },
+      }),
+    ).resolves.toBeNull();
+
+    const membershipSql = authzMocks.query.mock.calls[0]?.[0];
+    expect(membershipSql).toContain("profiles.email_key IS NOT NULL");
+    expect(membershipSql).toContain("users.email_key IS NOT NULL");
+    expect(membershipSql).toContain("other_profiles.id <> users.profile_id");
+  });
+
+  it("does not trust a raw framework Membership as a validated starter context", async () => {
+    authzMocks.query.mockResolvedValueOnce({ rows: [] });
+
+    await expect(
+      resolveMembershipContext({
+        tenantId,
+        user: { id: memberUserId, email: "member@example.com" },
+        membership: {
+          tenantId,
+          userId: memberUserId,
+          roleId: "role-1",
+          status: "active",
+        },
+      }),
+    ).resolves.toBeNull();
+
+    expect(authzMocks.query).toHaveBeenCalledWith(
+      expect.stringContaining("FROM memberships"),
+      memberUserId,
+    );
   });
 
   it("blocks role permissions that are not granted", async () => {
@@ -116,6 +163,7 @@ function membershipRow({
       userId === starterData.demoTenant.ownerUser.id
         ? starterData.demoTenant.ownerUser.email
         : `${roleSlug}@example.com`,
+    user_profile_id: profileId,
     tenant_id: tenantId,
     tenant_slug: starterData.demoTenant.slug,
     tenant_name: starterData.demoTenant.name,

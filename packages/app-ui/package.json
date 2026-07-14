@@ -1,6 +1,6 @@
 {
   "name": "@happyvertical/smrt-saas-ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Generic SaaS UI components for the SMRT SaaS starter.",
   "type": "module",
@@ -25,7 +25,7 @@
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-svelte": "catalog:",
     "lucide-svelte": "catalog:",
-    "svelte": "^5.55.5"
+    "svelte": "^5.56.4"
   },
   "devDependencies": {
     "svelte-check": "^4.0.0",

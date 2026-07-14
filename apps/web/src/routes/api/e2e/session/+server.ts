@@ -33,7 +33,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   try {
-    const target = await signInWithEmail(email);
+    const target = await signInWithEmail(email, { reuseExistingProfile: true });
     await startAccountSession(event, target);
     // The response carries Set-Cookie; never let an intermediary cache it.
     return json(

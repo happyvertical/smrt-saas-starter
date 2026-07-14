@@ -26,11 +26,15 @@ Kubernetes deployment — wired together and ready to fork.
 - **Multi-tenancy** — tenant isolation via `smrt-users` memberships; tenant
   resolution by subdomain, switch cookie, or (opt-in) trusted header. Selecting
   a tenant never grants access on its own — every handler authorizes explicitly.
-- **Authentication & onboarding** — OIDC through `@happyvertical/auth` (HappyVertical
-  IDP / Kanidm), plus a local dev-auth fallback so you can sign in immediately. Three
-  signup modes: **public**, **invite-only**, or **request-access** (a waitlist — the
-  SMRT `AccessRequest` primitive; visitors request access at `/request-access` and a
-  super user approves + graduates them from `/app/admin`).
+- **Authentication & onboarding** — eagerly bootstrapped OIDC through
+  `@happyvertical/smrt-users` (HappyVertical IDP / Kanidm), plus a local dev-auth fallback
+  so you can sign in immediately. Every starter-created User is bound to a canonical
+  global Person profile for SMRT identity and audit trails; existing deployments
+  adopt that invariant with `pnpm db:profiles:backfill` after reconciling
+  duplicate Profile ownership links. Three signup modes:
+  **public**, **invite-only**, or **request-access** (a waitlist — the SMRT
+  `AccessRequest` primitive; visitors request access at `/request-access` and a super
+  user approves + graduates them from `/app/admin`).
 - **Subscriptions & billing** — Stripe-backed checkout, customer portal, and
   webhook sync via `@happyvertical/accounting`; plans, features, and thresholds
   via `@happyvertical/smrt-subscriptions`.
@@ -78,7 +82,7 @@ cp .env.example .env            # sensible local defaults; edit as needed
 # 3. Database (local Docker Compose Postgres)
 pnpm services:up                # start the Postgres container
 pnpm db:migrate
-pnpm db:seed                    # demo tenant, plans, an active subscription, sample usage
+pnpm db:seed                    # demo tenant + Profile identity, plans, subscription, usage
 
 # 4. Run the web app
 pnpm --filter @happyvertical/smrt-saas-web dev
@@ -90,6 +94,10 @@ The app serves at **http://localhost:5173** and uses local Postgres at
 `.env.example` ships with `SMRT_STARTER_DEV_AUTH=true`, so locally you can sign
 in as the seeded demo **Owner** without configuring an external identity
 provider. Turn it off (and configure OIDC) for anything deployed.
+
+For an existing deployment, follow the identity preflight and ordered
+migration/backfill procedure in [docs/runbook.md](docs/runbook.md#local-auth)
+before enabling the new build's OIDC routes.
 
 To stop the database: `pnpm services:down`.
 

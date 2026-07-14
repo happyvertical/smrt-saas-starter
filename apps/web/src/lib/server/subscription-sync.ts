@@ -255,10 +255,14 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
           SELECT *
           FROM _smrt_tenant_subscriptions
           WHERE tenant_id = ?
+            AND subscriber_kind = ?
+            AND subscriber_external_id = ?
           ORDER BY created_at DESC
           LIMIT 1
         `,
         tenantId,
+        "tenant",
+        "",
       );
       return rowToSubscription(result.rows[0]);
     },
@@ -269,10 +273,14 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
           SELECT *
           FROM _smrt_tenant_subscriptions
           WHERE stripe_subscription_id = ?
+            AND subscriber_kind = ?
+            AND subscriber_external_id = ?
           ORDER BY updated_at DESC
           LIMIT 1
         `,
         stripeSubscriptionId,
+        "tenant",
+        "",
       );
       return rowToSubscription(result.rows[0]);
     },
@@ -283,10 +291,14 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
           SELECT *
           FROM _smrt_tenant_subscriptions
           WHERE stripe_customer_id = ?
+            AND subscriber_kind = ?
+            AND subscriber_external_id = ?
           ORDER BY updated_at DESC
           LIMIT 1
         `,
         stripeCustomerId,
+        "tenant",
+        "",
       );
       return rowToSubscription(result.rows[0]);
     },
@@ -313,26 +325,32 @@ async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore>
     },
 
     async upsertTenantSubscription(record) {
-      await db.upsert("_smrt_tenant_subscriptions", ["tenant_id"], {
-        id: record.id,
-        slug: record.slug,
-        context: record.tenantId,
-        updated_at: new Date().toISOString(),
-        tenant_id: record.tenantId,
-        plan_id: record.planId,
-        status: record.status,
-        started_at: record.startedAt.toISOString(),
-        current_period_start: record.currentPeriodStart?.toISOString() ?? null,
-        current_period_end: record.currentPeriodEnd?.toISOString() ?? null,
-        trial_ends_at: record.trialEndsAt?.toISOString() ?? null,
-        cancel_at_period_end: record.cancelAtPeriodEnd,
-        canceled_at: record.canceledAt?.toISOString() ?? null,
-        external_provider: "stripe",
-        stripe_customer_id: record.stripeCustomerId,
-        stripe_subscription_id: record.stripeSubscriptionId,
-        stripe_checkout_session_id: record.stripeCheckoutSessionId,
-        metadata: JSON.stringify(record.metadata),
-      });
+      await db.upsert(
+        "_smrt_tenant_subscriptions",
+        ["tenant_id", "subscriber_kind", "subscriber_external_id"],
+        {
+          id: record.id,
+          slug: record.slug,
+          context: record.tenantId,
+          updated_at: new Date().toISOString(),
+          tenant_id: record.tenantId,
+          subscriber_kind: "tenant",
+          subscriber_external_id: "",
+          plan_id: record.planId,
+          status: record.status,
+          started_at: record.startedAt.toISOString(),
+          current_period_start: record.currentPeriodStart?.toISOString() ?? null,
+          current_period_end: record.currentPeriodEnd?.toISOString() ?? null,
+          trial_ends_at: record.trialEndsAt?.toISOString() ?? null,
+          cancel_at_period_end: record.cancelAtPeriodEnd,
+          canceled_at: record.canceledAt?.toISOString() ?? null,
+          external_provider: "stripe",
+          stripe_customer_id: record.stripeCustomerId,
+          stripe_subscription_id: record.stripeSubscriptionId,
+          stripe_checkout_session_id: record.stripeCheckoutSessionId,
+          metadata: JSON.stringify(record.metadata),
+        },
+      );
     },
   };
 }

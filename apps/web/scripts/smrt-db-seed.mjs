@@ -18,6 +18,7 @@ try {
   const now = new Date();
   const window = getCurrentMonthWindow(now);
   const demoTenant = starterData.demoTenant;
+  const personProfileType = starterData.identity.personProfileType;
   const ownerRole = starterData.roles.find((role) => role.slug === "owner");
   const demoPlan = starterData.plans.find(
     (plan) => plan.planKey === starterData.demoSubscription.planKey,
@@ -62,13 +63,96 @@ try {
     });
   }
 
+  const existingPersonType = await db.query(
+    `SELECT id
+       FROM profile_types
+      WHERE slug = ? AND tenant_id IS NULL
+      LIMIT 1`,
+    personProfileType.slug,
+  );
+  let personProfileTypeId = existingPersonType.rows[0]?.id;
+  if (!personProfileTypeId) {
+    await db.upsert("profile_types", ["slug", "context", "_meta_type"], {
+      id: personProfileType.id,
+      slug: personProfileType.slug,
+      context: "",
+      _meta_type: "@happyvertical/smrt-profiles:ProfileType",
+      _meta_data: { seededBy: "smrt-saas-starter" },
+      updated_at: now.toISOString(),
+      tenant_id: null,
+      name: personProfileType.name,
+      description: personProfileType.description,
+    });
+    personProfileTypeId = personProfileType.id;
+  }
+
+  const existingOwnerProfiles = await db.query(
+    `SELECT id, tenant_id, _meta_type
+       FROM profiles
+      WHERE email_key = ?
+      ORDER BY created_at ASC, id ASC
+      LIMIT 2`,
+    demoTenant.ownerProfile.email.toLowerCase(),
+  );
+  if (existingOwnerProfiles.rows.length > 1) {
+    throw new Error(
+      `Cannot safely seed demo owner: multiple profiles use ${demoTenant.ownerProfile.email}`,
+    );
+  }
+  if (existingOwnerProfiles.rows[0]?.tenant_id) {
+    throw new Error(
+      `Cannot safely seed demo owner: profile for ${demoTenant.ownerProfile.email} is tenant-scoped`,
+    );
+  }
+  if (
+    existingOwnerProfiles.rows[0] &&
+    existingOwnerProfiles.rows[0]._meta_type !== "@happyvertical/smrt-profiles:Person"
+  ) {
+    throw new Error(
+      `Cannot safely seed demo owner: global profile for ${demoTenant.ownerProfile.email} is not a Person`,
+    );
+  }
+  let ownerProfileId = existingOwnerProfiles.rows[0]?.id;
+  if (!ownerProfileId) {
+    await db.upsert("profiles", ["slug", "context", "_meta_type"], {
+      id: demoTenant.ownerProfile.id,
+      slug: demoTenant.ownerProfile.slug,
+      context: "",
+      _meta_type: "@happyvertical/smrt-profiles:Person",
+      _meta_data: { seededBy: "smrt-saas-starter", demo: true },
+      updated_at: now.toISOString(),
+      tenant_id: null,
+      type_id: personProfileTypeId,
+      email: demoTenant.ownerProfile.email,
+      email_key: demoTenant.ownerProfile.email.toLowerCase(),
+      name: demoTenant.ownerProfile.name,
+      description: "Reference identity for the starter demo owner.",
+    });
+    ownerProfileId = demoTenant.ownerProfile.id;
+  }
+
+  const existingProfileOwner = await db.query(
+    `SELECT id
+       FROM users
+      WHERE profile_id = ? AND id <> ?
+      LIMIT 1`,
+    ownerProfileId,
+    demoTenant.ownerUser.id,
+  );
+  if (existingProfileOwner.rows[0]) {
+    throw new Error(
+      `Cannot safely seed demo owner: profile ${ownerProfileId} already belongs to another User`,
+    );
+  }
+
   await db.upsert("users", ["slug", "context"], {
     id: demoTenant.ownerUser.id,
     slug: demoTenant.ownerUser.slug,
     context: "",
     updated_at: now.toISOString(),
-    profile_id: null,
+    profile_id: ownerProfileId,
     email: demoTenant.ownerUser.email,
+    email_key: demoTenant.ownerUser.email.toLowerCase(),
     status: "active",
     last_login_at: null,
   });

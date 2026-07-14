@@ -5,8 +5,12 @@ const accountMocks = vi.hoisted(() => ({
   getAppDatabase: vi.fn(),
   magicLinkGenerate: vi.fn(),
   magicLinkVerify: vi.fn(),
+  ensureUserProfile: vi.fn(),
+  ensureUserProfileInTransaction: vi.fn(),
   query: vi.fn(),
   transaction: vi.fn(),
+  txQuery: vi.fn(),
+  txUpsert: vi.fn(),
   upsert: vi.fn(),
 }));
 
@@ -26,6 +30,11 @@ vi.mock("$lib/server/db", () => ({
   getAppDatabase: accountMocks.getAppDatabase,
 }));
 
+vi.mock("$lib/server/profile-identity", () => ({
+  ensureUserProfile: accountMocks.ensureUserProfile,
+  ensureUserProfileInTransaction: accountMocks.ensureUserProfileInTransaction,
+}));
+
 import {
   type AccountFlowError,
   generateWelcomeMagicLink,
@@ -42,6 +51,10 @@ const userId = "22222222-2222-4222-8222-222222222222";
 const ownerRoleId = "33333333-3333-4333-8333-333333333333";
 const memberRoleId = "44444444-4444-4444-8444-444444444444";
 const starterPlanId = "55555555-5555-4555-8555-555555555555";
+const transactionDb = {
+  query: accountMocks.txQuery,
+  upsert: accountMocks.txUpsert,
+};
 
 describe("account onboarding flows", () => {
   afterEach(() => {
@@ -55,17 +68,13 @@ describe("account onboarding flows", () => {
       transaction: accountMocks.transaction,
       upsert: accountMocks.upsert,
     });
-    accountMocks.transaction.mockImplementation(async (callback) =>
-      callback({
-        query: accountMocks.query,
-        upsert: accountMocks.upsert,
-      }),
-    );
+    accountMocks.transaction.mockImplementation(async (callback) => callback(transactionDb));
     accountMocks.createMagicLinkService.mockResolvedValue({
       generate: accountMocks.magicLinkGenerate,
       verify: accountMocks.magicLinkVerify,
     });
     accountMocks.upsert.mockResolvedValue({});
+    accountMocks.txUpsert.mockResolvedValue({});
     accountMocks.magicLinkGenerate.mockResolvedValue({
       token: "signed-token",
       expiresAt: new Date("2026-06-08T12:10:00.000Z"),
@@ -74,11 +83,21 @@ describe("account onboarding flows", () => {
       email: "member@example.com",
       nonce: "nonce-1",
     });
+    accountMocks.ensureUserProfile.mockResolvedValue({
+      profileId: "66666666-6666-4666-8666-666666666666",
+      created: false,
+      repairedDanglingLink: false,
+    });
+    accountMocks.ensureUserProfileInTransaction.mockResolvedValue({
+      profileId: "66666666-6666-4666-8666-666666666666",
+      created: true,
+      repairedDanglingLink: false,
+    });
   });
 
   it("creates a tenant, owner user, membership, and starter subscription", async () => {
-    accountMocks.query.mockImplementation(async (sql: string, ..._values: unknown[]) => {
-      if (sql.includes("FROM users") && sql.includes("lower(email)")) {
+    const queryImplementation = async (sql: string, ..._values: unknown[]) => {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
         return { rows: [] };
       }
       if (sql.includes("FROM tenants") && sql.includes("slug = ?")) {
@@ -91,7 +110,9 @@ describe("account onboarding flows", () => {
         return { rows: [{ id: starterPlanId, plan_key: "starter" }] };
       }
       return { rows: [] };
-    });
+    };
+    accountMocks.query.mockImplementation(queryImplementation);
+    accountMocks.txQuery.mockImplementation(queryImplementation);
 
     const result = await onboardTenant({
       email: " Founder@Example.COM ",
@@ -103,31 +124,42 @@ describe("account onboarding flows", () => {
       tenantSlug: "acme-labs",
       tenantLabel: "Acme Labs",
     });
-    expect(accountMocks.upsert).toHaveBeenCalledWith(
+    expect(accountMocks.txUpsert).toHaveBeenCalledWith(
       "tenants",
       ["slug", "context", "_meta_type"],
       expect.objectContaining({ slug: "acme-labs", name: "Acme Labs" }),
     );
-    expect(accountMocks.upsert).toHaveBeenCalledWith(
+    expect(accountMocks.txUpsert).toHaveBeenCalledWith(
       "users",
       ["slug", "context"],
       expect.objectContaining({ email: "founder@example.com", status: "active" }),
     );
-    expect(accountMocks.upsert).toHaveBeenCalledWith(
+    expect(accountMocks.txUpsert).toHaveBeenCalledWith(
       "memberships",
       ["slug", "context"],
       expect.objectContaining({ role_id: ownerRoleId, status: "active" }),
     );
-    expect(accountMocks.upsert).toHaveBeenCalledWith(
+    expect(accountMocks.txUpsert).toHaveBeenCalledWith(
       "_smrt_tenant_subscriptions",
-      ["tenant_id"],
-      expect.objectContaining({ plan_id: starterPlanId, status: "active" }),
+      ["tenant_id", "subscriber_kind", "subscriber_external_id"],
+      expect.objectContaining({
+        tenant_id: result.tenantId,
+        subscriber_kind: "tenant",
+        subscriber_external_id: "",
+        plan_id: starterPlanId,
+        status: "active",
+      }),
     );
+    expect(accountMocks.upsert).not.toHaveBeenCalled();
     expect(accountMocks.transaction).toHaveBeenCalledOnce();
+    expect(accountMocks.ensureUserProfileInTransaction).toHaveBeenCalledWith(transactionDb, {
+      userId: expect.any(String),
+      email: "founder@example.com",
+    });
   });
 
   it("rejects signup for an existing active user", async () => {
-    accountMocks.query.mockResolvedValueOnce({
+    accountMocks.txQuery.mockResolvedValueOnce({
       rows: [{ id: userId, email: "founder@example.com" }],
     });
 
@@ -142,7 +174,7 @@ describe("account onboarding flows", () => {
 
   it("signs in an active user with their first active tenant membership", async () => {
     accountMocks.query.mockImplementation(async (sql: string) => {
-      if (sql.includes("FROM users") && sql.includes("lower(email)")) {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
         return { rows: [{ id: userId, email: "member@example.com" }] };
       }
       if (sql.includes("FROM memberships") && sql.includes("INNER JOIN tenants")) {
@@ -174,6 +206,10 @@ describe("account onboarding flows", () => {
       expect.any(String),
       userId,
     );
+    expect(accountMocks.ensureUserProfile).toHaveBeenCalledWith(
+      { userId, email: "member@example.com" },
+      { db: expect.anything() },
+    );
   });
 
   it("requests a single-use sign-in link for an active user", async () => {
@@ -193,6 +229,7 @@ describe("account onboarding flows", () => {
         "http://localhost:5173/login/verify?token=signed-token&returnTo=%2Fapp%2Fsettings",
     });
     expect(accountMocks.magicLinkGenerate).toHaveBeenCalledWith("member@example.com");
+    expect(accountMocks.ensureUserProfile).not.toHaveBeenCalled();
   });
 
   it("does not look up emails when local magic links are disabled", async () => {
@@ -213,7 +250,7 @@ describe("account onboarding flows", () => {
 
   it("verifies a sign-in link before creating a session target", async () => {
     accountMocks.query.mockImplementation(async (sql: string) => {
-      if (sql.includes("FROM users") && sql.includes("lower(email)")) {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
         return { rows: [{ id: userId, email: "member@example.com" }] };
       }
       if (sql.includes("FROM memberships") && sql.includes("INNER JOIN tenants")) {
@@ -240,6 +277,10 @@ describe("account onboarding flows", () => {
       tenantLabel: "Acme",
     });
     expect(accountMocks.magicLinkVerify).toHaveBeenCalledWith("signed-token");
+    expect(accountMocks.ensureUserProfile).toHaveBeenCalledWith(
+      { userId, email: "member@example.com", reuseExistingProfile: true },
+      { db: expect.anything() },
+    );
   });
 
   it("invites a new member by creating a user and active membership", async () => {
@@ -247,7 +288,7 @@ describe("account onboarding flows", () => {
       if (sql.includes("FROM tenants") && sql.includes("id = ?")) {
         return { rows: [{ id: values[0], slug: "acme", name: "Acme" }] };
       }
-      if (sql.includes("FROM users") && sql.includes("lower(email)")) {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
         return { rows: [] };
       }
       if (sql.includes("FROM roles")) {
@@ -279,6 +320,10 @@ describe("account onboarding flows", () => {
       "memberships",
       ["slug", "context"],
       expect.objectContaining({ tenant_id: tenantId, role_id: memberRoleId }),
+    );
+    expect(accountMocks.ensureUserProfile).toHaveBeenCalledWith(
+      { userId: expect.any(String), email: "teammate@example.com" },
+      { db: expect.anything() },
     );
   });
 

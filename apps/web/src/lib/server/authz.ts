@@ -31,6 +31,7 @@ export interface StarterMembershipContext extends TenantMembershipOption {
   membershipId: string;
   userId: string;
   userEmail: string;
+  profileId: string;
   permissions: string[];
   availableTenants: TenantMembershipOption[];
   devFallback: boolean;
@@ -41,7 +42,7 @@ interface RequestLocals {
   user?: unknown;
   sessionId?: string | null;
   permissions?: string[];
-  membership?: StarterMembershipContext | null;
+  membership?: unknown;
 }
 
 interface MembershipRow extends Record<string, unknown> {
@@ -51,6 +52,8 @@ interface MembershipRow extends Record<string, unknown> {
   userId?: unknown;
   user_email?: unknown;
   userEmail?: unknown;
+  user_profile_id?: unknown;
+  profileId?: unknown;
   tenant_id?: unknown;
   tenantId?: unknown;
   tenant_slug?: unknown;
@@ -97,7 +100,10 @@ export async function resolveMembershipContext(
   tenantIdInput?: string | null,
 ): Promise<StarterMembershipContext | null> {
   const activeTenantId = getActiveTenantId(tenantIdInput ?? locals.tenantId);
-  if (locals.membership?.tenantId === activeTenantId) {
+  if (
+    isStarterMembershipContext(locals.membership) &&
+    locals.membership.tenantId === activeTenantId
+  ) {
     return locals.membership;
   }
 
@@ -127,10 +133,33 @@ export async function resolveMembershipContext(
     userId: readRequiredString(activeRow, "user_id", "userId"),
     userEmail:
       readString(activeRow, "user_email", "userEmail") ?? identity.email ?? DEMO_OWNER_EMAIL,
+    profileId: readRequiredString(activeRow, "user_profile_id", "profileId"),
     permissions,
     availableTenants,
     devFallback: identity.devFallback,
   };
+}
+
+function isStarterMembershipContext(value: unknown): value is StarterMembershipContext {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const membership = value as Partial<StarterMembershipContext>;
+  return (
+    typeof membership.membershipId === "string" &&
+    typeof membership.userId === "string" &&
+    typeof membership.userEmail === "string" &&
+    typeof membership.profileId === "string" &&
+    typeof membership.tenantId === "string" &&
+    typeof membership.tenantSlug === "string" &&
+    typeof membership.tenantLabel === "string" &&
+    typeof membership.roleId === "string" &&
+    typeof membership.roleSlug === "string" &&
+    typeof membership.roleLabel === "string" &&
+    Array.isArray(membership.permissions) &&
+    Array.isArray(membership.availableTenants) &&
+    typeof membership.devFallback === "boolean"
+  );
 }
 
 export async function requirePermission(
@@ -201,6 +230,7 @@ async function findMembershipRows(userId: string): Promise<MembershipRow[]> {
           memberships.id AS membership_id,
           memberships.user_id AS user_id,
           users.email AS user_email,
+          users.profile_id AS user_profile_id,
           tenants.id AS tenant_id,
           tenants.slug AS tenant_slug,
           tenants.name AS tenant_name,
@@ -209,11 +239,29 @@ async function findMembershipRows(userId: string): Promise<MembershipRow[]> {
           roles.name AS role_name
         FROM memberships
         INNER JOIN users ON users.id = memberships.user_id
+        INNER JOIN profiles ON profiles.id = users.profile_id
         INNER JOIN tenants ON tenants.id = memberships.tenant_id
         INNER JOIN roles ON roles.id = memberships.role_id
         WHERE memberships.user_id = ?
           AND memberships.status = 'active'
           AND users.status = 'active'
+          AND profiles.tenant_id IS NULL
+          AND profiles._meta_type = '@happyvertical/smrt-profiles:Person'
+          AND profiles.email_key IS NOT NULL
+          AND users.email_key IS NOT NULL
+          AND profiles.email_key = users.email_key
+          AND NOT EXISTS (
+            SELECT 1
+            FROM profiles AS other_profiles
+            WHERE other_profiles.email_key = users.email_key
+              AND other_profiles.id <> users.profile_id
+          )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM users AS other_users
+            WHERE other_users.profile_id = users.profile_id
+              AND other_users.id <> users.id
+          )
           AND tenants.status = 'active'
         ORDER BY tenants.name ASC, memberships.created_at ASC
       `,

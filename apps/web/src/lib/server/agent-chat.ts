@@ -10,7 +10,7 @@ import {
   type RuntimeTool as StarterRuntimeTool,
 } from "$lib/server/mcp";
 import { getSmrtConfig } from "$lib/server/smrt";
-import { getActiveTenantId, starterData } from "$lib/server/starter-data";
+import { getActiveTenantId } from "$lib/server/starter-data";
 import { type BillingOverview, getBillingOverview } from "$lib/server/subscriptions";
 import { withActiveTenant } from "$lib/server/tenant-context";
 import {
@@ -55,15 +55,17 @@ export class TenantChatError extends Error {
 
 export async function getTenantChatState(
   tenantId: string | null | undefined,
+  actorProfileId: string,
 ): Promise<TenantChatState> {
   return await withActiveTenant(tenantId, async (activeTenantId) => {
-    const session = await ensureTenantAgentSession(activeTenantId);
-    return await readTenantChatState(activeTenantId, session);
+    const session = await ensureTenantAgentSession(activeTenantId, actorProfileId);
+    return await readTenantChatState(activeTenantId, actorProfileId, session);
   });
 }
 
 export async function sendTenantChatMessage(
   tenantId: string | null | undefined,
+  actorProfileId: string,
   content: string,
 ): Promise<TenantChatSendResult> {
   const message = normalizeUserMessage(content);
@@ -81,12 +83,12 @@ export async function sendTenantChatMessage(
     }
     const chatUsageWindow = getContainedThresholdUsageWindow(chatThresholds);
 
-    const session = await ensureTenantAgentSession(activeTenantId, billing);
+    const session = await ensureTenantAgentSession(activeTenantId, actorProfileId, billing);
     const service = session.service;
     await service.sendAgentUserMessage({
       tenantId: activeTenantId,
       agentSessionId: session.sessionId,
-      actorProfileId: starterData.demoTenant.ownerUser.id,
+      actorProfileId,
       content: message,
     });
     await recordTenantUsageSignal({
@@ -117,13 +119,17 @@ export async function sendTenantChatMessage(
     }
 
     return {
-      ...(await readTenantChatState(activeTenantId, session)),
+      ...(await readTenantChatState(activeTenantId, actorProfileId, session)),
       selectedTool,
     };
   });
 }
 
-async function ensureTenantAgentSession(tenantId: string, billing?: BillingOverview) {
+async function ensureTenantAgentSession(
+  tenantId: string,
+  actorProfileId: string,
+  billing?: BillingOverview,
+) {
   const tenantBilling = billing ?? (await getBillingOverview(tenantId));
   assertAgentChatAvailable(tenantBilling);
   const service = await ChatService.create(getSmrtConfig("ChatRoom"));
@@ -132,7 +138,7 @@ async function ensureTenantAgentSession(tenantId: string, billing?: BillingOverv
   const { session, room } = await service.createAgentSession({
     tenantId,
     agentId: getStarterAgentId(tenantId),
-    actorProfileId: starterData.demoTenant.ownerUser.id,
+    actorProfileId,
     allowedTools: tools.map((tool) => tool.name),
     systemPrompt: prompt.text,
     maxMessages: 100,
@@ -169,12 +175,13 @@ function assertAgentChatAvailable(billing: BillingOverview): void {
 
 async function readTenantChatState(
   tenantId: string,
+  actorProfileId: string,
   session: Awaited<ReturnType<typeof ensureTenantAgentSession>>,
 ): Promise<TenantChatState> {
   const messages = (
     await session.service.getRoomMessages({
       roomId: session.roomId,
-      actorProfileId: starterData.demoTenant.ownerUser.id,
+      actorProfileId,
       tenantId,
     })
   )

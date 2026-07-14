@@ -1,4 +1,3 @@
-import { type SmrtConfig, setConfig } from "@happyvertical/smrt-config";
 import {
   defineLanguageString,
   invalidateLanguageCache,
@@ -17,9 +16,9 @@ import {
 } from "@happyvertical/smrt-prompts";
 import { getAppDatabase } from "$lib/server/db";
 import { getSmrtConfig } from "$lib/server/smrt";
+import { loadStarterConfig } from "$lib/server/starter-config";
 import { type StarterLanguageStringSeed, starterData } from "$lib/server/starter-data";
 import { withActiveTenant } from "$lib/server/tenant-context";
-import starterSmrtConfig from "../../../smrt.config.mjs";
 
 export interface PromptSetting {
   key: string;
@@ -62,14 +61,11 @@ export interface OverrideWriteResult {
 }
 
 let definitionsRegistered = false;
-let configLoaded = false;
 
-export async function loadStarterExperienceConfig(): Promise<void> {
-  if (!configLoaded) {
-    setConfig(starterSmrtConfig as Partial<SmrtConfig>);
-    configLoaded = true;
-  }
-}
+// Backwards-compatible name for existing starter consumers. Configuration is
+// intentionally owned by the lightweight bootstrap module so auth startup does
+// not pull in prompt/language/database modules.
+export const loadStarterExperienceConfig = loadStarterConfig;
 
 export function registerStarterExperienceDefinitions(): void {
   if (definitionsRegistered) {
