@@ -207,7 +207,22 @@ field metadata inline and no runtime file lookup is needed. The local workaround
 
 ## Open Blockers
 
-_None._
+### SDK: `loadEnvConfig` crashes in browsers (`process is not defined`)
+
+Status: open as [happyvertical/sdk#1096](https://github.com/happyvertical/sdk/issues/1096); non-blocking with a local workaround.
+
+`@happyvertical/utils@0.78.1` `loadEnvConfig` reads `process.env` without a
+`typeof process` guard, and it reaches the browser through
+`@happyvertical/logger` (no `browser` export condition) via
+`@happyvertical/smrt-svelte`'s module-scope `createLogger`. Client hydration
+throws `ReferenceError: process is not defined`; under vite 7 / kit 2.55 the
+SSR content quietly stayed unhydrated, while under vite 8 / kit 2.69 SvelteKit
+replaces the page with its root error page, breaking the public pages and the
+e2e suite.
+
+Workaround until the upstream guard ships: `apps/web/src/app.html` shims
+`globalThis.process ??= { env: {} }` before SvelteKit's module scripts run.
+Remove the shim when consuming a fixed `@happyvertical/utils`/`logger`.
 
 ## SDK: Stripe In `@happyvertical/accounting`
 
