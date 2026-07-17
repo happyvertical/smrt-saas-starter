@@ -4,6 +4,7 @@ dist/
 build/
 .svelte-kit/
 .smrt/
+.runtime/
 coverage/
 test-results/
 playwright-report/
@@ -15,4 +16,6 @@ playwright-report/
 apps/mobile/.gradle/
 apps/mobile/iosApp/*.xcodeproj/
 packages/mobile-contract/generated/
-apps/mobile/shared/src/commonMain/kotlin/generated/
+
+# Local agent/editor settings (per-developer, not shared)
+.claude/settings.local.json

@@ -1,17 +1,20 @@
 import { fail, redirect } from "@sveltejs/kit";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
 import { getBillingOverview, getPlanCards } from "$lib/server/subscriptions";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const overview = getBillingOverview(locals.tenantId ?? "demo");
+  const membership = await requirePermission(locals, starterPermissions.billingRead);
+  const overview = await getBillingOverview(membership.tenantId);
   return {
     ...overview,
-    plans: getPlanCards(overview.currentPlan.id),
+    plans: await getPlanCards(overview.currentPlan.id),
   };
 };
 
 export const actions: Actions = {
-  checkout: async ({ request }) => {
+  checkout: async ({ locals, request }) => {
+    await requirePermission(locals, starterPermissions.billingManage);
     const form = await request.formData();
     const planId = String(form.get("planId") ?? "");
     if (!planId) {
@@ -20,7 +23,8 @@ export const actions: Actions = {
 
     throw redirect(303, `/api/billing/checkout?planId=${encodeURIComponent(planId)}`);
   },
-  portal: async () => {
+  portal: async ({ locals }) => {
+    await requirePermission(locals, starterPermissions.billingManage);
     throw redirect(303, "/api/billing/portal");
   },
 };

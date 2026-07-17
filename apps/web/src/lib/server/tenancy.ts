@@ -1,16 +1,39 @@
 import type { RequestEvent } from "@sveltejs/kit";
+import { getAppDatabase } from "$lib/server/db";
+import { DEMO_TENANT_ID, DEMO_TENANT_SLUG, isUuid } from "$lib/server/starter-data";
 
 export interface TenantResolution {
   tenantId: string | null;
 }
 
+export const TENANT_SWITCH_COOKIE = "smrt_starter_tenant_id";
+
 const rootLikeHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const reservedSubdomains = new Set(["www", "api", "app", "admin"]);
 
+function isTrustedTenantHeaderEnabled(): boolean {
+  return process.env.SMRT_STARTER_TRUST_TENANT_HEADER === "true";
+}
+
 export async function resolveTenant(event: RequestEvent): Promise<TenantResolution> {
-  const headerTenant = event.request.headers.get("x-tenant-id");
-  if (headerTenant) {
-    return { tenantId: normalizeTenantSlug(headerTenant) };
+  // The `x-tenant-id` header is unauthenticated client input that selects the
+  // ambient tenant context before any session/membership check runs. To fail
+  // safe it is ignored by default and only honored when an operator opts in
+  // (e.g. behind an authenticating gateway/BFF that injects it). Browser flows
+  // use the membership-gated switch cookie or the tenant subdomain instead.
+  // Either way, data access is still gated downstream by requirePermission /
+  // requireTenantMembership, which re-verify the authenticated user's
+  // membership for the resolved tenant.
+  if (isTrustedTenantHeaderEnabled()) {
+    const headerTenant = event.request.headers.get("x-tenant-id");
+    if (headerTenant) {
+      return { tenantId: await resolveTenantKey(headerTenant) };
+    }
+  }
+
+  const cookieTenant = event.cookies.get(TENANT_SWITCH_COOKIE);
+  if (cookieTenant) {
+    return { tenantId: await resolveTenantKey(cookieTenant) };
   }
 
   const host = event.url.hostname.toLowerCase();
@@ -21,7 +44,10 @@ export async function resolveTenant(event: RequestEvent): Promise<TenantResoluti
   const baseDomain = process.env.PUBLIC_BASE_DOMAIN?.toLowerCase();
   if (baseDomain && host.endsWith(`.${baseDomain}`)) {
     const candidate = host.slice(0, -baseDomain.length - 1).split(".")[0];
-    return { tenantId: candidate && !reservedSubdomains.has(candidate) ? candidate : null };
+    return {
+      tenantId:
+        candidate && !reservedSubdomains.has(candidate) ? await resolveTenantKey(candidate) : null,
+    };
   }
 
   const labels = host.split(".");
@@ -30,7 +56,27 @@ export async function resolveTenant(event: RequestEvent): Promise<TenantResoluti
   }
 
   const candidate = labels[0];
-  return { tenantId: candidate && !reservedSubdomains.has(candidate) ? candidate : null };
+  return {
+    tenantId:
+      candidate && !reservedSubdomains.has(candidate) ? await resolveTenantKey(candidate) : null,
+  };
+}
+
+async function resolveTenantKey(value: string): Promise<string | null> {
+  const candidate = value.trim();
+  if (isUuid(candidate)) {
+    return candidate.toLowerCase();
+  }
+
+  const slug = normalizeTenantSlug(candidate);
+  if (!slug) {
+    return null;
+  }
+  if (slug === DEMO_TENANT_SLUG) {
+    return DEMO_TENANT_ID;
+  }
+
+  return await findTenantIdBySlug(slug);
 }
 
 function normalizeTenantSlug(value: string): string | null {
@@ -41,4 +87,39 @@ function normalizeTenantSlug(value: string): string | null {
     .replace(/^-+|-+$/g, "");
 
   return slug.length > 0 ? slug : null;
+}
+
+async function findTenantIdBySlug(slug: string): Promise<string | null> {
+  try {
+    const db = await getAppDatabase();
+    const result = await db.query(
+      `
+        SELECT id
+        FROM tenants
+        WHERE slug = ? AND status = 'active'
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+      slug,
+    );
+    const id = result.rows[0]?.id;
+    return typeof id === "string" && isUuid(id) ? id : null;
+  } catch (error) {
+    if (isMissingTenantsTableError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function isMissingTenantsTableError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const code = (error as Error & { code?: string }).code;
+  return (
+    code === "42P01" ||
+    error.message.includes('relation "tenants" does not exist') ||
+    error.message.includes("no such table: tenants")
+  );
 }

@@ -1,0 +1,54 @@
+{
+  "schema": "https://happyvertical.com/schemas/agent-project/v1",
+  "policy": {
+    "profile": "happyvertical",
+    "revision": "1.0.0"
+  },
+  "tracker": {
+    "provider": "github",
+    "repository": "happyvertical/smrt-saas-starter",
+    "project_url": "https://github.com/orgs/happyvertical/projects/7"
+  },
+  "labels": {
+    "claim": "agent: implementation",
+    "blocked": "status: blocked",
+    "dispatch": {
+      "claude": "dispatch: claude",
+      "codex": "dispatch: codex",
+      "hermes": "dispatch: hermes",
+      "zcode": "dispatch: zcode"
+    }
+  },
+  "memory": {
+    "provider": "hindsight",
+    "bank": "repo-happyvertical-smrt-saas-starter",
+    "package_tags": [
+      "package:apps",
+      "package:packages"
+    ]
+  },
+  "instructions": {
+    "canonical": "AGENTS.md",
+    "adapters": [
+      "claude",
+      "gemini",
+      "copilot"
+    ]
+  },
+  "skills": {
+    "paths": [
+      ".agents/skills"
+    ]
+  },
+  "github": {
+    "required_status_checks": [
+      "lifecycle",
+      "Required CI"
+    ]
+  },
+  "runtime": {
+    "agent_policy_runner": "arc-happyvertical",
+    "agent_validation_workflow": ".github/workflows/on-pull-request.yml",
+    "agent_lifecycle_stage": "compatibility"
+  }
+}

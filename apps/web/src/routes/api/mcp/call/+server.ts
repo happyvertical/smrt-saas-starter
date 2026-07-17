@@ -1,18 +1,38 @@
-import { error, json, type RequestHandler } from "@sveltejs/kit";
-import { callRuntimeTool, listRuntimeTools } from "$lib/server/mcp";
-import { getBillingOverview } from "$lib/server/subscriptions";
+import { error, isHttpError, json, type RequestHandler } from "@sveltejs/kit";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
+import { executeRuntimeToolForTenant, RuntimeToolExecutionError } from "$lib/server/mcp";
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-  const body = (await request.json()) as { name?: string; input?: unknown };
-  if (!body.name) {
+  const body = await readJsonObject(request);
+  if (typeof body.name !== "string" || body.name.trim().length === 0) {
     throw error(400, "Missing tool name");
   }
 
-  const overview = getBillingOverview(locals.tenantId ?? "demo");
-  const allowed = listRuntimeTools(overview.snapshot.features);
-  if (!allowed.some((tool) => tool.name === body.name)) {
-    throw error(403, "Tool is not available for the current tenant");
-  }
+  const membership = await requirePermission(locals, starterPermissions.mcpCall);
+  const tenantId = membership.tenantId;
+  const execution = await executeRuntimeToolForTenant(body.name.trim(), body.input, tenantId).catch(
+    (executionError: unknown) => {
+      if (executionError instanceof RuntimeToolExecutionError) {
+        throw error(executionError.status, executionError.message);
+      }
+      throw executionError;
+    },
+  );
 
-  return json(await callRuntimeTool(body.name, body.input));
+  return json(execution.response);
 };
+
+async function readJsonObject(request: Request): Promise<{ name?: unknown; input?: unknown }> {
+  try {
+    const body = (await request.json()) as unknown;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw error(400, "Expected JSON object");
+    }
+    return body as { name?: unknown; input?: unknown };
+  } catch (jsonError) {
+    if (isHttpError(jsonError)) {
+      throw jsonError;
+    }
+    throw error(400, "Invalid JSON body");
+  }
+}

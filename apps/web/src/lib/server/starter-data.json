@@ -1,0 +1,375 @@
+{
+  "identity": {
+    "personProfileType": {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "slug": "person",
+      "name": "Person",
+      "description": "Individual person profile"
+    }
+  },
+  "demoTenant": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "slug": "demo",
+    "name": "Demo Tenant",
+    "description": "Reference tenant for the SMRT SaaS starter.",
+    "ownerUser": {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "slug": "demo-owner",
+      "email": "demo-owner@example.com"
+    },
+    "ownerProfile": {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "slug": "demo-owner-profile",
+      "name": "Demo Owner",
+      "email": "demo-owner@example.com"
+    },
+    "ownerMembership": {
+      "id": "00000000-0000-4000-8000-000000000031",
+      "slug": "demo-owner"
+    }
+  },
+  "roles": [
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "slug": "owner",
+      "name": "Owner",
+      "description": "Full tenant administration."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000022",
+      "slug": "admin",
+      "name": "Admin",
+      "description": "Tenant administration without ownership transfer."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000023",
+      "slug": "member",
+      "name": "Member",
+      "description": "Standard tenant workspace access."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "slug": "viewer",
+      "name": "Viewer",
+      "description": "Read-only tenant workspace access."
+    }
+  ],
+  "plans": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "planKey": "starter",
+      "name": "Starter",
+      "description": "Tenant basics, hosted agents, and read-only tools.",
+      "priceAmount": 49,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_STARTER",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": false,
+          "metadata": { "label": "Bulk exports" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 100000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "chat.messages",
+          "limit": 1000,
+          "window": "month",
+          "enforcement": "block",
+          "label": "Chat messages"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 500,
+          "window": "month",
+          "enforcement": "block",
+          "label": "MCP calls"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "planKey": "growth",
+      "name": "Growth",
+      "description": "Team-scale workflows with write tools and bulk exports.",
+      "priceAmount": 149,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_GROWTH",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "mcp.write_tools",
+          "enabled": true,
+          "metadata": { "label": "Confirmed write tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": true,
+          "metadata": { "label": "Bulk exports" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 1000000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "chat.messages",
+          "limit": 10000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "Chat messages"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 5000,
+          "window": "month",
+          "enforcement": "block",
+          "label": "MCP calls"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "planKey": "scale",
+      "name": "Scale",
+      "description": "High-volume AI usage, translations, and custom prompt control.",
+      "priceAmount": 499,
+      "currency": "USD",
+      "billingInterval": "month",
+      "stripePriceEnvKey": "STRIPE_PRICE_SCALE",
+      "features": [
+        {
+          "featureKey": "chat.agent",
+          "enabled": true,
+          "metadata": { "label": "Agent chat" }
+        },
+        {
+          "featureKey": "mcp.read_tools",
+          "enabled": true,
+          "metadata": { "label": "Read-only MCP tools" }
+        },
+        {
+          "featureKey": "mcp.write_tools",
+          "enabled": true,
+          "metadata": { "label": "Confirmed write tools" }
+        },
+        {
+          "featureKey": "exports.bulk",
+          "enabled": true,
+          "metadata": { "label": "Bulk exports" }
+        },
+        {
+          "featureKey": "languages.ai_translate",
+          "enabled": true,
+          "metadata": { "label": "AI translations" }
+        },
+        {
+          "featureKey": "prompts.tenant_overrides",
+          "enabled": true,
+          "metadata": { "label": "Tenant prompt overrides" }
+        }
+      ],
+      "thresholds": [
+        {
+          "metricKey": "ai.tokens.total",
+          "limit": 5000000,
+          "window": "month",
+          "enforcement": "observe",
+          "label": "AI tokens"
+        },
+        {
+          "metricKey": "chat.messages",
+          "limit": 50000,
+          "window": "month",
+          "enforcement": "observe",
+          "label": "Chat messages"
+        },
+        {
+          "metricKey": "mcp.calls",
+          "limit": 50000,
+          "window": "month",
+          "enforcement": "warn",
+          "label": "MCP calls"
+        }
+      ]
+    }
+  ],
+  "demoSubscription": {
+    "id": "00000000-0000-4000-8000-000000000201",
+    "slug": "demo-growth",
+    "planKey": "growth",
+    "stripeCustomerId": ""
+  },
+  "appSettings": [
+    {
+      "id": "00000000-0000-4000-8000-000000000251",
+      "slug": "signup.access_mode",
+      "key": "signup.access_mode",
+      "value": "public"
+    }
+  ],
+  "usageSeeds": [
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "slug": "demo-mcp-calls-seed",
+      "metricKey": "mcp.calls",
+      "quantity": 128,
+      "source": "smrt-app-mcp"
+    }
+  ],
+  "aiUsageSeeds": [
+    {
+      "id": "00000000-0000-4000-8000-000000000311",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "operation": "chat",
+      "className": "AgentChat",
+      "promptTokens": 12000,
+      "completionTokens": 6000,
+      "totalTokens": 18000,
+      "estimatedCost": 0.13,
+      "durationMs": 1450
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000312",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5",
+      "operation": "chat",
+      "className": "AgentChat",
+      "promptTokens": 16000,
+      "completionTokens": 8500,
+      "totalTokens": 24500,
+      "estimatedCost": 0.18,
+      "durationMs": 1820
+    }
+  ],
+  "prompts": [
+    {
+      "key": "starter.assistant.system",
+      "label": "Assistant system prompt",
+      "description": "Base behavior for tenant workspace chat and MCP tool use.",
+      "template": "You are the tenant workspace assistant for {tenantName}. Keep answers tenant-scoped, use available MCP tools before guessing, and call out subscription or usage limits when they affect the answer.",
+      "ai": {
+        "profile": "default",
+        "params": {
+          "temperature": 0.3
+        }
+      },
+      "editable": {
+        "template": true,
+        "profile": true,
+        "model": true,
+        "params": true
+      }
+    },
+    {
+      "key": "starter.usage.digest",
+      "label": "Usage digest prompt",
+      "description": "Summary prompt for tenant usage and threshold snapshots.",
+      "template": "Summarize {tenantName}'s current usage by metric, threshold, and enforcement state. Highlight the next concrete action when a limit is close.",
+      "ai": {
+        "profile": "default",
+        "params": {
+          "temperature": 0.2
+        }
+      },
+      "editable": {
+        "template": true,
+        "profile": true,
+        "model": true,
+        "params": true
+      }
+    }
+  ],
+  "promptOverrides": [
+    {
+      "id": "00000000-0000-4000-8000-000000000401",
+      "slug": "demo-assistant-system",
+      "key": "starter.assistant.system",
+      "template": "You are Demo Tenant's workspace assistant. Keep answers tenant-scoped and prefer subscription, usage, prompt, language, and MCP context before suggesting implementation work.",
+      "profile": "default",
+      "model": null,
+      "params": {
+        "temperature": 0.2
+      }
+    }
+  ],
+  "languageStrings": [
+    {
+      "key": "starter.settings.heading",
+      "locale": "en",
+      "label": "Settings heading",
+      "description": "Primary heading for tenant configuration.",
+      "template": "Tenant configuration"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "en",
+      "label": "Assistant greeting",
+      "description": "Short text used near assistant entry points.",
+      "template": "Ask about {tenantName}'s subscription, usage, prompts, or MCP tools."
+    },
+    {
+      "key": "starter.billing.currentPlan",
+      "locale": "en",
+      "label": "Current plan label",
+      "description": "Billing label rendered with the active plan.",
+      "template": "Current plan: {planName}"
+    }
+  ],
+  "languageSettings": [
+    {
+      "key": "starter.settings.heading",
+      "locale": "en"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "en"
+    },
+    {
+      "key": "starter.assistant.greeting",
+      "locale": "fr-CA"
+    }
+  ],
+  "languageOverrides": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "slug": "demo-assistant-greeting-fr-ca",
+      "key": "starter.assistant.greeting",
+      "locale": "fr-CA",
+      "template": "Demandez des nouvelles de {tenantName} sur l'abonnement, l'utilisation, les invites ou les outils MCP."
+    }
+  ]
+}

@@ -6,16 +6,160 @@ on:
       - dev
       - staging
       - main
+    types: [opened, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{
+      github.event.pull_request.number ||
+      github.event.merge_group.head_sha ||
+      github.ref
+    }}-${{
+      (github.event_name == 'pull_request' &&
+      github.event.action == 'edited' &&
+      github.event.changes.title != null &&
+      github.event.changes.base == null) &&
+      'title' ||
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+      !contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
+      !(github.event.action == 'edited' && github.event.changes.base != null))) &&
+      'lifecycle' ||
+      'validation'
+    }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
   packages: read
 
+env:
+  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
+
 jobs:
+
+  # Only run on same-repo PRs. The self-hosted arc-happyvertical runner must
+  # never execute untrusted code from fork PRs (it checks out, installs, and
+  # runs contributor-controlled scripts). Fork PRs are skipped here; gate their
+  # CI behind maintainer approval / a GitHub-hosted path instead.
   check:
-    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'merge_group' ||
+      (github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action))
+    runs-on: arc-happyvertical
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: smrt_saas
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 36
+    env:
+      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-environment
       - name: Validate
         run: pnpm check
+
+  e2e:
+    if: >-
+      github.event_name == 'merge_group' ||
+      (github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action))
+    runs-on: arc-happyvertical
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: smrt_saas
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 36
+    env:
+      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+      # The web app and its db scripts import @happyvertical/smrt-saas-objects
+      # from dist/, so build it before seeding on a fresh runner.
+      - name: Build workspace objects
+        run: pnpm --filter @happyvertical/smrt-saas-objects build
+      - name: Seed database
+        run: pnpm db:seed
+      - name: Install Playwright browsers
+        run: pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
+      - name: Browser smoke
+        run: pnpm --filter @happyvertical/smrt-saas-web test:e2e
+
+  mobile-android:
+    if: >-
+      github.event_name == 'merge_group' ||
+      (github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action))
+    runs-on: arc-happyvertical
+    steps:
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v4
+      - uses: ./.github/actions/setup-environment
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Validate Android shell
+        run: pnpm mobile:validate:android
+
+  runtime:
+    if: >-
+      github.event_name == 'merge_group' ||
+      (github.event_name == 'pull_request' &&
+      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action))
+    runs-on: arc-happyvertical
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Azure/setup-kubectl@v5.1.0
+      - uses: ./.github/actions/setup-environment
+      - name: Validate runtime artifacts
+        run: pnpm runtime:check
+
+  required-ci:
+    name: Required CI
+    if: always()
+    needs: [check, e2e, mobile-android, runtime]
+    runs-on: arc-happyvertical
+    timeout-minutes: 5
+    steps:
+      - name: Require full validation success
+        env:
+          CHECK: ${{ needs.check.result }}
+          E2E: ${{ needs.e2e.result }}
+          MOBILE: ${{ needs.mobile-android.result }}
+          RUNTIME: ${{ needs.runtime.result }}
+        run: |
+          set -euo pipefail
+          for result in "$CHECK" "$E2E" "$MOBILE" "$RUNTIME"; do
+            if [ "$result" != success ]; then
+              echo "::error::full validation did not succeed: check=$CHECK e2e=$E2E mobile=$MOBILE runtime=$RUNTIME"
+              exit 1
+            fi
+          done

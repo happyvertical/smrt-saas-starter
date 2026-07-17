@@ -16,6 +16,8 @@
     <nav aria-label="Main">
       <a class="brand" href="/">SMRT SaaS Starter</a>
       <div>
+        <a href="/signup">Start</a>
+        <a href="/login">Sign in</a>
         <a href="/app">Demo app</a>
         <a href="/app/billing">Billing</a>
       </div>
@@ -28,8 +30,8 @@
         usage thresholds, prompt management, localization, mobile clients, and runtime MCP.
       </p>
       <div class="actions">
-        <a class="primary" href="/app">Open demo workspace</a>
-        <a class="secondary" href="/app/billing">View plans</a>
+        <a class="primary" href="/signup">Create workspace</a>
+        <a class="secondary" href="/app">Open demo workspace</a>
       </div>
     </div>
   </section>

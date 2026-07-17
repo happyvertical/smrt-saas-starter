@@ -1,8 +1,20 @@
 import { error, type RequestHandler, redirect } from "@sveltejs/kit";
-import { createCustomerPortalSession } from "$lib/server/billing";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
+import { createCustomerPortalSession, isStripeBillingConfigured } from "$lib/server/billing";
+import { getStripeCustomerId } from "$lib/server/subscriptions";
 
-export const GET: RequestHandler = async ({ url }) => {
-  const stripeCustomerId = "cus_demo_replace_with_subscription_row";
+export const GET: RequestHandler = async ({ locals, url }) => {
+  const membership = await requirePermission(locals, starterPermissions.billingManage);
+  if (!isStripeBillingConfigured()) {
+    throw error(503, "Stripe billing provider is not configured");
+  }
+
+  const tenantId = membership.tenantId;
+  const stripeCustomerId = await getStripeCustomerId(tenantId);
+  if (!stripeCustomerId) {
+    throw error(503, "Stripe customer id is not configured for this tenant");
+  }
+
   const session = await createCustomerPortalSession({
     stripeCustomerId,
     returnUrl: `${url.origin}/app/billing`,

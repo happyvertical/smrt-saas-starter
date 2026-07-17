@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const sops = await readFile(join(root, ".sops.yaml"), "utf8");
 const secret = await readFile(join(root, "manifests/base/app.secret.yaml"), "utf8");
 

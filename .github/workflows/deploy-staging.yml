@@ -4,27 +4,127 @@ on:
   push:
     branches:
       - staging
+    paths-ignore:
+      - manifests/overlays/staging/kustomization.yaml
 
 permissions:
   contents: write
   packages: write
   pull-requests: write
 
+env:
+  GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
+  WEB_IMAGE: ghcr.io/${{ github.repository }}-web
+  WORKER_IMAGE: ghcr.io/${{ github.repository }}-worker
+
 jobs:
   deploy-staging:
-    runs-on: ubuntu-latest
+    runs-on: arc-happyvertical
     environment: staging
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: smrt_saas
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smrt_saas -d smrt_saas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: staging
+      - uses: Azure/setup-kubectl@v5.1.0
       - uses: ./.github/actions/setup-environment
       - name: Validate staging
         run: pnpm check
-      - name: Build staging images
-        run: |
-          echo "Build and push web/worker images tagged staging-${GITHUB_SHA::12} and staging-latest"
+      - name: Prepare runtime trees
+        run: pnpm runtime:prepare
+      - uses: docker/login-action@v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/setup-buildx-action@v4.1.0
+      - name: Build and push web image
+        id: build-web
+        uses: docker/build-push-action@v7.2.0
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ github.sha }}
+          tags: |
+            ${{ env.WEB_IMAGE }}:staging-${{ github.sha }}
+            ${{ env.WEB_IMAGE }}:staging-latest
+      - name: Build and push worker image
+        id: build-worker
+        uses: docker/build-push-action@v7.2.0
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.WORKER_IMAGE }}:staging-${{ github.sha }}
+            ${{ env.WORKER_IMAGE }}:staging-latest
       - name: Update staging manifests
         run: |
-          echo "Patch manifests/overlays/staging with immutable image digests"
+          node scripts/update-manifest-digests.mjs staging \
+            "${{ steps.build-web.outputs.digest }}" \
+            "${{ steps.build-worker.outputs.digest }}"
+          pnpm manifests:check
+          pnpm manifests:render
+      - name: Commit staging manifest digests
+        run: |
+          if git diff --quiet -- manifests/overlays/staging/kustomization.yaml; then
+            echo "No staging manifest digest changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifests/overlays/staging/kustomization.yaml
+          git commit -m "chore(deploy): update staging image digests [skip ci]"
+          git push
+      # Gate promotion on a smoke test of the deployed staging environment.
+      # Requires the STAGING_BASE_URL variable on the staging environment;
+      # when unset the gate is skipped so fresh starter clones still deploy.
+      - name: Smoke staging deployment
+        if: vars.STAGING_BASE_URL != ''
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+          EXPECTED_APP_VERSION: ${{ github.sha }}
+          # Enables the @authed specs. The SAME secret/email must ALSO be present
+          # in the deployed web pod (its config/secret), since /api/e2e/session
+          # reads them server-side — the runner having them is not enough. The
+          # probe below degrades to @public if the deployed endpoint isn't
+          # enabled, so a half-provisioned setup doesn't block promotion.
+          E2E_AUTH_SECRET: ${{ secrets.E2E_AUTH_SECRET }}
+          E2E_USER_EMAIL: ${{ vars.E2E_USER_EMAIL }}
+        run: |
+          node scripts/wait-for-deploy.mjs "$PLAYWRIGHT_BASE_URL" "$EXPECTED_APP_VERSION"
+          # Only run @authed if the DEPLOYED app actually has the mint endpoint
+          # enabled (its pod must carry E2E_AUTH_SECRET/E2E_USER_EMAIL too).
+          if [ -n "$E2E_AUTH_SECRET" ]; then
+            code="$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+              -H "x-e2e-auth: $E2E_AUTH_SECRET" \
+              "$PLAYWRIGHT_BASE_URL/api/e2e/session" || echo 000)"
+            if [ "$code" != "200" ]; then
+              echo "::warning::Deployed /api/e2e/session not enabled (HTTP $code) — running @public only. Provision E2E_AUTH_SECRET/E2E_USER_EMAIL in the staging web pod to enable @authed."
+              unset E2E_AUTH_SECRET
+            fi
+          fi
+          pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
+          pnpm --filter @happyvertical/smrt-saas-web test:e2e
       - name: Open staging to main PR
         env:
           GH_TOKEN: ${{ github.token }}

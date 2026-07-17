@@ -1,3 +1,12 @@
+import { resolveStarterPromptPreview } from "$lib/server/experience";
+import { getBillingOverview } from "$lib/server/subscriptions";
+import {
+  assertMetricAllowed,
+  getContainedThresholdUsageWindow,
+  TenantQuotaError,
+} from "$lib/server/thresholds";
+import { getUsageSummaries, recordTenantUsageSignal } from "$lib/server/usage";
+
 export interface RuntimeTool {
   name: string;
   description: string;
@@ -9,6 +18,12 @@ export const runtimeTools: RuntimeTool[] = [
   {
     name: "tenant.usage.summary",
     description: "Summarize tenant usage meters and thresholds.",
+    readOnly: true,
+    requiredFeature: "mcp.read_tools",
+  },
+  {
+    name: "tenant.subscription.summary",
+    description: "Summarize the tenant subscription, feature grants, and billing period.",
     readOnly: true,
     requiredFeature: "mcp.read_tools",
   },
@@ -26,15 +41,152 @@ export const runtimeTools: RuntimeTool[] = [
   },
 ];
 
-export function listRuntimeTools(enabledFeatures: Record<string, boolean>) {
-  return runtimeTools.filter((tool) => enabledFeatures[tool.requiredFeature] === true);
+export function listRuntimeTools(enabledFeatureKeys: Iterable<string>) {
+  const enabledFeatures = new Set(enabledFeatureKeys);
+  return runtimeTools.filter((tool) => enabledFeatures.has(tool.requiredFeature));
 }
 
-export async function callRuntimeTool(name: string, input: unknown) {
+export interface RuntimeToolContext {
+  tenantId: string;
+}
+
+export interface RuntimeToolExecution {
+  tool: RuntimeTool;
+  response: Awaited<ReturnType<typeof callRuntimeTool>>;
+}
+
+export class RuntimeToolExecutionError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "RuntimeToolExecutionError";
+    this.status = status;
+  }
+}
+
+export async function executeRuntimeToolForTenant(
+  name: string,
+  input: unknown,
+  tenantId: string,
+): Promise<RuntimeToolExecution> {
+  const overview = await getBillingOverview(tenantId);
+  const allowed = listRuntimeTools(overview.snapshot.featureKeys);
+  const tool = allowed.find((candidate) => candidate.name === name);
+  if (!tool) {
+    throw new RuntimeToolExecutionError(403, "Tool is not available for the current tenant");
+  }
+
+  let mcpThresholds: ReturnType<typeof assertMetricAllowed> = [];
+  try {
+    mcpThresholds = assertMetricAllowed(overview.snapshot.thresholdEvaluations, "mcp.calls");
+  } catch (error) {
+    if (!(error instanceof TenantQuotaError)) {
+      throw error;
+    }
+    throw new RuntimeToolExecutionError(429, "Tenant exceeded the MCP calls threshold");
+  }
+  const mcpUsageWindow = getContainedThresholdUsageWindow(mcpThresholds);
+
+  const response = await callRuntimeTool(name, input, { tenantId });
+  await recordTenantUsageSignal({
+    tenantId,
+    metricKey: "mcp.calls",
+    quantity: 1,
+    source: "smrt-app-mcp",
+    sourceId: name,
+    ...(mcpUsageWindow
+      ? {
+          usageWindow: mcpUsageWindow,
+        }
+      : {}),
+    dimensions: {
+      toolName: tool.name,
+      readOnly: tool.readOnly,
+    },
+  });
+
+  return { tool, response };
+}
+
+export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {
   if (name === "tenant.usage.summary") {
+    const summaries = (await getUsageSummaries(context.tenantId)).map((summary) => ({
+      ...summary,
+      windowStart: summary.windowStart.toISOString(),
+      windowEnd: summary.windowEnd.toISOString(),
+    }));
+
     return {
-      content: [{ type: "text", text: "Usage summary is available in the Usage page." }],
-      structuredContent: { input },
+      content: [{ type: "text", text: "Tenant usage summary loaded." }],
+      structuredContent: { tenantId: context.tenantId, summaries, input },
+    };
+  }
+
+  if (name === "tenant.subscription.summary") {
+    const overview = await getBillingOverview(context.tenantId);
+
+    return {
+      content: [{ type: "text", text: "Tenant subscription summary loaded." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        subscription: {
+          planName: overview.currentPlan.name,
+          planKey: overview.currentPlan.planKey,
+          status: overview.snapshot.status,
+          periodEnd: overview.periodEnd,
+          billingPortalAvailable: overview.billingPortalAvailable,
+          featureKeys: overview.snapshot.featureKeys,
+          thresholds: overview.snapshot.thresholdEvaluations.map((evaluation) => ({
+            metricKey: evaluation.threshold.metricKey,
+            label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
+            enforcement: evaluation.threshold.enforcement,
+            limit: evaluation.threshold.limit,
+            used: evaluation.usage.quantity,
+            remaining: evaluation.remaining,
+            state: evaluation.state,
+            allowed: evaluation.allowed,
+          })),
+        },
+        input,
+      },
+    };
+  }
+
+  if (name === "tenant.prompt.preview") {
+    const prompt = await resolveStarterPromptPreview(context.tenantId, readPromptKey(input));
+
+    return {
+      content: [{ type: "text", text: "Tenant prompt preview loaded." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        prompt: {
+          key: prompt.key,
+          template: prompt.template,
+          text: prompt.text,
+          ai: prompt.ai,
+        },
+      },
+    };
+  }
+
+  if (name === "tenant.subscription.update") {
+    const overview = await getBillingOverview(context.tenantId);
+
+    return {
+      content: [{ type: "text", text: "Subscription change requires checkout confirmation." }],
+      structuredContent: {
+        tenantId: context.tenantId,
+        action: "requires_confirmation",
+        subscription: {
+          planName: overview.currentPlan.name,
+          planKey: overview.currentPlan.planKey,
+          status: overview.snapshot.status,
+          periodEnd: overview.periodEnd,
+          billingPortalAvailable: overview.billingPortalAvailable,
+        },
+        input,
+      },
     };
   }
 
@@ -44,4 +196,13 @@ export async function callRuntimeTool(name: string, input: unknown) {
     ],
     structuredContent: { input },
   };
+}
+
+function readPromptKey(input: unknown): string | undefined {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return undefined;
+  }
+
+  const key = (input as { key?: unknown }).key;
+  return typeof key === "string" && key.trim().length > 0 ? key : undefined;
 }

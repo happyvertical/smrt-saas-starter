@@ -1,12 +1,180 @@
 # Upstream Work
 
-Do not patch around these gaps locally. Implement them in isolated upstream worktrees and merge them before the first public starter release.
+Reusable starter functionality should continue to move upstream from isolated worktrees. Completed items are kept here so future starter work can see which package now owns each surface.
+
+## Consumed Versions
+
+- SMRT identity/runtime packages (`@happyvertical/smrt-*`): **0.39.15**
+- SMRT UI compatibility packages (`smrt-svelte`, `smrt-ui`): **0.37.5**
+- SDK (`@happyvertical/*`): **0.78.1**
+- Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
+
+These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
+`@happyvertical` scope to npmjs and **no GitHub token is required** to install. This
+completes the publish migration tracked in [smrt#1563](https://github.com/happyvertical/smrt/issues/1563)
+/ [sdk#1046](https://github.com/happyvertical/sdk/issues/1046) (and the straggler fixes
+[sdk#1051](https://github.com/happyvertical/sdk/issues/1051) / [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)).
+
+The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to absorb:
+
+- The Svelte UI runtime was extracted into a new **`@happyvertical/smrt-ui`** package;
+  `ThemeProvider` now lives at `@happyvertical/smrt-ui/theme` (was `@happyvertical/smrt-svelte`).
+  `smrt-ui` is added as a direct dependency.
+- The collection `db` option tightened to require the full `DatabaseInterface`; the
+  starter's invitation flow re-widens its narrowed `DbLike` at the boundary
+  (`apps/web/src/lib/server/accounts.ts`).
+
+The batched/reusable entitlement resolver from
+[smrt#1573](https://github.com/happyvertical/smrt/issues/1573) (`loadEntitlementContext`,
+`EntitlementResolutionContext`, `TenantUsageMeter`) is adopted in `getBillingOverview`: it
+loads the subscription/plan context once and passes the batching `TenantUsageMeter`
+(`summarizeBatch`) to the resolver so all thresholds are evaluated per window in a single
+query. Passing the meter directly required
+[smrt#1722](https://github.com/happyvertical/smrt/issues/1722) — the meter now guards the
+optional `_smrt_ai_usage` table (a missing table counts AI usage as zero instead of
+throwing) — which shipped in `smrt-subscriptions@0.37.3`, so the local single-metric
+`summarizeUsageMetric` safe-reader workaround was removed from `apps/web/src/lib/server/usage.ts`.
+The bump migrates cleanly (`db:smoke`) and passes `pnpm check` and e2e.
+
+The 0.39.15 line also adds the durable normalized identity keys, Profile/User
+ownership constraints, and safe default OIDC provisioning from
+[smrt#1998](https://github.com/happyvertical/smrt/issues/1998). See the resolved
+entry below for the starter integration and required deployment order.
+
+The 0.37.2 bump adds the **`AccessRequest`** primitive
+([smrt#1713](https://github.com/happyvertical/smrt/pull/1713), `@happyvertical/smrt-users`):
+a "request access / waitlist" flow. The starter adopts it in
+`apps/web/src/lib/server/access-requests.ts` (a wrapper over `AccessRequestService`) — a
+public `/request-access` form (rate-limited per-IP/per-email by
+`apps/web/src/lib/server/rate-limit.ts`, a per-instance in-memory limiter that expects
+edge/ingress rate limiting in multi-replica deploys), a third `request-access` signup mode,
+and super-user triage (approve / decline / graduate into a new tenant+owner, an existing
+tenant, or user-only) on `/app/admin`. Graduation sends the new user a best-effort welcome
+magic link (reusing the `MagicLinkService` flow in `accounts.ts`). The model registers
+automatically, so `access_requests` migrates with the normal flow.
+
+## Process
+
+When starter work hits an upstream bug or a missing public API in a
+`@happyvertical/*` package:
+
+1. File an issue on the owning repo — `happyvertical/smrt` for `smrt-*`
+   packages, `happyvertical/sdk` for the rest — with the package, version,
+   starter context, and a minimal repro. No secrets or tokens.
+2. Add the blocker under **Open Blockers** below with the issue link.
+3. Wait for the fix to land upstream; do not work around it locally (no
+   vendoring, forking, or patching `node_modules`). Continue with unblocked
+   work in the meantime.
+4. When the fix is released, bump the package version, validate with
+   `pnpm check`, and move the entry to the completed sections below.
+
+## Resolved
+
+### SMRT: safe Profile selection during verified-email OIDC provisioning
+
+Was: `smrt-users` delegated verified-email OIDC provisioning to a Profile-only
+email fallback that could select a tenant-scoped or non-Person Profile before
+the starter reconciler saw a User. The SvelteKit callback API did not expose a
+safe point for the starter to prevent that collision without duplicating the
+OIDC transaction and session boundary. This blocked the coordinated starter
+fixes in issues [#35](https://github.com/happyvertical/smrt-saas-starter/issues/35)
+and [#36](https://github.com/happyvertical/smrt-saas-starter/issues/36).
+
+Now: [smrt#1998](https://github.com/happyvertical/smrt/issues/1998) was fixed by
+[smrt#2005](https://github.com/happyvertical/smrt/pull/2005) and released in
+`@happyvertical/smrt-users@0.39.15` / `@happyvertical/smrt-profiles@0.39.15`.
+The owner-aware default provisions or reuses only one unowned global Person for
+a verified email and fails closed for tenant-scoped, non-Person, owned, or
+ambiguous candidates. The starter callback delegates system-context and
+transaction ownership to that upstream boundary.
+
+The release also adds durable Profile/User normalized-email keys and readiness
+markers. `pnpm db:migrate` applies the schema and then runs the public,
+transactional `backfillProfileEmailKeys()` and `backfillUserEmailKeys()` helpers
+in that order. Both are idempotent; the User backfill fails before writes while
+normalized duplicate User emails remain. Before applying the unique Profile
+ownership constraint, operators must reconcile duplicate non-null
+`users.profile_id` values as documented in `docs/runbook.md`. The starter's
+separate `pnpm db:profiles:backfill` step then attaches canonical Persons to
+active legacy Users.
+
+After 0.1.1 is published, `projects.happyvertical.com` should adopt it in a
+separate downstream change:
+
+1. Advance the downstream SMRT family coherently to 0.39.15—including
+   `smrt-svelte`/`smrt-ui`—and SDK packages to 0.78.1. Preserve the downstream
+   repository's existing 0.39 `AdminShell` implementation and adapt it only if
+   validation identifies a published API change; do not copy this starter's
+   temporary legacy-shell compatibility pins.
+2. Port the eager config bootstrap plus the complete starter Profile reconciler
+   across signup, invitation, access-request graduation, verified login,
+   session, worker, and dev/bootstrap account paths. Update every raw Profile or
+   User writer to maintain the normalized `email_key` fields.
+3. Stop old identity writers; preflight duplicate normalized Profile/User
+   emails, duplicate Profile owners, dangling links, tenant-scoped matches, and
+   non-Person matches. Then run schema migration, Profile email-key backfill,
+   User email-key backfill, and the atomic starter User/Profile backfill—in that
+   order—before enabling OIDC.
+4. Verify every active User has exactly one unique global Person. Preserve
+   existing issuer/subject links; use an administrator-owned mapping or a
+   separately verified account-link flow for a new provider because an already
+   owned backfilled Person is not implicitly relinked by email.
+5. Update project-connection audit writers to load `membership.profileId`
+   through `ProfileCollection` and pass that Person to tenant-scoped
+   `AuditLogCollection.record`.
+6. Export and migrate retained `project_connection_audits` with an explicit,
+   verified actor mapping; compare counts and sample records before cutover.
+7. Only after verification, remove the downstream `ProjectConnectionAudit`
+   model, exports, registration, and obsolete table. That removal advances
+   downstream #115 but does not by itself close it; close #115 and #132 only
+   after each issue's independent acceptance criteria, blockers, and validation
+   are complete. None of those downstream edits are made by this starter
+   release.
+
+### `@happyvertical/*` packages now publish to public npm
+
+Was: SMRT/SDK packages published only to GitHub Packages (`npm.pkg.github.com`), which
+requires a token for every read, so a public `pnpm install` needed `gh auth token`.
+Filed as [smrt#1563](https://github.com/happyvertical/smrt/issues/1563) /
+[sdk#1046](https://github.com/happyvertical/sdk/issues/1046); the incomplete-migration
+strays were caught in [sdk#1051](https://github.com/happyvertical/sdk/issues/1051)
+(missing `documents`) and [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)
+(a release gate so a package can't ship with dependency ranges that don't resolve on npm).
+
+Now: the packages publish to `registry.npmjs.org`, `.npmrc` routes the `@happyvertical`
+scope there, and the token is gone — a clean `pnpm install` needs no auth. See
+**Consumed Versions** above.
+
+### SMRT: Field metadata lost in vite-bundled production servers
+
+Was: SMRT package dists self-registered field metadata at import time via
+`ObjectRegistry.registerPackageManifest(new URL("./manifest.json", import.meta.url))`.
+When Vite bundled package code into SvelteKit server chunks, `import.meta.url`
+resolved to `build/server/chunks/manifest.json` (nonexistent), so registration
+silently no-opped: `create()`/`save()` dropped declared plain fields
+(`users.email`, `sessions.expires_at`/`user_agent`/`ip_address` — #1506) and
+WHERE validation rejected declared fields (`TenantUsageMetric.metricKey`,
+`TenantSubscription.subscriberKind` — #1507). Filed as
+[smrt#1506](https://github.com/happyvertical/smrt/issues/1506) /
+[smrt#1507](https://github.com/happyvertical/smrt/issues/1507).
+
+Now: fixed in `@happyvertical/smrt-*@0.37.5` via
+[smrt#1747](https://github.com/happyvertical/smrt/pull/1747), which inlines each
+package manifest into its `__smrt-register__` module at build time
+(`registerPackageManifest(JSON.parse(...))`), so the bundled chunk carries its
+field metadata inline and no runtime file lookup is needed. The local workaround
+(`apps/web/scripts/generate-runtime-manifest.mjs`, its `pnpm build` step, and the
+`build/server/manifest.json` guard in `scripts/smoke-runtime-images.mjs`) is removed.
+
+## Open Blockers
+
+_None._
 
 ## SDK: Stripe In `@happyvertical/accounting`
 
-Current finding: the SDK has a typed Stripe provider stub under `@happyvertical/accounting`, while QuickBooks is implemented.
+Status: complete in `@happyvertical/accounting@0.74.4` via [happyvertical/sdk#1041](https://github.com/happyvertical/sdk/pull/1041).
 
-Required work:
+Covered surface:
 
 - customers: create, retrieve, list, sync
 - invoices: create, retrieve, list, send, void, sync
@@ -15,13 +183,6 @@ Required work:
 - customer portal sessions: create portal sessions
 - webhooks: verify signatures and parse events
 - subscription status retrieval: normalize Stripe subscription state for SMRT subscription rows
-
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/sdk
-git worktree add ../sdk-stripe-billing codex/sdk-stripe-billing
-```
 
 Validation:
 
@@ -33,36 +194,26 @@ pnpm build
 
 ## SMRT: Tenant Metering
 
-Required work:
+Status: initial tenant subscription metering is complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
 
-- persist tenant-aware signal metrics
+Covered surface:
+
+- persist tenant-aware usage metric records
 - expose public APIs for recording and summarizing metric windows
 - include `_smrt_ai_usage` in the same usage query surface
 - support threshold windows used by subscription plans
 
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/smrt
-git worktree add ../smrt-tenant-metering codex/smrt-tenant-metering
-```
-
 ## SMRT: Subscriptions
 
-Required work:
+Status: complete in `@happyvertical/smrt-subscriptions@0.27.12` via [happyvertical/smrt#1435](https://github.com/happyvertical/smrt/pull/1435), with the Postgres UUID migration fix from [happyvertical/smrt#1439](https://github.com/happyvertical/smrt/pull/1439).
+
+Covered surface:
 
 - add `@happyvertical/smrt-subscriptions`
 - models: subscription plan, plan feature, plan threshold, tenant subscription
-- services: entitlement resolver, threshold evaluator, billing provider adapter
-- Svelte components: plan picker, current plan summary, usage meters, admin threshold editor
+- services: entitlement resolver, threshold evaluator, usage meter
+- Svelte components: plan picker, current plan summary, usage thresholds
 - generated REST/CLI/MCP surfaces
-
-Worktree:
-
-```sh
-cd /Users/will/Work/happyvertical/repos/smrt
-git worktree add ../smrt-subscriptions codex/smrt-subscriptions
-```
 
 ## SMRT Svelte: Right-Dock Chat Helpers
 

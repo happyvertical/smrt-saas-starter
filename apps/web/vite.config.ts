@@ -2,23 +2,13 @@ import { smrtConsumer } from "@happyvertical/smrt-core/consumer-plugin";
 import { smrtPlugin } from "@happyvertical/smrt-core/vite-plugin";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
+import { smrtRuntimePackages } from "./smrt-packages.mjs";
 
 export default defineConfig({
   plugins: [
     sveltekit(),
     smrtConsumer({
-      packages: [
-        "@happyvertical/smrt-users",
-        "@happyvertical/smrt-profiles",
-        "@happyvertical/smrt-features",
-        "@happyvertical/smrt-prompts",
-        "@happyvertical/smrt-languages",
-        "@happyvertical/smrt-chat",
-        "@happyvertical/smrt-app-mcp",
-        "@happyvertical/smrt-commerce",
-        "@happyvertical/smrt-ledgers",
-        "@happyvertical/smrt-analytics",
-      ],
+      packages: smrtRuntimePackages,
       generateTypes: true,
       svelteKit: true,
     }),
