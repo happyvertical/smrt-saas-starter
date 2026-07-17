@@ -18,6 +18,11 @@ for (const file of required) {
 
 const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
 for (const file of workflowFiles) {
+  if (file === "agent-policy.yml") {
+    // Byte-canonical Agent Policy output: generated and audited by the
+    // pinned policy runtime, not by workspace conventions.
+    continue;
+  }
   const text = await readFile(join(workflowsDir, file), "utf8");
   if (!text.includes("uses: actions/checkout@v6")) {
     throw new Error(`${file} must checkout the repository`);
