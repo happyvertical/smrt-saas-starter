@@ -1,39 +1,32 @@
 <script lang="ts">
   import { AssistantDock } from "@happyvertical/smrt-saas-ui";
-  import { RoleShell } from "@happyvertical/smrt-svelte/workspace";
+  import { AdminShell, TenantNav } from "@happyvertical/smrt-svelte/workspace";
   import NavIcon from "$lib/components/NavIcon.svelte";
 
   let { data, children } = $props();
 
   const navItems = $derived(
     [
-      { href: "/app", label: "Overview", icon: "bar-chart", exact: true, permission: "tenant.read" },
+      { href: "/app", label: "Overview", icon: "bar-chart", permission: "tenant.read" },
       { href: "/app/billing", label: "Billing", icon: "credit-card", permission: "tenant.billing.read" },
       { href: "/app/usage", label: "Usage", icon: "gauge", permission: "tenant.usage.read" },
       { href: "/app/settings", label: "Settings", icon: "settings", permission: "tenant.settings.read" },
       { href: "/app/admin", label: "Admin", icon: "settings", permission: "super-user" },
-    ].filter((item) => item.permission === "super-user" ? data.isSuperUser : data.permissions.includes(item.permission)),
+    ]
+      .filter((item) =>
+        item.permission === "super-user" ? data.isSuperUser : data.permissions.includes(item.permission),
+      )
+      .map(({ permission: _permission, ...item }) => item),
   );
-
-  const roles = $derived([
-    {
-      id: data.currentRole,
-      label: data.roleLabel,
-      description: data.userLabel,
-      sections: navItems.map(({ permission: _permission, ...item }) => item),
-    },
-  ]);
 </script>
 
 <div class="workspace">
-  <RoleShell
-    {roles}
-    currentRole={data.currentRole}
-    currentPath={data.activePath}
-    title="SMRT Starter"
-    navIconComponent={NavIcon}
-  >
-    {#snippet sidebarFooter()}
+  <AdminShell title="SMRT Starter" subtitle={data.roleLabel}>
+    {#snippet tenantPanel()}
+      <TenantNav items={navItems} currentHref={data.activePath} iconComponent={NavIcon} />
+    {/snippet}
+
+    {#snippet tenantFooter()}
       <form class="tenant-switch" method="POST" action="/api/tenant/switch">
         <input type="hidden" name="returnTo" value={data.activePath} />
         <label>
@@ -62,7 +55,7 @@
     {/snippet}
 
     {@render children()}
-  </RoleShell>
+  </AdminShell>
 
   <AssistantDock tenantId={data.tenantId} activePath={data.activePath} chatEndpoint="/api/chat" />
 </div>
@@ -77,7 +70,7 @@
     background: var(--smrt-color-background, #f7f8fa);
   }
 
-  .workspace :global(.smrt-workspace-shell) {
+  .workspace :global(.smrt-admin-shell) {
     flex: 1 1 auto;
     min-width: 0;
   }

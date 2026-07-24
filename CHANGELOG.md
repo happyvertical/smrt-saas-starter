@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Advance the whole SMRT family to **0.40.20** and the HappyVertical SDK family
+  to **0.84.0**, moving `smrt-svelte`/`smrt-ui` off the legacy `0.37.5` shell that
+  the 0.1.1 identity patch held back so the starter tracks the current coordinated
+  release.
+- Migrate the tenant workspace from the first-generation `RoleShell` (removed from
+  `@happyvertical/smrt-svelte/workspace` in 0.40) to the `AdminShell` four-edge
+  shell + `TenantNav` in `apps/web/src/routes/app/+layout.svelte`; the nav lives in
+  the collapsible tenant edge and the tenant switcher/sign-out move to
+  `tenantFooter`. The AssistantDock keeps the `ToolsDock` API by importing it from
+  the compatibility subpath `@happyvertical/smrt-svelte/workspace/legacy`.
+- Externalize `@duckdb/*` in `apps/web/vite.config.ts` so the SSR build no longer
+  tries to bundle the optional (Postgres-unused) DuckDB native adapter that
+  `@happyvertical/sql@0.84` now reaches through a statically-analyzable dynamic
+  import. See `docs/upstream-work.md`.
+
 ## 0.1.1 - 2026-07-14
 
 ### Fixed

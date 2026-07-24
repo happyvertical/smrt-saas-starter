@@ -4,10 +4,38 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT identity/runtime packages (`@happyvertical/smrt-*`): **0.39.15**
-- SMRT UI compatibility packages (`smrt-svelte`, `smrt-ui`): **0.37.5**
-- SDK (`@happyvertical/*`): **0.78.1**
+- SMRT packages (`@happyvertical/smrt-*`, including `smrt-svelte`/`smrt-ui`): **0.40.20**
+- SDK (`@happyvertical/*`): **0.84.0**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
+
+The 0.39 → 0.40 SMRT bump also un-pins `smrt-svelte`/`smrt-ui` from the legacy
+`0.37.5` shell that the identity-only 0.1.1 patch held back. The 0.40 line replaced
+the first-generation `RoleShell` in `@happyvertical/smrt-svelte/workspace` with the
+`AdminShell` four-edge shell + `TenantNav`, and there is no compat export for
+`RoleShell` (only `ToolsDock` survives, under the opt-in
+`@happyvertical/smrt-svelte/workspace/legacy` subpath). The starter therefore:
+
+- Migrated the tenant workspace layout (`apps/web/src/routes/app/+layout.svelte`)
+  from `RoleShell` to `AdminShell` + `TenantNav` (nav in the collapsible tenant
+  edge, tenant switcher/sign-out in `tenantFooter`).
+- Repointed the AssistantDock (`packages/app-ui/src/AssistantDock.svelte`,
+  `DockPanel.svelte`) to `@happyvertical/smrt-svelte/workspace/legacy` — the
+  ToolsDock API is unchanged, only the import path moved.
+
+### SDK 0.84 DuckDB bundling (consumer-side mitigation)
+
+`@happyvertical/sql@0.84` reaches its optional DuckDB adapter through a
+statically-analyzable `import(/* @vite-ignore */ "@duckdb/node-api")` in the
+package entry (0.78 used an indirect, non-analyzable variable import). The
+`@vite-ignore` hint is not honored by SvelteKit's SSR rollup pass, so the
+production `vite build` follows the import into the native `@duckdb/*` `.node`
+binding and fails. This app runs on Postgres, so the adapter is never executed;
+`apps/web/vite.config.ts` externalizes `@duckdb/*` (SSR + rollup `external` +
+`optimizeDeps.exclude`) so the bundler leaves it as a runtime import that is
+never taken. This is standard native-addon build config, not a framework
+workaround. **Follow-up:** file an SDK issue so `@happyvertical/sql` keeps the
+DuckDB import un-analyzable (or ships a browser/edge-safe entry) and consumers
+need no such config.
 
 These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
 `@happyvertical` scope to npmjs and **no GitHub token is required** to install. This
