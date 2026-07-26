@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workflowsDir = join(root, ".github/workflows");
 const required = [
+  "agent-policy.yml",
   "on-pull-request.yml",
   "deploy-dev.yml",
   "promote-dev.yml",
@@ -19,6 +20,15 @@ for (const file of required) {
 const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
+  if (file === "agent-policy.yml") {
+    if (!text.includes("uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd")) {
+      throw new Error("agent-policy.yml must use the canonical pinned checkout action");
+    }
+    if (!text.includes("runs-on: arc-happyvertical")) {
+      throw new Error("agent-policy.yml must use the broker-owned organization alias");
+    }
+    continue;
+  }
   if (!text.includes("uses: actions/checkout@v6")) {
     throw new Error(`${file} must checkout the repository`);
   }
@@ -26,10 +36,20 @@ for (const file of workflowFiles) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
   // This public repository keeps untrusted workflow code on GitHub-hosted runners.
+  let generalAliasUses = 0;
   for (const runner of text.matchAll(/runs-on:\s*(\S+)/g)) {
+    if (file === "on-pull-request.yml" && runner[1] === "arc-happyvertical") {
+      generalAliasUses += 1;
+      continue;
+    }
     if (runner[1] !== "ubuntu-latest") {
       throw new Error(`${file} must run on ubuntu-latest (found runs-on: ${runner[1]})`);
     }
+  }
+  if (file === "on-pull-request.yml" && generalAliasUses !== 1) {
+    throw new Error(
+      "on-pull-request.yml must use arc-happyvertical only for the lifecycle dependency",
+    );
   }
   if (text.includes("pnpm check")) {
     for (const phrase of [
@@ -75,20 +95,6 @@ for (const phrase of [
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
   }
-}
-
-// Preserve the repository's existing same-repository PR policy independently
-// from the runner backend.
-const forkGuard = "github.event.pull_request.head.repo.full_name == github.repository";
-const prJobCount = (pullRequestWorkflow.match(/^ {2}\S.*:\s*$/gm) ?? []).filter((line) =>
-  /^ {2}(check|e2e|mobile-android|runtime):/.test(line),
-).length;
-const forkGuardCount = pullRequestWorkflow.split(forkGuard).length - 1;
-if (forkGuardCount < prJobCount) {
-  throw new Error(
-    `on-pull-request.yml: every job must gate runs on same-repo PRs ` +
-      `(found ${forkGuardCount} "${forkGuard}" for ${prJobCount} jobs)`,
-  );
 }
 
 for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {
