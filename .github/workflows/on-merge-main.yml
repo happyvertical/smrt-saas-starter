@@ -19,7 +19,7 @@ env:
 
 jobs:
   deploy-production:
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     environment: production
     services:
       postgres:

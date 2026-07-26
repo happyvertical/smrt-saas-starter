@@ -19,7 +19,7 @@ env:
 
 jobs:
   deploy-staging:
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     environment: staging
     services:
       postgres:

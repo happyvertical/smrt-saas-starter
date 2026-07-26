@@ -53,7 +53,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'pull_request' ||
       github.event_name == 'merge_group'
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
@@ -118,7 +118,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null)))
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:18-alpine
@@ -148,7 +148,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null)))
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:18-alpine
@@ -186,7 +186,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null)))
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: gradle/actions/wrapper-validation@v6
@@ -210,7 +210,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null)))
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: Azure/setup-kubectl@v5.1.0
@@ -229,7 +229,7 @@ jobs:
       (contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) ||
       (github.event.action == 'edited' && github.event.changes.base != null))))
     needs: [lifecycle, check, e2e, mobile-android, runtime]
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       checks: read
@@ -275,7 +275,7 @@ jobs:
     needs: [lifecycle]
     outputs:
       prerequisites-passed: ${{ steps.prerequisites.outputs.passed }}
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       checks: read
@@ -316,7 +316,7 @@ jobs:
       (github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository)
     needs: [validation-gate, metadata-gate]
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       checks: read

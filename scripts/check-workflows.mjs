@@ -25,10 +25,10 @@ for (const file of workflowFiles) {
   if (!text.includes("setup-environment")) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
-  // CI runs on the self-hosted arc-happyvertical runner, not GitHub-hosted.
+  // This public repository keeps untrusted workflow code on GitHub-hosted runners.
   for (const runner of text.matchAll(/runs-on:\s*(\S+)/g)) {
-    if (runner[1] !== "arc-happyvertical") {
-      throw new Error(`${file} must run on arc-happyvertical (found runs-on: ${runner[1]})`);
+    if (runner[1] !== "ubuntu-latest") {
+      throw new Error(`${file} must run on ubuntu-latest (found runs-on: ${runner[1]})`);
     }
   }
   if (text.includes("pnpm check")) {
@@ -77,8 +77,8 @@ for (const phrase of [
   }
 }
 
-// The self-hosted runner must not execute fork-PR code: every PR job must gate
-// on the PR coming from this repo (not a fork).
+// Preserve the repository's existing same-repository PR policy independently
+// from the runner backend.
 const forkGuard = "github.event.pull_request.head.repo.full_name == github.repository";
 const prJobCount = (pullRequestWorkflow.match(/^ {2}\S.*:\s*$/gm) ?? []).filter((line) =>
   /^ {2}(check|e2e|mobile-android|runtime):/.test(line),
@@ -86,7 +86,7 @@ const prJobCount = (pullRequestWorkflow.match(/^ {2}\S.*:\s*$/gm) ?? []).filter(
 const forkGuardCount = pullRequestWorkflow.split(forkGuard).length - 1;
 if (forkGuardCount < prJobCount) {
   throw new Error(
-    `on-pull-request.yml: every job must gate self-hosted runs on same-repo PRs ` +
+    `on-pull-request.yml: every job must gate runs on same-repo PRs ` +
       `(found ${forkGuardCount} "${forkGuard}" for ${prJobCount} jobs)`,
   );
 }
