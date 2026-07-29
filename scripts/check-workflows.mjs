@@ -21,11 +21,11 @@ const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWi
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
   if (file === "agent-policy.yml") {
-    if (!text.includes("uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd")) {
+    if (!text.includes("uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09")) {
       throw new Error("agent-policy.yml must use the canonical pinned checkout action");
     }
-    if (!text.includes("runs-on: arc-happyvertical")) {
-      throw new Error("agent-policy.yml must use the broker-owned organization alias");
+    if (!text.includes("runs-on: ubuntu-latest")) {
+      throw new Error("agent-policy.yml must keep public pull requests on hosted runners");
     }
     continue;
   }
@@ -36,20 +36,10 @@ for (const file of workflowFiles) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
   // This public repository keeps untrusted workflow code on GitHub-hosted runners.
-  let generalAliasUses = 0;
   for (const runner of text.matchAll(/runs-on:\s*(\S+)/g)) {
-    if (file === "on-pull-request.yml" && runner[1] === "arc-happyvertical") {
-      generalAliasUses += 1;
-      continue;
-    }
     if (runner[1] !== "ubuntu-latest") {
       throw new Error(`${file} must run on ubuntu-latest (found runs-on: ${runner[1]})`);
     }
-  }
-  if (file === "on-pull-request.yml" && generalAliasUses !== 1) {
-    throw new Error(
-      "on-pull-request.yml must use arc-happyvertical only for the lifecycle dependency",
-    );
   }
   if (text.includes("pnpm check")) {
     for (const phrase of [

@@ -49,7 +49,7 @@
     ]
   },
   "runtime": {
-    "agent_policy_runner": "arc-happyvertical",
+    "agent_policy_runner": "ubuntu-latest",
     "agent_validation_workflow": ".github/workflows/on-pull-request.yml",
     "agent_lifecycle_stage": "compatibility"
   }
