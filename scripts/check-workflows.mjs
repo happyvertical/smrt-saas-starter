@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workflowsDir = join(root, ".github/workflows");
 const required = [
+  "agent-policy.yml",
   "on-pull-request.yml",
   "deploy-dev.yml",
   "promote-dev.yml",
@@ -19,16 +20,25 @@ for (const file of required) {
 const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
+  if (file === "agent-policy.yml") {
+    if (!text.includes("uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09")) {
+      throw new Error("agent-policy.yml must use the canonical pinned checkout action");
+    }
+    if (!text.includes("runs-on: ubuntu-latest")) {
+      throw new Error("agent-policy.yml must keep public pull requests on hosted runners");
+    }
+    continue;
+  }
   if (!text.includes("uses: actions/checkout@v6")) {
     throw new Error(`${file} must checkout the repository`);
   }
   if (!text.includes("setup-environment")) {
     throw new Error(`${file} must use the shared setup-environment action`);
   }
-  // CI runs on the self-hosted arc-happyvertical runner, not GitHub-hosted.
+  // This public repository keeps untrusted workflow code on GitHub-hosted runners.
   for (const runner of text.matchAll(/runs-on:\s*(\S+)/g)) {
-    if (runner[1] !== "arc-happyvertical") {
-      throw new Error(`${file} must run on arc-happyvertical (found runs-on: ${runner[1]})`);
+    if (runner[1] !== "ubuntu-latest") {
+      throw new Error(`${file} must run on ubuntu-latest (found runs-on: ${runner[1]})`);
     }
   }
   if (text.includes("pnpm check")) {
@@ -75,20 +85,6 @@ for (const phrase of [
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
   }
-}
-
-// The self-hosted runner must not execute fork-PR code: every PR job must gate
-// on the PR coming from this repo (not a fork).
-const forkGuard = "github.event.pull_request.head.repo.full_name == github.repository";
-const prJobCount = (pullRequestWorkflow.match(/^ {2}\S.*:\s*$/gm) ?? []).filter((line) =>
-  /^ {2}(check|e2e|mobile-android|runtime):/.test(line),
-).length;
-const forkGuardCount = pullRequestWorkflow.split(forkGuard).length - 1;
-if (forkGuardCount < prJobCount) {
-  throw new Error(
-    `on-pull-request.yml: every job must gate self-hosted runs on same-repo PRs ` +
-      `(found ${forkGuardCount} "${forkGuard}" for ${prJobCount} jobs)`,
-  );
 }
 
 for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {

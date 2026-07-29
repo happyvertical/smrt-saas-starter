@@ -13,7 +13,7 @@ env:
 
 jobs:
   promote:
-    runs-on: arc-happyvertical
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:18-alpine
