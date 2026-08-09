@@ -7,6 +7,7 @@ export const smrtRuntimePackages = [
   "@happyvertical/smrt-commerce",
   "@happyvertical/smrt-content",
   "@happyvertical/smrt-features",
+  "@happyvertical/smrt-fields",
   "@happyvertical/smrt-jobs",
   "@happyvertical/smrt-languages",
   "@happyvertical/smrt-ledgers",

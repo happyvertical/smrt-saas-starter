@@ -99,6 +99,36 @@ Postgres service.
 images, smoke-tests web and worker startup imports, and renders every kustomize
 overlay with `kubectl kustomize`.
 
+## Field-policy walkthrough
+
+Use an owner or admin identity to manage organization policy and a member or
+viewer identity to verify personal policy behavior.
+
+1. As the owner, open any `/app` page, open the AdminShell **Tools** region,
+   select **Field settings**, then **Configure application settings**. Use the
+   Organization tab to set a default, move the field between Basic and
+   Advanced, and lock the organization policy. Save each change.
+2. As the member, use the same **Field settings** focus tool. The Organization
+   tab and control-panel navigation are unavailable; **Just me** remains
+   available only for fields the organization has not locked.
+3. As the owner, unlock the field. As the member, set a personal label or help
+   message and save it, then reopen the form to verify the override persists.
+4. Use **Reset to inherited** as the member to return to the organization
+   policy. Then use it as the owner to return the organization layer to the app
+   definition.
+5. As the owner, open **Field settings** from the AdminShell navigation and
+   verify the control panel reports the organization customization and personal
+   override count without exposing another user's values.
+
+The `/app/admin` signup-access form is intentionally restricted to separately
+configured application super users. A super user can use that ObjectForm to
+visually verify the resulting Basic/Advanced placement, label, help, default,
+and lock behavior; tenant owner/admin status alone does not grant this route.
+
+Field policies are sparse overrides. A reset deletes only the selected layer;
+the form immediately inherits the next app, organization, or personal value
+instead of writing a copied default.
+
 ## Local Auth
 
 The web app uses `smrt-users` sessions when a `sid` cookie is present. In

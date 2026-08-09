@@ -33,38 +33,37 @@ catalog:
   '@happyvertical/translator': 0.78.1
   '@happyvertical/sql': 0.78.1
   '@happyvertical/utils': 0.78.1
-  '@happyvertical/smrt-agents': 0.39.15
-  '@happyvertical/smrt-analytics': 0.39.15
-  '@happyvertical/smrt-app-mcp': 0.39.15
-  '@happyvertical/smrt-assets': 0.39.15
-  '@happyvertical/smrt-chat': 0.39.15
-  '@happyvertical/smrt-cli': 0.39.15
-  '@happyvertical/smrt-commerce': 0.39.15
-  '@happyvertical/smrt-config': 0.39.15
-  '@happyvertical/smrt-content': 0.39.15
-  '@happyvertical/smrt-core': 0.39.15
-  '@happyvertical/smrt-dev-mcp': 0.39.15
-  '@happyvertical/smrt-features': 0.39.15
-  '@happyvertical/smrt-jobs': 0.39.15
-  '@happyvertical/smrt-languages': 0.39.15
-  '@happyvertical/smrt-ledgers': 0.39.15
-  '@happyvertical/smrt-messages': 0.39.15
-  '@happyvertical/smrt-profiles': 0.39.15
-  '@happyvertical/smrt-projects': 0.39.15
-  '@happyvertical/smrt-prompts': 0.39.15
-  '@happyvertical/smrt-scanner': 0.39.15
-  '@happyvertical/smrt-secrets': 0.39.15
-  '@happyvertical/smrt-sites': 0.39.15
-  '@happyvertical/smrt-subscriptions': 0.39.15
-  # Keep the legacy RoleShell/ToolsDock UI surface for this identity-only patch;
-  # the 0.39 line moves those APIs to a compatibility subpath.
-  '@happyvertical/smrt-svelte': 0.37.5
-  '@happyvertical/smrt-tags': 0.39.15
-  '@happyvertical/smrt-tenancy': 0.39.15
-  '@happyvertical/smrt-types': 0.39.15
-  '@happyvertical/smrt-ui': 0.37.5
-  '@happyvertical/smrt-users': 0.39.15
-  '@happyvertical/smrt-vitest': 0.39.15
+  '@happyvertical/smrt-agents': 0.40.61
+  '@happyvertical/smrt-analytics': 0.40.61
+  '@happyvertical/smrt-app-mcp': 0.40.61
+  '@happyvertical/smrt-assets': 0.40.61
+  '@happyvertical/smrt-chat': 0.40.61
+  '@happyvertical/smrt-cli': 0.40.61
+  '@happyvertical/smrt-commerce': 0.40.61
+  '@happyvertical/smrt-config': 0.40.61
+  '@happyvertical/smrt-content': 0.40.61
+  '@happyvertical/smrt-core': 0.40.61
+  '@happyvertical/smrt-dev-mcp': 0.40.61
+  '@happyvertical/smrt-features': 0.40.61
+  '@happyvertical/smrt-fields': 0.40.61
+  '@happyvertical/smrt-jobs': 0.40.61
+  '@happyvertical/smrt-languages': 0.40.61
+  '@happyvertical/smrt-ledgers': 0.40.61
+  '@happyvertical/smrt-messages': 0.40.61
+  '@happyvertical/smrt-profiles': 0.40.61
+  '@happyvertical/smrt-projects': 0.40.61
+  '@happyvertical/smrt-prompts': 0.40.61
+  '@happyvertical/smrt-scanner': 0.40.61
+  '@happyvertical/smrt-secrets': 0.40.61
+  '@happyvertical/smrt-sites': 0.40.61
+  '@happyvertical/smrt-subscriptions': 0.40.61
+  '@happyvertical/smrt-svelte': 0.40.61
+  '@happyvertical/smrt-tags': 0.40.61
+  '@happyvertical/smrt-tenancy': 0.40.61
+  '@happyvertical/smrt-types': 0.40.61
+  '@happyvertical/smrt-ui': 0.40.61
+  '@happyvertical/smrt-users': 0.40.61
+  '@happyvertical/smrt-vitest': 0.40.61
   # sdk-mcp is not installed by pnpm (npx launches it from .mcp.json); this
   # catalog entry is the single version source that scripts/check-dependencies.mjs
   # verifies the .mcp.json pin against.
@@ -94,36 +93,37 @@ minimumReleaseAgeExclude:
   - '@happyvertical/sql@0.78.1'
   - '@happyvertical/translator@0.78.1'
   - '@happyvertical/utils@0.78.1'
-  - '@happyvertical/smrt-agents@0.39.15'
-  - '@happyvertical/smrt-analytics@0.39.15'
-  - '@happyvertical/smrt-app-mcp@0.39.15'
-  - '@happyvertical/smrt-assets@0.39.15'
-  - '@happyvertical/smrt-chat@0.39.15'
-  - '@happyvertical/smrt-cli@0.39.15'
-  - '@happyvertical/smrt-commerce@0.39.15'
-  - '@happyvertical/smrt-config@0.39.15'
-  - '@happyvertical/smrt-content@0.39.15'
-  - '@happyvertical/smrt-core@0.39.15'
-  - '@happyvertical/smrt-dev-mcp@0.39.15'
-  - '@happyvertical/smrt-features@0.39.15'
-  - '@happyvertical/smrt-jobs@0.39.15'
-  - '@happyvertical/smrt-languages@0.39.15'
-  - '@happyvertical/smrt-ledgers@0.39.15'
-  - '@happyvertical/smrt-messages@0.39.15'
-  - '@happyvertical/smrt-profiles@0.39.15'
-  - '@happyvertical/smrt-projects@0.39.15'
-  - '@happyvertical/smrt-prompts@0.39.15'
-  - '@happyvertical/smrt-scanner@0.39.15'
-  - '@happyvertical/smrt-secrets@0.39.15'
-  - '@happyvertical/smrt-sites@0.39.15'
-  - '@happyvertical/smrt-subscriptions@0.39.15'
-  - '@happyvertical/smrt-svelte@0.37.5'
-  - '@happyvertical/smrt-tags@0.39.15'
-  - '@happyvertical/smrt-tenancy@0.39.15'
-  - '@happyvertical/smrt-types@0.39.15'
-  - '@happyvertical/smrt-ui@0.37.5'
-  - '@happyvertical/smrt-users@0.39.15'
-  - '@happyvertical/smrt-vitest@0.39.15'
+  - '@happyvertical/smrt-agents@0.40.61'
+  - '@happyvertical/smrt-analytics@0.40.61'
+  - '@happyvertical/smrt-app-mcp@0.40.61'
+  - '@happyvertical/smrt-assets@0.40.61'
+  - '@happyvertical/smrt-chat@0.40.61'
+  - '@happyvertical/smrt-cli@0.40.61'
+  - '@happyvertical/smrt-commerce@0.40.61'
+  - '@happyvertical/smrt-config@0.40.61'
+  - '@happyvertical/smrt-content@0.40.61'
+  - '@happyvertical/smrt-core@0.40.61'
+  - '@happyvertical/smrt-dev-mcp@0.40.61'
+  - '@happyvertical/smrt-features@0.40.61'
+  - '@happyvertical/smrt-fields@0.40.61'
+  - '@happyvertical/smrt-jobs@0.40.61'
+  - '@happyvertical/smrt-languages@0.40.61'
+  - '@happyvertical/smrt-ledgers@0.40.61'
+  - '@happyvertical/smrt-messages@0.40.61'
+  - '@happyvertical/smrt-profiles@0.40.61'
+  - '@happyvertical/smrt-projects@0.40.61'
+  - '@happyvertical/smrt-prompts@0.40.61'
+  - '@happyvertical/smrt-scanner@0.40.61'
+  - '@happyvertical/smrt-secrets@0.40.61'
+  - '@happyvertical/smrt-sites@0.40.61'
+  - '@happyvertical/smrt-subscriptions@0.40.61'
+  - '@happyvertical/smrt-svelte@0.40.61'
+  - '@happyvertical/smrt-tags@0.40.61'
+  - '@happyvertical/smrt-tenancy@0.40.61'
+  - '@happyvertical/smrt-types@0.40.61'
+  - '@happyvertical/smrt-ui@0.40.61'
+  - '@happyvertical/smrt-users@0.40.61'
+  - '@happyvertical/smrt-vitest@0.40.61'
 
 overrides:
   '@happyvertical/accounting': 0.78.1
@@ -148,33 +148,34 @@ overrides:
   '@happyvertical/translator': 0.78.1
   '@happyvertical/sql': 0.78.1
   '@happyvertical/utils': 0.78.1
-  '@happyvertical/smrt-agents': 0.39.15
-  '@happyvertical/smrt-analytics': 0.39.15
-  '@happyvertical/smrt-app-mcp': 0.39.15
-  '@happyvertical/smrt-assets': 0.39.15
-  '@happyvertical/smrt-chat': 0.39.15
-  '@happyvertical/smrt-cli': 0.39.15
-  '@happyvertical/smrt-commerce': 0.39.15
-  '@happyvertical/smrt-config': 0.39.15
-  '@happyvertical/smrt-content': 0.39.15
-  '@happyvertical/smrt-core': 0.39.15
-  '@happyvertical/smrt-dev-mcp': 0.39.15
-  '@happyvertical/smrt-features': 0.39.15
-  '@happyvertical/smrt-jobs': 0.39.15
-  '@happyvertical/smrt-languages': 0.39.15
-  '@happyvertical/smrt-ledgers': 0.39.15
-  '@happyvertical/smrt-messages': 0.39.15
-  '@happyvertical/smrt-profiles': 0.39.15
-  '@happyvertical/smrt-projects': 0.39.15
-  '@happyvertical/smrt-prompts': 0.39.15
-  '@happyvertical/smrt-scanner': 0.39.15
-  '@happyvertical/smrt-secrets': 0.39.15
-  '@happyvertical/smrt-sites': 0.39.15
-  '@happyvertical/smrt-subscriptions': 0.39.15
-  '@happyvertical/smrt-svelte': 0.37.5
-  '@happyvertical/smrt-tags': 0.39.15
-  '@happyvertical/smrt-tenancy': 0.39.15
-  '@happyvertical/smrt-types': 0.39.15
-  '@happyvertical/smrt-ui': 0.37.5
-  '@happyvertical/smrt-users': 0.39.15
-  '@happyvertical/smrt-vitest': 0.39.15
+  '@happyvertical/smrt-agents': 0.40.61
+  '@happyvertical/smrt-analytics': 0.40.61
+  '@happyvertical/smrt-app-mcp': 0.40.61
+  '@happyvertical/smrt-assets': 0.40.61
+  '@happyvertical/smrt-chat': 0.40.61
+  '@happyvertical/smrt-cli': 0.40.61
+  '@happyvertical/smrt-commerce': 0.40.61
+  '@happyvertical/smrt-config': 0.40.61
+  '@happyvertical/smrt-content': 0.40.61
+  '@happyvertical/smrt-core': 0.40.61
+  '@happyvertical/smrt-dev-mcp': 0.40.61
+  '@happyvertical/smrt-features': 0.40.61
+  '@happyvertical/smrt-fields': 0.40.61
+  '@happyvertical/smrt-jobs': 0.40.61
+  '@happyvertical/smrt-languages': 0.40.61
+  '@happyvertical/smrt-ledgers': 0.40.61
+  '@happyvertical/smrt-messages': 0.40.61
+  '@happyvertical/smrt-profiles': 0.40.61
+  '@happyvertical/smrt-projects': 0.40.61
+  '@happyvertical/smrt-prompts': 0.40.61
+  '@happyvertical/smrt-scanner': 0.40.61
+  '@happyvertical/smrt-secrets': 0.40.61
+  '@happyvertical/smrt-sites': 0.40.61
+  '@happyvertical/smrt-subscriptions': 0.40.61
+  '@happyvertical/smrt-svelte': 0.40.61
+  '@happyvertical/smrt-tags': 0.40.61
+  '@happyvertical/smrt-tenancy': 0.40.61
+  '@happyvertical/smrt-types': 0.40.61
+  '@happyvertical/smrt-ui': 0.40.61
+  '@happyvertical/smrt-users': 0.40.61
+  '@happyvertical/smrt-vitest': 0.40.61

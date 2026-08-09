@@ -66,6 +66,7 @@ describe("starter authorization", () => {
         "smrt.session.permission",
         starterPermissions.mcpCall,
         starterPermissions.settingsRead,
+        starterPermissions.fieldPolicyPersonalize,
       ]),
     );
     expect(membership?.permissions).not.toContain(starterPermissions.billingManage);

@@ -13,16 +13,20 @@ const mocks = vi.hoisted(() => ({
   getCurrentTenant: vi.fn(),
   loadBearerSessionContext: vi.fn(),
   parseBearerToken: vi.fn(),
+  requirePermission: vi.fn(),
+  requireSuperUser: vi.fn(),
   resolveMembershipContext: vi.fn(),
   ensureUserProfile: vi.fn(),
   loadStarterConfig: vi.fn(),
   resolveTenant: vi.fn(),
+  withTenant: vi.fn(async (_context: unknown, run: () => Promise<unknown>) => await run()),
 }));
 
 vi.mock("@happyvertical/smrt-tenancy", () => ({
   enableTenancy: mocks.enableTenancy,
   getCurrentTenant: mocks.getCurrentTenant,
   createSvelteKitHandle: mocks.createSvelteKitHandle,
+  withTenant: mocks.withTenant,
 }));
 
 vi.mock("@happyvertical/smrt-users/sveltekit", () => ({
@@ -50,7 +54,13 @@ vi.mock("@sveltejs/kit/hooks", () => ({
 }));
 
 vi.mock("$lib/server/authz", () => ({
+  requirePermission: mocks.requirePermission,
   resolveMembershipContext: mocks.resolveMembershipContext,
+  starterPermissions: { settingsManage: "tenant.settings.manage" },
+}));
+
+vi.mock("$lib/server/super-users", () => ({
+  requireSuperUser: mocks.requireSuperUser,
 }));
 
 vi.mock("$lib/server/profile-identity", () => ({
@@ -60,6 +70,8 @@ vi.mock("$lib/server/profile-identity", () => ({
 vi.mock("$lib/server/smrt", () => ({
   getSmrtConfig: () => ({}),
 }));
+
+vi.mock("$lib/server/smrt-register", () => ({}));
 
 vi.mock("$lib/server/starter-config", () => ({
   loadStarterConfig: mocks.loadStarterConfig,
@@ -85,6 +97,8 @@ describe("starter request bootstrap", () => {
     mocks.loadStarterConfig.mockResolvedValue(undefined);
     mocks.getCurrentTenant.mockReturnValue(null);
     mocks.parseBearerToken.mockReturnValue(null);
+    mocks.requirePermission.mockResolvedValue(undefined);
+    mocks.requireSuperUser.mockReturnValue(undefined);
     mocks.resolveMembershipContext.mockResolvedValue(null);
     mocks.ensureUserProfile.mockResolvedValue({
       profileId: "22222222-2222-4222-8222-222222222222",
@@ -139,9 +153,18 @@ describe("starter request bootstrap", () => {
   });
 
   it("reconciles the seeded Profile for dev-auth fallback requests", async () => {
+    const locals: Record<string, unknown> = { user: null };
+    mocks.resolveMembershipContext.mockResolvedValue({
+      tenantId: starterData.demoTenant.id,
+      userId: starterData.demoTenant.ownerUser.id,
+      userEmail: starterData.demoTenant.ownerUser.email,
+      profileId: "22222222-2222-4222-8222-222222222222",
+      permissions: ["tenant.settings.manage"],
+      devFallback: true,
+    });
     await handle({
       event: {
-        locals: { user: null },
+        locals,
         request: new Request("http://localhost/app"),
         url: new URL("http://localhost/app"),
       },
@@ -153,5 +176,76 @@ describe("starter request bootstrap", () => {
       email: starterData.demoTenant.ownerUser.email,
       name: starterData.demoTenant.ownerProfile.name,
     });
+    expect(locals.user).toEqual({
+      id: starterData.demoTenant.ownerUser.id,
+      email: starterData.demoTenant.ownerUser.email,
+      profileId: "22222222-2222-4222-8222-222222222222",
+    });
+    expect(locals.permissions).toEqual(["tenant.settings.manage"]);
+  });
+
+  it("protects generated starter-setting CRUD with the existing admin capability", async () => {
+    const locals = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requirePermission.mockResolvedValue({
+      tenantId: starterData.demoTenant.id,
+      userId,
+      permissions: ["tenant.settings.manage"],
+    });
+    await handle({
+      event: {
+        locals,
+        request: new Request("http://localhost/api/generated/starterappsettings"),
+        url: new URL("http://localhost/api/generated/starterappsettings"),
+      },
+      resolve: async () => new Response("ok"),
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(mocks.resolveMembershipContext).toHaveBeenCalledOnce();
+    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
+    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
+    expect(mocks.withTenant).toHaveBeenCalledWith(
+      {
+        tenantId: starterData.demoTenant.id,
+        userId,
+        permissions: new Set(["tenant.settings.manage"]),
+      },
+      expect.any(Function),
+    );
+  });
+
+  it("protects generated starter-setting item updates with the same capability", async () => {
+    const locals = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requirePermission.mockResolvedValue({
+      tenantId: starterData.demoTenant.id,
+      userId,
+      permissions: ["tenant.settings.manage"],
+    });
+    await handle({
+      event: {
+        locals,
+        request: new Request(`http://localhost/api/generated/starterappsettings/${userId}`),
+        url: new URL(`http://localhost/api/generated/starterappsettings/${userId}`),
+      },
+      resolve: async () => new Response("ok"),
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
+    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
+  });
+
+  it("disables the generated sync write path", async () => {
+    const resolve = vi.fn(async () => new Response("unexpected"));
+    const response = await handle({
+      event: {
+        locals: { user: { id: userId, email: "Person@Example.com" } },
+        request: new Request("http://localhost/api/generated/sync/apply", { method: "POST" }),
+        url: new URL("http://localhost/api/generated/sync/apply"),
+      },
+      resolve,
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(response.status).toBe(404);
+    expect(resolve).not.toHaveBeenCalled();
+    expect(mocks.requireSuperUser).not.toHaveBeenCalled();
   });
 });

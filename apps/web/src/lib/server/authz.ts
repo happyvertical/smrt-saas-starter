@@ -14,6 +14,8 @@ export const starterPermissions = {
   mcpRead: "tenant.mcp.read",
   mcpCall: "tenant.mcp.call",
   chatUse: "tenant.chat.use",
+  fieldPolicyManage: "fields.policy.manage",
+  fieldPolicyPersonalize: "fields.policy.personalize",
 } as const;
 
 export type StarterPermission = (typeof starterPermissions)[keyof typeof starterPermissions];
@@ -81,6 +83,7 @@ const permissionsByRole: Record<string, readonly StarterPermission[]> = {
     starterPermissions.mcpRead,
     starterPermissions.mcpCall,
     starterPermissions.chatUse,
+    starterPermissions.fieldPolicyPersonalize,
   ],
   viewer: [
     starterPermissions.appAccess,
@@ -88,6 +91,7 @@ const permissionsByRole: Record<string, readonly StarterPermission[]> = {
     starterPermissions.usageRead,
     starterPermissions.settingsRead,
     starterPermissions.mcpRead,
+    starterPermissions.fieldPolicyPersonalize,
   ],
 };
 

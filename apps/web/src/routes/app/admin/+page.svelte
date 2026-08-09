@@ -1,12 +1,63 @@
 <script lang="ts">
+  import {
+    FieldPolicyGearProvider,
+    ObjectForm,
+    type ObjectFormFieldSnippetProps,
+  } from "@happyvertical/smrt-fields/svelte";
+  import { untrack } from "svelte";
+  import {
+    getStarterAppSettingDefinition,
+    getStarterAppSettingObjectRef,
+  } from "$lib/field-policy";
+  import { fieldPolicyAdapter, starterAppSettingsClient } from "$lib/field-policy-client";
+
   let { data, form } = $props();
 
   const inviteRows = $derived(data.invitations ?? []);
   const accessRows = $derived(data.accessRequests ?? []);
   const tenantRows = $derived(data.tenants ?? []);
-  const currentMode = $derived(
-    form?.kind === "signupMode" && form.signupMode ? form.signupMode : data.signupMode,
-  );
+  const definition = getStarterAppSettingDefinition();
+  const objectRef = getStarterAppSettingObjectRef();
+  const formFields = {
+    value: definition.fields.value,
+    metadata: definition.fields.metadata,
+  };
+  let settingId = $state<string | null>(untrack(() => data.signupAccess.id));
+  let record = $state<Record<string, unknown>>({
+    value: untrack(() => data.signupAccess.mode),
+    metadata: { ...untrack(() => data.signupAccess.metadata) },
+  });
+  let saveMessage = $state<string | null>(null);
+  let saveError = $state<string | null>(null);
+  let saving = $state(false);
+
+  function itemId(value: unknown): string | null {
+    if (!value || typeof value !== "object") return null;
+    const id = (value as Record<string, unknown>).id;
+    return typeof id === "string" && id ? id : null;
+  }
+
+  async function saveSignupAccess(): Promise<void> {
+    saving = true;
+    saveError = null;
+    saveMessage = null;
+    const payload = {
+      value: String(record.value ?? "public"),
+      metadata: record.metadata ?? {},
+    };
+
+    try {
+      const saved = settingId
+        ? await starterAppSettingsClient.update(settingId, payload)
+        : await starterAppSettingsClient.create({ key: "signup.access_mode", ...payload });
+      settingId ??= itemId(saved);
+      saveMessage = "Signup access updated.";
+    } catch (error) {
+      saveError = error instanceof Error ? error.message : "Could not update signup access.";
+    } finally {
+      saving = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -19,49 +70,86 @@
     <h1>Starter administration</h1>
   </header>
 
+  {#snippet signupModeRenderer(props: ObjectFormFieldSnippetProps)}
+    <fieldset class="mode-choices" aria-label="Signup access mode">
+      <label class="choice">
+        <input
+          type="radio"
+          name={props.field.name}
+          value="public"
+          checked={props.value === "public"}
+          disabled={props.disabled}
+          onchange={() => props.setValue("public")}
+        />
+        <span>
+          <strong>Public</strong>
+          <small>Anyone can create a tenant workspace.</small>
+        </span>
+      </label>
+      <label class="choice">
+        <input
+          type="radio"
+          name={props.field.name}
+          value="invite-only"
+          checked={props.value === "invite-only"}
+          disabled={props.disabled}
+          onchange={() => props.setValue("invite-only")}
+        />
+        <span>
+          <strong>Invite only</strong>
+          <small>New tenant workspaces require a super-user invite.</small>
+        </span>
+      </label>
+      <label class="choice">
+        <input
+          type="radio"
+          name={props.field.name}
+          value="request-access"
+          checked={props.value === "request-access"}
+          disabled={props.disabled}
+          onchange={() => props.setValue("request-access")}
+        />
+        <span>
+          <strong>Request access</strong>
+          <small>Visitors join a waitlist; a super user approves and graduates them.</small>
+        </span>
+      </label>
+    </fieldset>
+  {/snippet}
+
+  {#snippet signupActions()}
+    <button type="submit" disabled={saving}>
+      {saving ? "Saving…" : "Save access mode"}
+    </button>
+  {/snippet}
+
   <div class="grid">
     <section class="panel">
       <h2>Signup access</h2>
-      {#if form?.kind === "signupMode" && form.message}
-        <p class="notice error">{form.message}</p>
-      {:else if form?.kind === "signupMode" && form.success}
-        <p class="notice success">Signup access updated.</p>
+      {#if saveError}
+        <p class="notice error">{saveError}</p>
+      {:else if saveMessage}
+        <p class="notice success">{saveMessage}</p>
       {/if}
 
-      <form method="POST" action="?/setSignupMode" class="mode-form">
-        <label class="choice">
-          <input type="radio" name="signupMode" value="public" checked={currentMode === "public"} />
-          <span>
-            <strong>Public</strong>
-            <small>Anyone can create a tenant workspace.</small>
-          </span>
-        </label>
-        <label class="choice">
-          <input
-            type="radio"
-            name="signupMode"
-            value="invite-only"
-            checked={currentMode === "invite-only"}
-          />
-          <span>
-            <strong>Invite only</strong>
-            <small>New tenant workspaces require a super-user invite.</small>
-          </span>
-        </label>
-        <label class="choice">
-          <input
-            type="radio"
-            name="signupMode"
-            value="request-access"
-            checked={currentMode === "request-access"}
-          />
-          <span>
-            <strong>Request access</strong>
-            <small>Visitors join a waitlist; a super user approves and graduates them.</small>
-          </span>
-        </label>
-        <button type="submit">Save access mode</button>
-      </form>
+      <FieldPolicyGearProvider
+        {objectRef}
+        fields={formFields}
+        adapter={fieldPolicyAdapter}
+      >
+        <ObjectForm
+          {objectRef}
+          fields={formFields}
+          policy={data.signupPolicy}
+          bind:value={record}
+          isNewRecord={settingId === null}
+          disabled={saving}
+          showPolicyGear
+          renderers={{ value: signupModeRenderer }}
+          actions={signupActions}
+          onsubmit={saveSignupAccess}
+        />
+      </FieldPolicyGearProvider>
     </section>
 
     <section class="panel">
@@ -256,8 +344,12 @@
     gap: 0.55rem;
   }
 
-  .mode-form {
+  .mode-choices {
+    display: grid;
     gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 
   .choice {

@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { ToolsDockApi, ToolsDockContext } from "@happyvertical/smrt-svelte/workspace";
-import { RefreshCw, SendHorizontal } from "lucide-svelte";
+  import type { ToolsDockApi, ToolsDockContext } from "@happyvertical/smrt-svelte/workspace/legacy";
+  import { RefreshCw, SendHorizontal } from "lucide-svelte";
 
   interface Props {
     context: ToolsDockContext | null;

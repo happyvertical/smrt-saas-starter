@@ -3,3 +3,9 @@ src/lib/server/smrt-register.ts
 src/routes/api/generated/**/+server.ts
 src/types/smrt-generated/
 src/types/virtual-modules.d.ts
+
+# BEGIN SMRT auto-generated routes (Vite plugin)
+src/routes/api/generated/starterappsettings/\[id\]/+server.ts
+src/routes/api/generated/starterappsettings/+server.ts
+src/routes/api/generated/sync/apply/+server.ts
+# END SMRT auto-generated routes (Vite plugin)
