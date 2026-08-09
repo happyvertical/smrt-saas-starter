@@ -1,5 +1,6 @@
 import type { SmrtObjectOptions } from "@happyvertical/smrt-core";
 import { crossPackageRef, field, SmrtObject, smrt } from "@happyvertical/smrt-core";
+import { getCurrentTenant } from "@happyvertical/smrt-tenancy";
 
 export interface StarterAppSettingOptions extends SmrtObjectOptions {
   key?: string;
@@ -11,21 +12,46 @@ export interface StarterAppSettingOptions extends SmrtObjectOptions {
 @smrt({
   tableName: "starter_app_settings",
   conflictColumns: ["key"],
-  api: false,
+  // This is the one deliberately browser-managed starter object. Keep the
+  // generated surface narrow: settings may be read and upserted by the admin
+  // UI, but are never deleted through REST.
+  api: {
+    include: ["list", "get", "create", "update"],
+    principalContext: true,
+    writable: ["key", "value", "metadata"],
+  },
   mcp: false,
   cli: false,
 })
 export class StarterAppSetting extends SmrtObject {
-  @field({ required: true, unique: true })
+  @field({
+    required: true,
+    unique: true,
+    description: "Stable application setting identifier.",
+    ui: { basic: true, order: 1 },
+  })
   key = "";
 
-  @field({ required: true })
+  @field({
+    required: true,
+    description: "Value applied by the starter application for this setting.",
+    ui: { basic: true, order: 2 },
+  })
   value = "";
 
-  @crossPackageRef("@happyvertical/smrt-users:User", { nullable: true })
+  @crossPackageRef("@happyvertical/smrt-users:User", {
+    nullable: true,
+    readonly: true,
+    description: "User who last changed this setting.",
+    ui: { basic: false, order: 4 },
+  })
   updatedByUserId: string | null = null;
 
-  @field({ type: "json" })
+  @field({
+    type: "json",
+    description: "Optional structured configuration for this setting.",
+    ui: { basic: false, order: 3 },
+  })
   metadata = "{}";
 
   constructor(options: StarterAppSettingOptions = {}) {
@@ -42,6 +68,16 @@ export class StarterAppSetting extends SmrtObject {
 
   setMetadata(metadata: Record<string, unknown>): void {
     this.metadata = JSON.stringify(metadata);
+  }
+
+  protected stampUpdatedByFromAmbientContext(): void {
+    const context = getCurrentTenant();
+    if (context) this.updatedByUserId = context.userId ?? null;
+  }
+
+  override async save(): Promise<this> {
+    this.stampUpdatedByFromAmbientContext();
+    return await super.save();
   }
 }
 

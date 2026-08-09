@@ -8,12 +8,13 @@ import {
   toAccessRequestMessage,
 } from "$lib/server/access-requests";
 import { listTenants } from "$lib/server/accounts";
+import { requirePermission, starterPermissions } from "$lib/server/authz";
+import { resolveStarterAppSettingPolicy } from "$lib/server/field-policy";
 import {
   createTenantOwnerInvitation,
-  getSignupAccessMode,
+  getSignupAccessSetting,
   listTenantOwnerInvitations,
   revokeTenantOwnerInvitation,
-  setSignupAccessMode,
   toAccountFlowMessage,
 } from "$lib/server/invitations";
 import { requireSuperUser } from "$lib/server/super-users";
@@ -21,10 +22,12 @@ import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
   const superUser = requireSuperUser(locals);
+  const membership = await requirePermission(locals, starterPermissions.settingsManage);
 
   return {
     superUser,
-    signupMode: await getSignupAccessMode(),
+    signupAccess: await getSignupAccessSetting(),
+    signupPolicy: await resolveStarterAppSettingPolicy(membership),
     invitations: await listTenantOwnerInvitations(),
     tenants: await listTenants(),
     accessRequests: await listAccessRequests(superUser, {
@@ -34,24 +37,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-  setSignupMode: async ({ request, locals }) => {
-    const superUser = requireSuperUser(locals);
-    const data = await request.formData();
-    const mode = String(data.get("signupMode") ?? "public");
-
-    try {
-      const signupMode = await setSignupAccessMode(mode, superUser.userId);
-      return { kind: "signupMode", success: true, signupMode };
-    } catch (error) {
-      console.error("[admin] Failed to update signup mode:", error);
-      return fail(500, {
-        kind: "signupMode",
-        success: false,
-        message: "Could not update signup mode.",
-      });
-    }
-  },
-
   inviteTenantOwner: async ({ request, locals, url }) => {
     const superUser = requireSuperUser(locals);
     const data = await request.formData();

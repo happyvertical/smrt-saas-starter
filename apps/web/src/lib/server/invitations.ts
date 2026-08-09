@@ -13,6 +13,12 @@ import { getSmrtConfig } from "$lib/server/smrt";
 
 export type SignupAccessMode = "public" | "invite-only" | "request-access";
 
+export interface SignupAccessSetting {
+  id: string | null;
+  mode: SignupAccessMode;
+  metadata: Record<string, unknown>;
+}
+
 export interface TenantOwnerInvitationSummary {
   id: string;
   email: string;
@@ -39,13 +45,21 @@ const signupAccessModeKey = "signup.access_mode";
 const defaultSignupAccessMode: SignupAccessMode = "public";
 
 export async function getSignupAccessMode(): Promise<SignupAccessMode> {
+  return (await getSignupAccessSetting()).mode;
+}
+
+export async function getSignupAccessSetting(): Promise<SignupAccessSetting> {
   try {
     const settings = await getAppSettingCollection();
     const setting = await withSystemContext(() => settings.findByKey(signupAccessModeKey));
-    return normalizeSignupAccessMode(setting?.value);
+    return {
+      id: setting?.id ?? null,
+      mode: normalizeSignupAccessMode(setting?.value),
+      metadata: normalizeSignupAccessMetadata(setting?.metadata),
+    };
   } catch (queryError) {
     if (isMissingStarterTableError(queryError)) {
-      return defaultSignupAccessMode;
+      return { id: null, mode: defaultSignupAccessMode, metadata: {} };
     }
     throw queryError;
   }
@@ -54,6 +68,7 @@ export async function getSignupAccessMode(): Promise<SignupAccessMode> {
 export async function setSignupAccessMode(
   modeInput: string,
   updatedByUserId: string,
+  metadataInput?: string,
 ): Promise<SignupAccessMode> {
   const mode = normalizeSignupAccessMode(modeInput);
   const settings = await getAppSettingCollection();
@@ -64,6 +79,7 @@ export async function setSignupAccessMode(
     if (existing) {
       existing.value = mode;
       existing.updatedByUserId = updatedByUserId;
+      if (metadataInput !== undefined) existing.metadata = normalizeMetadata(metadataInput);
       existing.updated_at = now;
       await existing.save();
       return;
@@ -75,7 +91,10 @@ export async function setSignupAccessMode(
       key: signupAccessModeKey,
       value: mode,
       updatedByUserId,
-      metadata: JSON.stringify({ createdBy: "smrt-saas-starter-admin" }),
+      metadata:
+        metadataInput === undefined
+          ? JSON.stringify({ createdBy: "smrt-saas-starter-admin" })
+          : normalizeMetadata(metadataInput),
     });
   });
 
@@ -165,6 +184,36 @@ function normalizeSignupAccessMode(value: string | null | undefined): SignupAcce
     return "request-access";
   }
   return "public";
+}
+
+export function normalizeSignupAccessMetadata(value: unknown): Record<string, unknown> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return { ...(value as Record<string, unknown>) };
+  }
+  if (typeof value !== "string") return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? { ...(parsed as Record<string, unknown>) }
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeMetadata(value: string): string {
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Metadata must be a JSON object.");
+    }
+    return JSON.stringify(parsed);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Metadata must be a JSON object.") {
+      throw error;
+    }
+    throw new Error("Metadata must be valid JSON.");
+  }
 }
 
 async function getAppSettingCollection() {

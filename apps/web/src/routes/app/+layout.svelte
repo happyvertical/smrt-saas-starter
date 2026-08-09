@@ -1,39 +1,79 @@
 <script lang="ts">
+  import { fieldPolicyControlPanelNavItem } from "@happyvertical/smrt-fields/svelte";
   import { AssistantDock } from "@happyvertical/smrt-saas-ui";
-  import { RoleShell } from "@happyvertical/smrt-svelte/workspace";
+  import {
+    AdminShell,
+    AppScopePanel,
+    type ShellNavItem,
+    TenantNav,
+  } from "@happyvertical/smrt-svelte/workspace";
+  import FieldPolicyFocusTool from "$lib/components/FieldPolicyFocusTool.svelte";
   import NavIcon from "$lib/components/NavIcon.svelte";
 
   let { data, children } = $props();
 
-  const navItems = $derived(
-    [
-      { href: "/app", label: "Overview", icon: "bar-chart", exact: true, permission: "tenant.read" },
+  type StarterNavItem = ShellNavItem & { permission?: string };
+
+  const navItems = $derived.by((): ShellNavItem[] => {
+    const candidates: Array<StarterNavItem | null> = [
+      { href: "/app", label: "Overview", icon: "bar-chart", permission: "tenant.read" },
       { href: "/app/billing", label: "Billing", icon: "credit-card", permission: "tenant.billing.read" },
       { href: "/app/usage", label: "Usage", icon: "gauge", permission: "tenant.usage.read" },
       { href: "/app/settings", label: "Settings", icon: "settings", permission: "tenant.settings.read" },
+      fieldPolicyControlPanelNavItem({
+        href: "/app/settings/field-policies",
+        permissions: data.permissions,
+        label: "Field settings",
+        icon: "sliders-horizontal",
+      }),
       { href: "/app/admin", label: "Admin", icon: "settings", permission: "super-user" },
-    ].filter((item) => item.permission === "super-user" ? data.isSuperUser : data.permissions.includes(item.permission)),
-  );
-
-  const roles = $derived([
-    {
-      id: data.currentRole,
-      label: data.roleLabel,
-      description: data.userLabel,
-      sections: navItems.map(({ permission: _permission, ...item }) => item),
-    },
-  ]);
+    ];
+    return candidates.filter((item): item is StarterNavItem => {
+      if (!item) return false;
+      const permission = item.permission;
+      return permission === "super-user"
+        ? data.isSuperUser
+        : !permission || data.permissions.includes(permission);
+    });
+  });
 </script>
 
 <div class="workspace">
-  <RoleShell
-    {roles}
-    currentRole={data.currentRole}
-    currentPath={data.activePath}
+  <AdminShell
     title="SMRT Starter"
-    navIconComponent={NavIcon}
+    subtitle={data.tenantLabel}
+    config={{
+      top: { initial: "collapsed", label: "Workspace" },
+      left: { initial: "expanded", label: "Navigation" },
+      right: { initial: "collapsed", label: "Tools" },
+      bottom: false,
+    }}
   >
-    {#snippet sidebarFooter()}
+    {#snippet appBar()}
+      <div class="app-bar">
+        <strong>SMRT Starter</strong>
+        <span>{data.tenantLabel}</span>
+      </div>
+    {/snippet}
+
+    {#snippet appPanel()}
+      <AppScopePanel appName="SMRT Starter" tenantName={data.tenantLabel} />
+    {/snippet}
+
+    {#snippet tenantPanel()}
+      <TenantNav items={navItems} currentHref={data.activePath} iconComponent={NavIcon} />
+    {/snippet}
+
+    {#snippet tenantRail()}
+      <TenantNav
+        items={navItems}
+        currentHref={data.activePath}
+        iconComponent={NavIcon}
+        collapsed
+      />
+    {/snippet}
+
+    {#snippet tenantFooter()}
       <form class="tenant-switch" method="POST" action="/api/tenant/switch">
         <input type="hidden" name="returnTo" value={data.activePath} />
         <label>
@@ -61,8 +101,9 @@
       </form>
     {/snippet}
 
+    <FieldPolicyFocusTool />
     {@render children()}
-  </RoleShell>
+  </AdminShell>
 
   <AssistantDock tenantId={data.tenantId} activePath={data.activePath} chatEndpoint="/api/chat" />
 </div>
@@ -77,9 +118,21 @@
     background: var(--smrt-color-background, #f7f8fa);
   }
 
-  .workspace :global(.smrt-workspace-shell) {
+  .workspace :global(.smrt-admin-shell) {
     flex: 1 1 auto;
     min-width: 0;
+  }
+
+  .app-bar {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .app-bar span,
+  .tenant-switch span,
+  .tenant-switch label > span {
+    color: var(--smrt-color-on-surface-variant, #5e6470);
+    font-size: 0.75rem;
   }
 
   .tenant-switch {
@@ -94,12 +147,6 @@
   .identity {
     display: grid;
     gap: 0.2rem;
-  }
-
-  .tenant-switch span,
-  .tenant-switch label > span {
-    color: var(--smrt-color-on-surface-variant, #5e6470);
-    font-size: 0.75rem;
   }
 
   .tenant-switch select {
@@ -117,19 +164,8 @@
     font-size: 0.86rem;
   }
 
-  .tenant-switch button {
-    min-height: 2.2rem;
-    border: 1px solid var(--smrt-color-primary, #155eef);
-    border-radius: 6px;
-    background: var(--smrt-color-primary, #155eef);
-    color: var(--smrt-color-on-primary, #fff);
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
+  .tenant-switch button,
   .logout button {
-    width: 100%;
     min-height: 2.2rem;
     border: 1px solid var(--smrt-color-outline, #d7dce2);
     border-radius: 6px;
@@ -138,5 +174,11 @@
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  .tenant-switch button {
+    border-color: var(--smrt-color-primary, #155eef);
+    background: var(--smrt-color-primary, #155eef);
+    color: var(--smrt-color-on-primary, #fff);
   }
 </style>

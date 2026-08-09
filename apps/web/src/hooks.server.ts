@@ -2,6 +2,7 @@ import {
   createSvelteKitHandle,
   enableTenancy,
   getCurrentTenant,
+  withTenant,
 } from "@happyvertical/smrt-tenancy";
 import {
   createSessionHandler,
@@ -10,11 +11,13 @@ import {
 } from "@happyvertical/smrt-users/sveltekit";
 import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import { resolveMembershipContext } from "$lib/server/authz";
+import { requirePermission, resolveMembershipContext, starterPermissions } from "$lib/server/authz";
 import { ensureUserProfile } from "$lib/server/profile-identity";
 import { getSmrtConfig } from "$lib/server/smrt";
+import "$lib/server/smrt-register";
 import { loadStarterConfig } from "$lib/server/starter-config";
 import { starterData } from "$lib/server/starter-data";
+import { requireSuperUser } from "$lib/server/super-users";
 import { resolveTenant } from "$lib/server/tenancy";
 
 let demoProfileEnsurePromise: Promise<void> | null = null;
@@ -95,11 +98,47 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
     if (membership) {
       event.locals.tenantId = membership.tenantId;
       event.locals.permissions = membership.permissions;
+      if (membership.devFallback && !event.locals.user) {
+        event.locals.user = {
+          id: membership.userId,
+          email: membership.userEmail,
+          profileId: membership.profileId,
+        };
+      }
     }
   }
 
   return resolve(event);
 };
+
+const starterAppSettingsApiHandle: Handle = async ({ event, resolve }) => {
+  if (
+    event.url.pathname === "/api/generated/sync/apply" ||
+    event.url.pathname.startsWith("/api/generated/sync/apply/")
+  ) {
+    return new Response("Not Found", { status: 404 });
+  }
+  if (isStarterAppSettingsApiRequest(event.url.pathname)) {
+    requireSuperUser(event.locals);
+    const membership = await requirePermission(event.locals, starterPermissions.settingsManage);
+    return withTenant(
+      {
+        tenantId: membership.tenantId,
+        userId: membership.userId,
+        permissions: new Set(membership.permissions),
+      },
+      async () => await resolve(event),
+    );
+  }
+  return resolve(event);
+};
+
+function isStarterAppSettingsApiRequest(pathname: string): boolean {
+  return (
+    pathname === "/api/generated/starterappsettings" ||
+    pathname.startsWith("/api/generated/starterappsettings/")
+  );
+}
 
 function readAuthenticatedUser(
   user: unknown,
@@ -146,6 +185,7 @@ const appHandle: Handle = sequence(
   sessionHandle,
   bearerSessionHandle,
   reconcileTenantLocals,
+  starterAppSettingsApiHandle,
 );
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -168,7 +208,6 @@ function shouldResolveMembership(pathname: string): boolean {
       !pathname.startsWith("/api/mobile/auth/") &&
       // /api/e2e/* skip membership resolution; any future route added under
       // this prefix must do its own requirePermission/requireTenantMembership.
-      !pathname.startsWith("/api/e2e/") &&
-      !pathname.startsWith("/api/generated/"))
+      !pathname.startsWith("/api/e2e/"))
   );
 }

@@ -4,8 +4,7 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT identity/runtime packages (`@happyvertical/smrt-*`): **0.39.15**
-- SMRT UI compatibility packages (`smrt-svelte`, `smrt-ui`): **0.37.5**
+- SMRT packages (`@happyvertical/smrt-*`): **0.40.61**
 - SDK (`@happyvertical/*`): **0.78.1**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
 
@@ -69,6 +68,27 @@ When starter work hits an upstream bug or a missing public API in a
    `pnpm check`, and move the entry to the completed sections below.
 
 ## Resolved
+
+### SMRT Fields: field-policy adoption surfaces
+
+[smrt#2263](https://github.com/happyvertical/smrt/issues/2263) was implemented by
+[smrt#2264](https://github.com/happyvertical/smrt/pull/2264) and released in
+`@happyvertical/smrt-fields@0.40.61`. `ObjectForm` now accepts an `actions`
+snippet inside its owned native form, so the starter supplies an ordinary
+submit button without querying or depending on private form markup. The same
+coordinated release includes the #2048–#2050 provider, policy gear, and control
+panel surfaces used by the starter.
+
+The #2052 adoption covers all three slices:
+
+- **Slice 3 — Provider/PolicyField:** no additional upstream gap found. The
+  signup-access `ObjectForm` consumes manifest `description`/`ui.basic` metadata
+  through its policy-owned provider and basic/advanced mode.
+- **Slice 4 — ObjectForm/gear:** the signup-access CRUD screen uses generated
+  REST restricted to `StarterAppSetting.api.include`, with policy gear and an
+  AdminShell Focus tool.
+- **Slice 5 — control panel:** no additional upstream gap found. The starter
+  mounts the control-panel destination through AdminShell tenant navigation.
 
 ### SMRT: safe Profile selection during verified-email OIDC provisioning
 

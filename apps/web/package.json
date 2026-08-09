@@ -61,6 +61,7 @@
     "@happyvertical/smrt-content": "catalog:",
     "@happyvertical/smrt-core": "catalog:",
     "@happyvertical/smrt-features": "catalog:",
+    "@happyvertical/smrt-fields": "catalog:",
     "@happyvertical/smrt-jobs": "catalog:",
     "@happyvertical/smrt-languages": "catalog:",
     "@happyvertical/smrt-ledgers": "catalog:",

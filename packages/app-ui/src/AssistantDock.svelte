@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { defineToolsDock, ToolsDock } from "@happyvertical/smrt-svelte/workspace";
+  import { defineToolsDock, ToolsDock } from "@happyvertical/smrt-svelte/workspace/legacy";
   import DockPanel from "./DockPanel.svelte";
   import ChatIcon from "./icons/ChatIcon.svelte";
   import SettingsIcon from "./icons/SettingsIcon.svelte";

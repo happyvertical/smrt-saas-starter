@@ -22,6 +22,8 @@ export default defineConfig({
         objectsDir: "../../packages/app-objects/src/models",
         configPath: "src/lib/server",
         configFileName: "smrt.ts",
+        changesRoute: { enabled: false },
+        eventsRoute: { enabled: false },
       },
     }),
   ],
