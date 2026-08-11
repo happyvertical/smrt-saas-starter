@@ -9,6 +9,9 @@ import { defineConfig } from "@playwright/test";
 //   Deployed envs have real auth, so only @public runs by default; when
 //   E2E_AUTH_SECRET is configured, @authed runs too — it mints a real session
 //   for the seeded e2e user instead of relying on the dev-auth fallback.
+// - Production image (E2E_PRODUCTION_IMAGE=true): always excludes @authed.
+//   This profile uses the isolated demo-auth container and deliberately never
+//   forwards an ambient host E2E_AUTH_SECRET into that container.
 const remoteBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim();
 const e2eAuthConfigured = Boolean(process.env.E2E_AUTH_SECRET?.trim());
 const productionImage = process.env.E2E_PRODUCTION_IMAGE === "true";
@@ -37,9 +40,7 @@ export default defineConfig({
   testDir: "e2e",
   ...(productionImage ? { globalSetup: "./e2e/production-global-setup.ts" } : {}),
   ...(productionImage
-    ? e2eAuthConfigured
-      ? {}
-      : { grepInvert: /@authed/u }
+    ? { grepInvert: /@authed/u }
     : remoteBaseUrl
       ? { grep: e2eAuthConfigured ? /@public|@authed/u : /@public/u }
       : {
