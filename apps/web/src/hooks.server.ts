@@ -11,7 +11,12 @@ import {
 } from "@happyvertical/smrt-users/sveltekit";
 import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import { requirePermission, resolveMembershipContext, starterPermissions } from "$lib/server/authz";
+import {
+  isDevAuthFallbackEnabled,
+  requirePermission,
+  resolveMembershipContext,
+  starterPermissions,
+} from "$lib/server/authz";
 import { ensureUserProfile } from "$lib/server/profile-identity";
 import { getSmrtConfig } from "$lib/server/smrt";
 import "$lib/server/smrt-register";
@@ -32,6 +37,13 @@ if (process.env.E2E_AUTH_SECRET?.trim() && process.env.NODE_ENV === "production"
   console.warn(
     "[security] E2E_AUTH_SECRET is set with NODE_ENV=production — the /api/e2e/session " +
       "auth-bypass route is ENABLED. Expected on staging; never set this on real production.",
+  );
+}
+
+if (process.env.SMRT_STARTER_DEMO_AUTH === "true") {
+  console.warn(
+    "[security] SMRT_STARTER_DEMO_AUTH is enabled — every visitor receives the shared seeded " +
+      "demo-owner identity. Use this only for an isolated, non-production demonstration.",
   );
 }
 
@@ -175,9 +187,7 @@ function ensureDemoProfile(): Promise<void> {
 }
 
 function isDevFallbackRequest(user: unknown): boolean {
-  return (
-    !user && process.env.SMRT_STARTER_DEV_AUTH !== "false" && process.env.NODE_ENV !== "production"
-  );
+  return !user && isDevAuthFallbackEnabled();
 }
 
 const appHandle: Handle = sequence(

@@ -1,0 +1,119 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: smrt-saas-demo
+resources:
+  - ../dev
+  - ingress.yaml
+  - network-policy.yaml
+patches:
+  - target:
+      kind: Namespace
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: unused
+  - target:
+      kind: Secret
+      name: smrt-saas-secret
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: smrt-saas-secret
+  - target:
+      kind: ConfigMap
+      name: smrt-saas-config
+    patch: |-
+      - op: replace
+        path: /data/PUBLIC_APP_NAME
+        value: SMRT SaaS Starter Demo
+      - op: add
+        path: /data/SMRT_STARTER_DEV_AUTH
+        value: "false"
+      - op: add
+        path: /data/SMRT_STARTER_DEMO_AUTH
+        value: "true"
+      - op: add
+        path: /data/SMRT_STARTER_MIGRATE_ON_START
+        value: "true"
+  - target:
+      kind: Deployment
+      name: smrt-saas-web
+    patch: |-
+      - op: remove
+        path: /spec/template/spec/containers/0/envFrom/1
+      - op: add
+        path: /spec/template/spec/securityContext
+        value:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: smrt-saas-postgres-app
+                key: uri
+      - op: replace
+        path: /spec/template/spec/containers/0/readinessProbe/httpGet/path
+        value: /api/health
+  - target:
+      kind: Deployment
+      name: smrt-saas-worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+      - op: remove
+        path: /spec/template/spec/containers/0/envFrom/1
+      - op: add
+        path: /spec/template/spec/securityContext
+        value:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: smrt-saas-postgres-app
+                key: uri

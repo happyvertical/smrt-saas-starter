@@ -1,7 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { extractCatalogVersions, findMcpPinIssues } from "./lib/mcp-pins.mjs";
+import {
+  extractCatalogVersions,
+  extractSectionVersions,
+  findMcpPinIssues,
+  findSmrtCatalogIssues,
+  findSmrtOverrideIssues,
+} from "./lib/mcp-pins.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -66,6 +72,8 @@ function keys(object) {
 }
 
 const workspace = await readFile(join(root, "pnpm-workspace.yaml"), "utf8");
+const catalogVersions = extractCatalogVersions(workspace);
+const overrideVersions = extractSectionVersions(workspace, "overrides");
 const webPackage = await readJson(join(root, "apps/web/package.json"));
 const workerPackage = await readJson(join(root, "apps/worker/package.json"));
 const objectPackage = await readJson(join(root, "packages/app-objects/package.json"));
@@ -86,6 +94,18 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+const smrtCatalogIssues = findSmrtCatalogIssues(catalogVersions);
+const smrtVersionIssues = [
+  ...smrtCatalogIssues,
+  ...findSmrtOverrideIssues(catalogVersions, overrideVersions),
+];
+if (smrtVersionIssues.length > 0) {
+  for (const issue of smrtVersionIssues) {
+    console.error(issue);
+  }
+  process.exit(1);
+}
+
 // .mcp.json launches HappyVertical MCP servers via `npx <pkg>@<version>`, so
 // pnpm never resolves those pins and they can drift from the catalog silently.
 // Require the agent-facing MCP servers to be registered and every pinned
@@ -102,7 +122,7 @@ for (const server of requiredMcpServers) {
   }
 }
 
-const mcpIssues = findMcpPinIssues(mcpText, extractCatalogVersions(workspace));
+const mcpIssues = findMcpPinIssues(mcpText, catalogVersions);
 if (mcpIssues.length > 0) {
   for (const issue of mcpIssues) {
     console.error(issue);
@@ -111,4 +131,7 @@ if (mcpIssues.length > 0) {
 }
 
 console.log("Dependency surface includes required SMRT and SDK packages.");
+console.log(
+  `SMRT catalog entries are exact and lockstep at ${catalogVersions.get("@happyvertical/smrt-core")}.`,
+);
 console.log("MCP server pins in .mcp.json match the pnpm catalog.");

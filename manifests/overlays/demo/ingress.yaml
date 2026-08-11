@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smrt-saas-web
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: demo.s-m-r-t.dev
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - demo.s-m-r-t.dev
+      secretName: smrt-saas-demo-tls
+  rules:
+    - host: demo.s-m-r-t.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: smrt-saas-web
+                port:
+                  number: 80

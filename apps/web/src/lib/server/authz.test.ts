@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authzMocks = vi.hoisted(() => ({
   getAppDatabase: vi.fn(),
@@ -9,7 +9,12 @@ vi.mock("$lib/server/db", () => ({
   getAppDatabase: authzMocks.getAppDatabase,
 }));
 
-import { requirePermission, resolveMembershipContext, starterPermissions } from "$lib/server/authz";
+import {
+  isDevAuthFallbackEnabled,
+  requirePermission,
+  resolveMembershipContext,
+  starterPermissions,
+} from "$lib/server/authz";
 import { DEMO_TENANT_ID, starterData } from "$lib/server/starter-data";
 
 const memberUserId = "11111111-1111-4111-8111-111111111111";
@@ -17,9 +22,14 @@ const profileId = "22222222-2222-4222-8222-222222222222";
 const tenantId = DEMO_TENANT_ID;
 
 describe("starter authorization", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.SMRT_STARTER_DEV_AUTH;
+    delete process.env.SMRT_STARTER_DEMO_AUTH;
     authzMocks.getAppDatabase.mockResolvedValue({ query: authzMocks.query });
     authzMocks.query.mockResolvedValue({
       rows: [membershipRow({ roleSlug: "owner", roleName: "Owner" })],
@@ -41,6 +51,16 @@ describe("starter authorization", () => {
       expect.stringContaining("FROM memberships"),
       starterData.demoTenant.ownerUser.id,
     );
+  });
+
+  it("requires an explicit demo flag to enable the fallback in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("SMRT_STARTER_DEV_AUTH", "true");
+
+    expect(isDevAuthFallbackEnabled()).toBe(false);
+
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
+    expect(isDevAuthFallbackEnabled()).toBe(true);
   });
 
   it("resolves real user memberships and starter role permissions", async () => {

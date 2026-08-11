@@ -96,6 +96,9 @@ const permissionsByRole: Record<string, readonly StarterPermission[]> = {
 };
 
 export function isDevAuthFallbackEnabled(): boolean {
+  if (process.env.SMRT_STARTER_DEMO_AUTH === "true") {
+    return true;
+  }
   return process.env.SMRT_STARTER_DEV_AUTH !== "false" && process.env.NODE_ENV !== "production";
 }
 

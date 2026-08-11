@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   getCurrentTenant: vi.fn(),
   loadBearerSessionContext: vi.fn(),
   parseBearerToken: vi.fn(),
+  isDevAuthFallbackEnabled: vi.fn(() => true),
   requirePermission: vi.fn(),
   requireSuperUser: vi.fn(),
   resolveMembershipContext: vi.fn(),
@@ -54,6 +55,7 @@ vi.mock("@sveltejs/kit/hooks", () => ({
 }));
 
 vi.mock("$lib/server/authz", () => ({
+  isDevAuthFallbackEnabled: mocks.isDevAuthFallbackEnabled,
   requirePermission: mocks.requirePermission,
   resolveMembershipContext: mocks.resolveMembershipContext,
   starterPermissions: { settingsManage: "tenant.settings.manage" },
