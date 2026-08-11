@@ -30,7 +30,9 @@
       "matchPackageNames": ["@happyvertical/smrt-*"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "ignoreTests": false
     }
   ]
 }

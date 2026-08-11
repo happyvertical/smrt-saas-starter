@@ -20,6 +20,17 @@ describe("GET /api/health", () => {
     await expect(response.json()).resolves.toEqual({ status: "ok", version: null });
   });
 
+  it("reports the ephemeral run binding only when explicitly configured", async () => {
+    vi.stubEnv("APP_VERSION", "abc123");
+    vi.stubEnv("SMRT_PRODUCTION_E2E_RUN_ID", "run-123");
+    const response = await GET({} as HealthHandlerEvent);
+    await expect(response.json()).resolves.toEqual({
+      status: "ok",
+      version: "abc123",
+      e2eRunId: "run-123",
+    });
+  });
+
   it("is non-cacheable so deploy pipelines never see a stale version", async () => {
     const response = await GET({} as HealthHandlerEvent);
     expect(response.headers.get("cache-control")).toBe("no-store");

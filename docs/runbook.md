@@ -85,6 +85,7 @@ pnpm sops:check
 pnpm validate
 pnpm check
 pnpm runtime:check
+pnpm test:e2e:production
 ```
 
 `pnpm db:seed` idempotently creates the demo tenant, Profile-backed owner identity,
@@ -98,6 +99,15 @@ Postgres service.
 `.runtime/worker` with `pnpm deploy --prod --legacy`, builds local Docker
 images, smoke-tests web and worker startup imports, and renders every kustomize
 overlay with `kubectl kustomize`.
+
+`pnpm test:e2e:production` is the release-shaped consumer gate. It creates a
+new PostgreSQL container with no pre-existing schema, builds the actual web
+image with the current commit as `APP_VERSION`, waits for `/api/health`, checks
+the framework- and starter-owned persistence contract, and runs Playwright
+against the compiled server. It also starts the same entrypoint a second time
+against the initialized database to prove migration and seed idempotency. On a
+failure, inspect `artifacts/production-e2e`, `apps/web/test-results`, and
+`apps/web/playwright-report` before changing framework or application code.
 
 ## Field-policy walkthrough
 
@@ -166,17 +176,21 @@ The framework update rail is executable policy:
    pnpm catalog, with matching overrides and MCP pins.
 2. Renovate waits one day after publication, then opens one SMRT framework PR
    against `dev` and regenerates the lockfile.
-3. CI rejects ranges, mixed SMRT versions, drifted MCP pins, and any consumer
-   regression through `pnpm check` plus runtime validation.
+3. CI rejects ranges, mixed SMRT versions, drifted MCP pins, and consumer
+   regressions through `pnpm check`, runtime validation, and the empty-database
+   production-image E2E job.
 4. A green minor or patch update auto-merges. Deploy Dev publishes immutable
    web and worker digests and commits them to the dev overlay.
 5. After the demo GitOps source is enabled, Flux observes that commit through
    the nested demo overlay and reconciles the new digest for
    [demo.s-m-r-t.dev](https://demo.s-m-r-t.dev).
 
-Major updates remain manual. If any automated update fails, the existing PR is
-the durable failure signal; fix the consumer or the upstream package rather
-than bypassing the version guard.
+Major updates remain manual. SMRT minor/patch automerge is handled by Renovate
+itself (`platformAutomerge: false`, `ignoreTests: false`), so it waits for all PR
+checks, including production E2E, instead of delegating an early merge to the
+platform. If any automated update fails, the existing PR is the durable failure
+signal; fix the consumer or the upstream package rather than bypassing the
+version guard.
 
 Every starter login/account path requires a canonical `smrt-profiles` identity.
 Signup, member invites, access-request graduation, magic-link/mobile login,
