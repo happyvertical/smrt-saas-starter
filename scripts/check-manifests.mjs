@@ -22,6 +22,13 @@ for (const file of required) {
   await access(join(root, file));
 }
 
+for (const dockerfile of ["apps/web/Dockerfile", "apps/worker/Dockerfile"]) {
+  const text = await readFile(join(root, dockerfile), "utf8");
+  if (!/^USER\s+1000:1000\s*$/m.test(text)) {
+    throw new Error(`${dockerfile} must declare the numeric non-root runtime user 1000:1000`);
+  }
+}
+
 for (const env of ["dev", "staging", "production"]) {
   const text = await readFile(join(root, `manifests/overlays/${env}/kustomization.yaml`), "utf8");
   if (!text.includes("../../base")) {
