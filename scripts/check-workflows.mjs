@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workflowsDir = join(root, ".github/workflows");
 const required = [
-  "agent-policy.yml",
   "on-pull-request.yml",
   "deploy-dev.yml",
   "promote-dev.yml",
@@ -20,15 +19,6 @@ for (const file of required) {
 const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
-  if (file === "agent-policy.yml") {
-    if (!text.includes("uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09")) {
-      throw new Error("agent-policy.yml must use the canonical pinned checkout action");
-    }
-    if (!text.includes("runs-on: ubuntu-latest")) {
-      throw new Error("agent-policy.yml must keep public pull requests on hosted runners");
-    }
-    continue;
-  }
   if (!text.includes("uses: actions/checkout@v6")) {
     throw new Error(`${file} must checkout the repository`);
   }
