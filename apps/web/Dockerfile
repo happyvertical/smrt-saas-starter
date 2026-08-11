@@ -8,4 +8,4 @@ ENV APP_VERSION=$APP_VERSION
 COPY .runtime/web/ ./
 EXPOSE 3000
 USER node
-CMD ["node", "build"]
+CMD ["node", "scripts/smrt-start.mjs"]

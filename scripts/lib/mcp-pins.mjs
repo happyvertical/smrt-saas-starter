@@ -15,8 +15,19 @@
  * @returns {Map<string, string>} package name -> catalog version
  */
 export function extractCatalogVersions(workspaceText) {
+  return extractSectionVersions(workspaceText, "catalog");
+}
+
+/**
+ * Parse `@happyvertical/*` versions from one top-level pnpm workspace section.
+ *
+ * @param {string} workspaceText - contents of pnpm-workspace.yaml
+ * @param {string} section - top-level section name
+ * @returns {Map<string, string>}
+ */
+export function extractSectionVersions(workspaceText, section) {
   const lines = workspaceText.split("\n");
-  const start = lines.findIndex((line) => line.replace(/\s+$/u, "") === "catalog:");
+  const start = lines.findIndex((line) => line.replace(/\s+$/u, "") === `${section}:`);
   const versions = new Map();
   if (start === -1) {
     return versions;
@@ -67,5 +78,58 @@ export function findMcpPinIssues(mcpText, catalogVersions) {
     }
   }
 
+  return issues;
+}
+
+/**
+ * Verify that every SMRT catalog entry uses the same exact version.
+ *
+ * @param {Map<string, string>} catalogVersions - from extractCatalogVersions
+ * @returns {string[]}
+ */
+export function findSmrtCatalogIssues(catalogVersions) {
+  const entries = [...catalogVersions].filter(([name]) => name.startsWith("@happyvertical/smrt-"));
+  const issues = [];
+
+  for (const [name, version] of entries) {
+    if (!/^\d+\.\d+\.\d+(?:[-+].+)?$/u.test(version)) {
+      issues.push(`${name} must use an exact version, found ${version}.`);
+    }
+  }
+
+  const exactVersions = new Set(
+    entries
+      .map(([, version]) => version)
+      .filter((version) => /^\d+\.\d+\.\d+(?:[-+].+)?$/u.test(version)),
+  );
+  if (exactVersions.size > 1) {
+    issues.push(
+      `SMRT catalog entries must move in lockstep; found ${[...exactVersions].join(", ")}.`,
+    );
+  }
+
+  return issues;
+}
+
+/**
+ * Verify that SMRT overrides mirror the catalog exactly.
+ *
+ * @param {Map<string, string>} catalogVersions
+ * @param {Map<string, string>} overrideVersions
+ * @returns {string[]}
+ */
+export function findSmrtOverrideIssues(catalogVersions, overrideVersions) {
+  const issues = [];
+  for (const [name, version] of catalogVersions) {
+    if (!name.startsWith("@happyvertical/smrt-")) {
+      continue;
+    }
+    const override = overrideVersions.get(name);
+    if (override !== version) {
+      issues.push(
+        `${name} override must match catalog ${version}, found ${override ?? "missing"}.`,
+      );
+    }
+  }
   return issues;
 }

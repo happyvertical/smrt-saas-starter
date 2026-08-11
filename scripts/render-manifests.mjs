@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const environments = ["dev", "staging", "production"];
+const environments = ["dev", "demo", "staging", "production"];
 const digestPattern =
   /image: ghcr\.io\/happyvertical\/smrt-saas-starter-(web|worker):[^@\s]+@sha256:[a-f0-9]{64}/g;
 

@@ -11,6 +11,9 @@ const required = [
   "manifests/base/postgres.cluster.yaml",
   "manifests/base/app.secret.yaml",
   "manifests/overlays/dev/kustomization.yaml",
+  "manifests/overlays/demo/kustomization.yaml",
+  "manifests/overlays/demo/ingress.yaml",
+  "manifests/overlays/demo/network-policy.yaml",
   "manifests/overlays/staging/kustomization.yaml",
   "manifests/overlays/production/kustomization.yaml",
 ];
@@ -39,4 +42,32 @@ for (const env of ["dev", "staging", "production"]) {
   }
 }
 
-console.log("Kubernetes manifests include base overlays with digest-pinned images.");
+const demo = await readFile(join(root, "manifests/overlays/demo/kustomization.yaml"), "utf8");
+const demoIngress = await readFile(join(root, "manifests/overlays/demo/ingress.yaml"), "utf8");
+const demoNetworkPolicy = await readFile(
+  join(root, "manifests/overlays/demo/network-policy.yaml"),
+  "utf8",
+);
+if (!demo.includes("../dev")) {
+  throw new Error("demo overlay must derive from the digest-pinned dev overlay");
+}
+for (const phrase of [
+  "SMRT_STARTER_DEMO_AUTH",
+  "SMRT_STARTER_MIGRATE_ON_START",
+  "smrt-saas-postgres-app",
+]) {
+  if (!demo.includes(phrase)) {
+    throw new Error(`demo overlay must include: ${phrase}`);
+  }
+}
+if (!demoIngress.includes("demo.s-m-r-t.dev") || !demoIngress.includes("letsencrypt-prod")) {
+  throw new Error("demo ingress must serve demo.s-m-r-t.dev with production TLS");
+}
+if (
+  !demoNetworkPolicy.includes("kubernetes.io/metadata.name: postgresql-operator") ||
+  !demoNetworkPolicy.includes("port: 8000")
+) {
+  throw new Error("demo PostgreSQL ingress must admit CloudNativePG operator management");
+}
+
+console.log("Kubernetes manifests include base, digest-pinned, and public demo overlays.");

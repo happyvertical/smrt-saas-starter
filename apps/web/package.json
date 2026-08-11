@@ -12,8 +12,10 @@
     "scripts/smrt-db-profile-backfill.mjs",
     "scripts/smrt-db-seed.mjs",
     "scripts/smrt-db-smoke.mjs",
+    "scripts/smrt-start.mjs",
     "smrt-packages.mjs",
     "smrt.config.mjs",
+    "src/lib/server/starter-data.json",
     "src/lib/server/profile-identity-core.ts"
   ],
   "exports": {

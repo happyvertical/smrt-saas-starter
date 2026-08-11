@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["local>happyvertical/renovate-config:application"],
+  "baseBranchPatterns": ["dev"],
+  "prConcurrentLimit": 2,
+  "branchConcurrentLimit": 2,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Keep npx-launched HappyVertical MCP servers aligned with the pnpm catalog",
+      "managerFilePatterns": ["/^\\.mcp\\.json$/"],
+      "matchStrings": [
+        "(?<depName>@happyvertical/(?:smrt-[a-z0-9-]+|sdk-mcp))@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "npm"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Advance the exact-pinned SMRT framework as one validated consumer update",
+      "matchPackageNames": ["@happyvertical/smrt-*"],
+      "groupName": "SMRT framework",
+      "groupSlug": "smrt-framework",
+      "rangeStrategy": "pin",
+      "minimumReleaseAge": "1 day",
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Automerge green SMRT minor and patch consumer updates",
+      "matchPackageNames": ["@happyvertical/smrt-*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}

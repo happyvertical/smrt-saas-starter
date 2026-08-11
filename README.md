@@ -101,6 +101,21 @@ before enabling the new build's OIDC routes.
 
 To stop the database: `pnpm services:down`.
 
+## Hosted demo
+
+The maintained demonstration profile is designed for
+[demo.s-m-r-t.dev](https://demo.s-m-r-t.dev). Once its GitOps deployment is
+enabled, it follows the `dev` branch's immutable image digests, seeds an isolated
+database at startup, and gives every visitor the shared seeded Owner identity.
+It carries no Stripe, OIDC, email, or test-auth credentials and is intentionally
+not a production configuration. Treat the URL as available only after the
+deployment runbook's readiness check passes.
+
+The demo's `SMRT_STARTER_DEMO_AUTH=true` setting is the only way to enable the
+fallback in a production-mode image. Normal deployments omit it and therefore
+remain fail-closed. See [the runbook](docs/runbook.md#public-demo) for the full
+deployment and update contract.
+
 ## Configuration
 
 All configuration is environment-based. `.env.example` is the documented
@@ -110,7 +125,7 @@ default. Key groups:
 - **Database** — `DATABASE_URL` and the `POSTGRES_*` service settings.
 - **Identity** — `HAPPYVERTICAL_IDP_ISSUER`, `OIDC_CLIENT_ID/SECRET`, and the
   `MOBILE_*` auth settings.
-- **Local auth shortcuts** — `SMRT_STARTER_DEV_AUTH`,
+- **Local/demo auth shortcuts** — `SMRT_STARTER_DEV_AUTH`, `SMRT_STARTER_DEMO_AUTH`,
   `SMRT_STARTER_AUTH_INLINE_LINKS` (non-production only).
 - **Billing** — `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the
   `STRIPE_PRICE_*` plan price IDs.
@@ -162,7 +177,7 @@ are validated by:
 pnpm runtime:check
 ```
 
-Kubernetes manifests live in `manifests/` (Kustomize base + dev/staging/
+Kubernetes manifests live in `manifests/` (Kustomize base + dev/demo/staging/
 production overlays, digest-pinned images, SOPS secrets). Operational procedures
 are in [docs/runbook.md](docs/runbook.md).
 

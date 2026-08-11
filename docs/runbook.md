@@ -140,6 +140,44 @@ session identity locally. Tenant switching writes the
 `smrt_starter_tenant_id` cookie and updates the SMRT session tenant when a
 session exists.
 
+## Public demo
+
+`manifests/overlays/demo` derives from the digest-pinned dev overlay. It removes
+the template secret, reads `DATABASE_URL` from CloudNativePG's generated
+`smrt-saas-postgres-app` Secret, and sets
+`SMRT_STARTER_MIGRATE_ON_START=true`. The web image runs the idempotent migrate
+and seed path before importing the SvelteKit server, so a fresh database becomes
+ready without an out-of-band command. Before enabling reconciliation, verify
+that both digest-pinned GHCR packages allow anonymous pulls; the demo deliberately
+does not distribute a registry credential. The worker stays scaled to zero
+because the public demo does not carry external service credentials.
+Network policies admit web traffic only from the ingress-controller namespace
+and PostgreSQL traffic only from the web pod.
+
+The overlay explicitly sets `SMRT_STARTER_DEV_AUTH=false` and
+`SMRT_STARTER_DEMO_AUTH=true`. That second flag is an intentional public-demo
+mode: every visitor receives the shared seeded Owner identity, including
+super-user access. Never set it on a real customer deployment. The server emits
+a startup warning whenever it is enabled.
+
+The framework update rail is executable policy:
+
+1. Every `@happyvertical/smrt-*` package is exact-pinned to one version in the
+   pnpm catalog, with matching overrides and MCP pins.
+2. Renovate waits one day after publication, then opens one SMRT framework PR
+   against `dev` and regenerates the lockfile.
+3. CI rejects ranges, mixed SMRT versions, drifted MCP pins, and any consumer
+   regression through `pnpm check` plus runtime validation.
+4. A green minor or patch update auto-merges. Deploy Dev publishes immutable
+   web and worker digests and commits them to the dev overlay.
+5. After the demo GitOps source is enabled, Flux observes that commit through
+   the nested demo overlay and reconciles the new digest for
+   [demo.s-m-r-t.dev](https://demo.s-m-r-t.dev).
+
+Major updates remain manual. If any automated update fails, the existing PR is
+the durable failure signal; fix the consumer or the upstream package rather
+than bypassing the version guard.
+
 Every starter login/account path requires a canonical `smrt-profiles` identity.
 Signup, member invites, access-request graduation, magic-link/mobile login,
 bearer/session requests, E2E auth, and the dev fallback use the starter
