@@ -7,5 +7,5 @@ ARG APP_VERSION=""
 ENV APP_VERSION=$APP_VERSION
 COPY .runtime/web/ ./
 EXPOSE 3000
-USER node
+USER 1000:1000
 CMD ["node", "scripts/smrt-start.mjs"]
