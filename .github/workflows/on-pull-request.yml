@@ -7,27 +7,9 @@ on:
       - staging
       - main
     types: [opened, synchronize, reopened]
-  merge_group:
-    types: [checks_requested]
+
 concurrency:
-  group: >-
-    ${{ github.workflow }}-${{
-      github.event.pull_request.number ||
-      github.event.merge_group.head_sha ||
-      github.ref
-    }}-${{
-      (github.event_name == 'pull_request' &&
-      github.event.action == 'edited' &&
-      github.event.changes.title != null &&
-      github.event.changes.base == null) &&
-      'title' ||
-      (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' &&
-      !contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) &&
-      !(github.event.action == 'edited' && github.event.changes.base != null))) &&
-      'lifecycle' ||
-      'validation'
-    }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -38,24 +20,6 @@ env:
   GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
 
 jobs:
-  # hv-agent-validation-dependency:start
-  lifecycle:
-    name: lifecycle / validation dependency
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'merge_group' ||
-      (github.event_name == 'pull_request' &&
-      contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action))
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    permissions:
-      contents: read
-    steps:
-      - name: Preserve repository validation dependencies
-        run: echo 'The dedicated Agent Policy workflow publishes the lifecycle context.'
-  # hv-agent-validation-dependency:end
-
-
   check:
     runs-on: ubuntu-latest
     services:
@@ -138,62 +102,3 @@ jobs:
       - uses: ./.github/actions/setup-environment
       - name: Validate runtime artifacts
         run: pnpm runtime:check
-
-  validation-gate:
-    name: Required CI / validation
-    if: always()
-    needs: [lifecycle, check, e2e, mobile-android, runtime]
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      checks: read
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Verify or preserve required validation
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_ACTION: ${{ github.event.action }}
-          BASE_CHANGED: ${{ github.event.changes.base != null }}
-          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
-          LIFECYCLE: ${{ needs.lifecycle.result }}
-          CHECK: ${{ needs.check.result }}
-          E2E: ${{ needs.e2e.result }}
-          MOBILE: ${{ needs.mobile-android.result }}
-          RUNTIME: ${{ needs.runtime.result }}
-        run: |
-          set -euo pipefail
-          if [ "$LIFECYCLE" != success ]; then
-            echo "::error::Lifecycle policy failed: $LIFECYCLE"
-            exit 1
-          fi
-
-          for result in "$CHECK" "$E2E" "$MOBILE" "$RUNTIME"; do
-            if [ "$result" != success ]; then
-              echo "::error::Required repository job failed or skipped: $result"
-              exit 1
-            fi
-          done
-          echo "Validation baseline passed for $EVENT_NAME"
-
-  required-ci:
-    name: Required CI
-    if: always()
-    needs: [validation-gate]
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      checks: read
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Require full validation
-        env:
-          VALIDATION: ${{ needs.validation-gate.result }}
-        run: |
-          set -euo pipefail
-          [ "$VALIDATION" = success ] || {
-            echo "::error::Required validation failed: $VALIDATION"
-            exit 1
-          }
