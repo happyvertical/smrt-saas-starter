@@ -3,12 +3,12 @@
     "smrt-dev-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@happyvertical/smrt-dev-mcp@0.40.61"]
+      "args": ["-y", "@happyvertical/smrt-dev-mcp@0.40.63"]
     },
     "happyvertical-sdk-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@happyvertical/sdk-mcp@0.78.1"]
+      "args": ["-y", "@happyvertical/sdk-mcp@0.86.1"]
     },
     "playwright": {
       "type": "stdio",
