@@ -39,12 +39,12 @@ To install the required check in a generated repository:
 
 1. Merge the workflow with existing required checks unchanged.
 2. Observe ten successful representative `Required CI` pull-request runs.
-3. Enable `CI_NODE_RUNNER_ENABLED`, then `CI_POSTGRES_ENABLED`, observing ten
-   successful runs after each change.
+3. Enable `CI_NODE_RUNNER_ENABLED`, then `CI_DOCKER_RUNNER_ENABLED`, then
+   `CI_POSTGRES_ENABLED`, observing ten successful runs after each change.
 4. Enable `CI_MERGE_QUEUE_ENABLED` and observe one queued merge and deployment.
 5. Change the ruleset to require only `Required CI`.
 
-Rollback by clearing those three variables, disabling the merge queue, and
+Rollback by clearing those four variables, disabling the merge queue, and
 restoring the previous required-status list. This restores exhaustive PR
 validation without changing the local command or SQLite coverage.
 

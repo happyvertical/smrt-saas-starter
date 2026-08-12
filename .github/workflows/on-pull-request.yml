@@ -317,7 +317,7 @@ jobs:
        vars.CI_MERGE_QUEUE_ENABLED != 'true' ||
        needs.scope.outputs.runtime == 'true') &&
       (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: arc-happyvertical
+    runs-on: ${{ vars.CI_DOCKER_RUNNER_ENABLED == 'true' && 'arc-happyvertical' || 'ubuntu-latest' }}
     timeout-minutes: 30
     permissions:
       contents: read

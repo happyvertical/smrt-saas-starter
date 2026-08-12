@@ -40,6 +40,10 @@ describe("starter scaffold", () => {
       pullRequest,
       /CI_NODE_RUNNER_ENABLED == 'true' && 'arc-happyvertical-node' \|\| 'ubuntu-latest'/,
     );
+    assert.match(
+      pullRequest,
+      /CI_DOCKER_RUNNER_ENABLED == 'true' && 'arc-happyvertical' \|\| 'ubuntu-latest'/,
+    );
     assert.match(pullRequest, /runtime-candidate\.json/);
     assert.match(
       pullRequest,
