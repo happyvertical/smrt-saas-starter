@@ -58,7 +58,11 @@ behavior; the wrapper always creates and force-drops a unique database.
   entrypoint. It waits on health, verifies required framework/starter tables,
   reruns the same entrypoint against the initialized database, and runs the
   browser suite against the compiled image. CI runs this hermetic gate on every
-  PR, including Renovate's lockstep SMRT updates.
+  PR during the rollout observation window. After the merge-queue cutover it
+  runs for changes to the web app, its workspace dependencies, production E2E
+  scripts, runtime preparation, or the root build and dependency configuration;
+  merge-queue validation remains exhaustive. Renovate's lockstep SMRT updates
+  change the lockfile and therefore always run the gate.
 - **Dockerfiles, runtime trees, manifests, deploy scripts** —
   `pnpm runtime:check` (build → prepare runtime trees → build images → smoke
   them → render manifests). Needs Docker and `kubectl`.

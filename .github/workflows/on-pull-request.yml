@@ -60,7 +60,12 @@ jobs:
               - 'packages/app-ui/**'
               - '.github/actions/**'
               - '.github/workflows/**'
+              - 'package.json'
               - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'scripts/*production-e2e*.mjs'
+              - 'scripts/prepare-runtime.mjs'
             mobile:
               - 'apps/mobile/**'
               - 'packages/mobile-contract/**'
