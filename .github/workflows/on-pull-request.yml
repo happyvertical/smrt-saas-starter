@@ -179,7 +179,7 @@ jobs:
     name: Isolated PostgreSQL (shared lane)
     needs: [scope, generated]
     if: >-
-      needs.scope.outputs.postgres == 'true' &&
+      (github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.postgres == 'true') &&
       vars.CI_POSTGRES_ENABLED == 'true' &&
       (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: arc-happyvertical-node
@@ -209,7 +209,7 @@ jobs:
     name: Isolated PostgreSQL (service fallback)
     needs: [scope, generated]
     if: >-
-      needs.scope.outputs.postgres == 'true' &&
+      (github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.postgres == 'true') &&
       (vars.CI_POSTGRES_ENABLED != 'true' ||
        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository))
     runs-on: ubuntu-latest
@@ -279,7 +279,10 @@ jobs:
   mobile:
     name: Mobile Contract and Android
     needs: [scope]
-    if: needs.scope.outputs.mobile == 'true'
+    if: >-
+      github.event_name == 'merge_group' ||
+      vars.CI_MERGE_QUEUE_ENABLED != 'true' ||
+      needs.scope.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -301,7 +304,11 @@ jobs:
   candidate:
     name: Deployment Candidate
     needs: [scope, generated]
-    if: needs.scope.outputs.runtime == 'true' && (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    if: >-
+      (github.event_name == 'merge_group' ||
+       vars.CI_MERGE_QUEUE_ENABLED != 'true' ||
+       needs.scope.outputs.runtime == 'true') &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: arc-happyvertical
     timeout-minutes: 30
     permissions:
@@ -383,15 +390,15 @@ jobs:
           SCOPE: ${{ needs.scope.result }}
           STATIC: ${{ needs.static.result }}
           GENERATED: ${{ needs.generated.result }}
-          POSTGRES_REQUIRED: ${{ needs.scope.outputs.postgres }}
+          POSTGRES_REQUIRED: ${{ github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.postgres == 'true' }}
           POSTGRES_ENABLED: ${{ vars.CI_POSTGRES_ENABLED }}
           POSTGRES_SHARED: ${{ needs.postgres-shared.result }}
           POSTGRES_FALLBACK: ${{ needs.postgres-fallback.result }}
           E2E_REQUIRED: ${{ github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.e2e == 'true' }}
           E2E: ${{ needs.e2e.result }}
-          MOBILE_REQUIRED: ${{ needs.scope.outputs.mobile }}
+          MOBILE_REQUIRED: ${{ github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.mobile == 'true' }}
           MOBILE: ${{ needs.mobile.result }}
-          CANDIDATE_REQUIRED: ${{ needs.scope.outputs.runtime }}
+          CANDIDATE_REQUIRED: ${{ github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.runtime == 'true' }}
           CANDIDATE: ${{ needs.candidate.result }}
         run: |
           require_success() {
