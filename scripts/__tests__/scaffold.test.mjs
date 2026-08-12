@@ -54,6 +54,8 @@ describe("starter scaffold", () => {
     assert.match(deploy, /ref: \$\{\{ inputs\.source_sha \|\| github\.sha \}\}/);
     assert.doesNotMatch(deploy, /docker\/build-push-action/);
     assert.match(promotion, /commits\/\$SOURCE_SHA\/pulls/);
+    assert.match(promotion, /pull_requests\[\]\?; \.number == \$pr_number/);
+    assert.match(promotion, /recovery-build\.yml/);
     assert.match(promotion, /HEAD\^\{tree\}/);
     assert.match(promotion, /Expected exactly one verified candidate for tree/);
     assert.match(isolation, /GITHUB_RUN_ATTEMPT/);

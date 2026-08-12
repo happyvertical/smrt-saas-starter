@@ -178,7 +178,10 @@ jobs:
   postgres-shared:
     name: Isolated PostgreSQL (shared lane)
     needs: [scope, generated]
-    if: needs.scope.outputs.postgres == 'true' && vars.CI_POSTGRES_ENABLED == 'true'
+    if: >-
+      needs.scope.outputs.postgres == 'true' &&
+      vars.CI_POSTGRES_ENABLED == 'true' &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: arc-happyvertical-node
     timeout-minutes: 20
     steps:
@@ -205,12 +208,15 @@ jobs:
   postgres-fallback:
     name: Isolated PostgreSQL (service fallback)
     needs: [scope, generated]
-    if: needs.scope.outputs.postgres == 'true' && vars.CI_POSTGRES_ENABLED != 'true'
+    if: >-
+      needs.scope.outputs.postgres == 'true' &&
+      (vars.CI_POSTGRES_ENABLED != 'true' ||
+       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
         env:
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: localdev
@@ -245,7 +251,10 @@ jobs:
   e2e:
     name: Production Image E2E
     needs: [scope, generated]
-    if: needs.scope.outputs.e2e == 'true'
+    if: >-
+      github.event_name == 'merge_group' ||
+      vars.CI_MERGE_QUEUE_ENABLED != 'true' ||
+      needs.scope.outputs.e2e == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -378,7 +387,7 @@ jobs:
           POSTGRES_ENABLED: ${{ vars.CI_POSTGRES_ENABLED }}
           POSTGRES_SHARED: ${{ needs.postgres-shared.result }}
           POSTGRES_FALLBACK: ${{ needs.postgres-fallback.result }}
-          E2E_REQUIRED: ${{ needs.scope.outputs.e2e }}
+          E2E_REQUIRED: ${{ github.event_name == 'merge_group' || vars.CI_MERGE_QUEUE_ENABLED != 'true' || needs.scope.outputs.e2e == 'true' }}
           E2E: ${{ needs.e2e.result }}
           MOBILE_REQUIRED: ${{ needs.scope.outputs.mobile }}
           MOBILE: ${{ needs.mobile.result }}
@@ -404,7 +413,7 @@ jobs:
           require_success "Static checks" "$STATIC"
           require_success "Build/typecheck/tests" "$GENERATED"
           if [ "$POSTGRES_REQUIRED" = "true" ]; then
-            if [ "$POSTGRES_ENABLED" = "true" ]; then
+            if [ "$POSTGRES_ENABLED" = "true" ] && [ "$SAME_REPOSITORY" = "true" ]; then
               require_success "Shared PostgreSQL" "$POSTGRES_SHARED"
               require_optional "PostgreSQL fallback" "false" "$POSTGRES_FALLBACK"
             else

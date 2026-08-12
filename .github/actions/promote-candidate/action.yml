@@ -31,7 +31,13 @@ runs:
       run: |
         if [ -n "$EXPLICIT_RUN_ID" ]; then
           run_ids=("$EXPLICIT_RUN_ID")
-          candidate_source_sha=""
+          workflow_path=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$EXPLICIT_RUN_ID" --jq '.path')
+          conclusion=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$EXPLICIT_RUN_ID" --jq '.conclusion')
+          if [ "$workflow_path" != ".github/workflows/recovery-build.yml" ] || [ "$conclusion" != "success" ]; then
+            echo "Explicit candidate must be a successful Emergency Recovery Build run"
+            exit 1
+          fi
+          candidate_source_sha="$SOURCE_SHA"
         else
           mapfile -t run_ids < <(gh run list \
             --workflow on-pull-request.yml \
@@ -42,22 +48,18 @@ runs:
             --jq '.[].databaseId')
           candidate_source_sha="$SOURCE_SHA"
           if [ "${#run_ids[@]}" -eq 0 ]; then
-            mapfile -t pr_heads < <(gh api \
+            mapfile -t merged_prs < <(gh api \
               -H "Accept: application/vnd.github+json" \
               "/repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA/pulls" \
-              --jq '.[] | select(.merged_at != null) | .head.sha' | sort -u)
-            if [ "${#pr_heads[@]}" -ne 1 ]; then
-              echo "Expected one merged PR for $SOURCE_SHA; found ${#pr_heads[@]}"
+              --jq '.[] | select(.merged_at != null) | [.number, .head.sha] | @tsv' | sort -u)
+            if [ "${#merged_prs[@]}" -ne 1 ]; then
+              echo "Expected one merged PR for $SOURCE_SHA; found ${#merged_prs[@]}"
               exit 1
             fi
-            candidate_source_sha="${pr_heads[0]}"
-            mapfile -t run_ids < <(gh run list \
-              --workflow on-pull-request.yml \
-              --commit "$candidate_source_sha" \
-              --status success \
-              --limit 20 \
-              --json databaseId \
-              --jq '.[].databaseId')
+            IFS=$'\t' read -r pr_number candidate_source_sha <<< "${merged_prs[0]}"
+            mapfile -t run_ids < <(gh api --paginate \
+              "/repos/$GITHUB_REPOSITORY/actions/workflows/on-pull-request.yml/runs?event=pull_request&status=success&per_page=100" \
+              --jq ".workflow_runs[] | select(any(.pull_requests[]?; .number == $pr_number)) | .id")
           fi
         fi
 

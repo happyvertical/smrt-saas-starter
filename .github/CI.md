@@ -70,7 +70,11 @@ be a CI-only role with no production network route or credentials. Set
 `CI_POSTGRES_ENABLED=true` only after that role and mount are verified. When it
 is unset, workflows use an ephemeral PostgreSQL service container; SQLite jobs
 are unchanged. PostgreSQL work is uncached and the registry concurrency is
-limited.
+limited. Configure `CI_POSTGRES_EXPECTED_HOST` and
+`CI_POSTGRES_EXPECTED_USER` before enabling the scheduled janitor; cleanup
+fails closed unless the mounted URL matches both values. Fork pull requests
+always use the ephemeral hosted-runner fallback and never receive the mounted
+shared credential.
 
 ## Deployment artifacts
 
