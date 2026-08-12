@@ -1,6 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["GH_PACKAGES_TOKEN", "GITHUB_PACKAGES_TOKEN", "NODE_AUTH_TOKEN"],
+  "globalPassThroughEnv": [
+    "DEPLOY_WAIT_TIMEOUT_MS",
+    "E2E_APP_VERSION",
+    "E2E_ARTIFACT_DIR",
+    "E2E_WEB_IMAGE",
+    "GITHUB_RUN_ATTEMPT",
+    "GITHUB_RUN_ID",
+    "WEB_IMAGE_TAG",
+    "WORKER_IMAGE_TAG"
+  ],
   "tasks": {
     "lint": {
       "dependsOn": ["^build"],
