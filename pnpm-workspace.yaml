@@ -9,6 +9,7 @@ allowBuilds:
   onnxruntime-node: true
   protobufjs: true
   sharp: true
+  tesseract.js: true
 
 catalog:
   '@happyvertical/accounting': 0.86.1
@@ -106,10 +107,15 @@ minimumReleaseAgeExclude:
   - '@happyvertical/smrt-dev-mcp@0.40.65'
   - '@happyvertical/smrt-features@0.40.65'
   - '@happyvertical/smrt-fields@0.40.65'
+  - '@happyvertical/smrt-facts@0.40.65'
+  - '@happyvertical/smrt-images@0.40.65'
   - '@happyvertical/smrt-jobs@0.40.65'
   - '@happyvertical/smrt-languages@0.40.65'
   - '@happyvertical/smrt-ledgers@0.40.65'
   - '@happyvertical/smrt-messages@0.40.65'
+  - '@happyvertical/smrt-mobile-contract@0.40.65'
+  - '@happyvertical/smrt-personas@0.40.65'
+  - '@happyvertical/smrt-playground@0.40.65'
   - '@happyvertical/smrt-profiles@0.40.65'
   - '@happyvertical/smrt-projects@0.40.65'
   - '@happyvertical/smrt-prompts@0.40.65'
@@ -124,6 +130,7 @@ minimumReleaseAgeExclude:
   - '@happyvertical/smrt-ui@0.40.65'
   - '@happyvertical/smrt-users@0.40.65'
   - '@happyvertical/smrt-vitest@0.40.65'
+  - '@happyvertical/smrt-web@0.40.65'
 
 overrides:
   '@happyvertical/accounting': 0.86.1
