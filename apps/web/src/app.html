@@ -3,16 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script>
-      // Workaround for https://github.com/happyvertical/sdk/issues/1096:
-      // @happyvertical/utils loadEnvConfig reads process.env unguarded and is
-      // pulled into the browser via @happyvertical/logger ->
-      // @happyvertical/smrt-svelte's module-scope createLogger. Without this
-      // shim client hydration throws "process is not defined" (SvelteKit
-      // 2.69+ then replaces the page with its error page). Remove once the
-      // upstream guard ships.
-      globalThis.process ??= { env: {} };
-    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

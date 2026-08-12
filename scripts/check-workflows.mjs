@@ -48,7 +48,11 @@ const setupEnvironmentAction = await readFile(
   join(root, ".github/actions/setup-environment/action.yml"),
   "utf8",
 );
-for (const phrase of ["uses: actions/setup-node@v6", 'node-version: "24"']) {
+for (const phrase of [
+  "uses: actions/setup-node@v6",
+  'node-version: "24.18.0"',
+  "corepack prepare pnpm@11.13.0 --activate",
+]) {
   if (!setupEnvironmentAction.includes(phrase)) {
     throw new Error(`setup-environment action must include: ${phrase}`);
   }

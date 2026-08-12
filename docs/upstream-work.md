@@ -5,16 +5,17 @@ Reusable starter functionality should continue to move upstream from isolated wo
 ## Consumed Versions
 
 - SMRT packages (`@happyvertical/smrt-*`): **0.40.65**
-- SDK (`@happyvertical/*`): **0.86.1**
+- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.86.4**
+- OCR (`@happyvertical/ocr`): **0.61.5**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
 
 The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.40.65`
 depends on the SDK line at `^0.86.1`, so the catalog/`overrides` pin the SDK family
-to `0.86.1` to match. (A prior state pinned SMRT `0.40.61` while `overrides` still
+to `0.86.4` to match. (A prior state pinned SMRT `0.40.61` while `overrides` still
 forced the SDK to `0.78.1`; pnpm silently resolved SMRT's own SDK deps down to the
 older line — this bump realigns them.)
 
-### SDK DuckDB bundling (consumer-side mitigation, still required at 0.86.1)
+### SDK DuckDB bundling (consumer-side mitigation, still required at 0.86.4)
 
 `@happyvertical/sql` reaches its optional DuckDB adapter through a
 statically-analyzable `import("@duckdb/node-api")` in the package entry, which the
@@ -87,6 +88,15 @@ When starter work hits an upstream bug or a missing public API in a
    `pnpm check`, and move the entry to the completed sections below.
 
 ## Resolved
+
+### SDK: browser-safe environment loading
+
+[sdk#1096](https://github.com/happyvertical/sdk/issues/1096) was fixed by
+[sdk#1199](https://github.com/happyvertical/sdk/pull/1199) and released in
+`@happyvertical/utils@0.86.4` / `@happyvertical/logger@0.86.4`. Browser builds now
+guard access to `process.env`, so Vite 8 client hydration no longer needs the
+starter's `globalThis.process` shim. The shim has been removed from
+`apps/web/src/app.html`.
 
 ### SMRT Fields: field-policy adoption surfaces
 
@@ -207,22 +217,7 @@ field metadata inline and no runtime file lookup is needed. The local workaround
 
 ## Open Blockers
 
-### SDK: `loadEnvConfig` crashes in browsers (`process is not defined`)
-
-Status: open as [happyvertical/sdk#1096](https://github.com/happyvertical/sdk/issues/1096); non-blocking with a local workaround.
-
-`@happyvertical/utils@0.78.1` `loadEnvConfig` reads `process.env` without a
-`typeof process` guard, and it reaches the browser through
-`@happyvertical/logger` (no `browser` export condition) via
-`@happyvertical/smrt-svelte`'s module-scope `createLogger`. Client hydration
-throws `ReferenceError: process is not defined`; under vite 7 / kit 2.55 the
-SSR content quietly stayed unhydrated, while under vite 8 / kit 2.69 SvelteKit
-replaces the page with its root error page, breaking the public pages and the
-e2e suite.
-
-Workaround until the upstream guard ships: `apps/web/src/app.html` shims
-`globalThis.process ??= { env: {} }` before SvelteKit's module scripts run.
-Remove the shim when consuming a fixed `@happyvertical/utils`/`logger`.
+_None._
 
 ## SDK: Stripe In `@happyvertical/accounting`
 

@@ -5,8 +5,9 @@
 ### Changed
 
 - Advance the SMRT and SDK families together to the current coordinated release:
-  SMRT `@happyvertical/smrt-*` to **0.40.65** and the HappyVertical SDK
-  `@happyvertical/*` to **0.86.1**. `smrt-core@0.40.65` requires the SDK at
+  SMRT `@happyvertical/smrt-*` to **0.40.65**, the coordinated HappyVertical SDK
+  family to **0.86.4**, and the independently versioned `@happyvertical/ocr` to
+  **0.61.5**. `smrt-core@0.40.65` requires the SDK at
   `^0.86.1`, so this realigns a prior skew where SMRT `0.40.61` ran against an
   SDK `overrides`-pinned to `0.78.1`.
 - Externalize `@duckdb/*` in `apps/web/vite.config.ts` so the SSR build does not
