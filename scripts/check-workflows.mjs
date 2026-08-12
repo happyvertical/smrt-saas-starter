@@ -93,6 +93,7 @@ for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]
     "node scripts/update-manifest-digests.mjs",
     "pnpm manifests:render",
     'LEFTHOOK=0 git commit -m "chore(deploy): update',
+    "LEFTHOOK=0 git push",
   ]) {
     if (!text.includes(phrase)) {
       throw new Error(`${file} must include deploy runtime hardening: ${phrase}`);
