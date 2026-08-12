@@ -92,7 +92,7 @@ for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]
     "uses: docker/build-push-action@v7.2.0",
     "node scripts/update-manifest-digests.mjs",
     "pnpm manifests:render",
-    'git commit -m "chore(deploy): update',
+    'LEFTHOOK=0 git commit -m "chore(deploy): update',
   ]) {
     if (!text.includes(phrase)) {
       throw new Error(`${file} must include deploy runtime hardening: ${phrase}`);

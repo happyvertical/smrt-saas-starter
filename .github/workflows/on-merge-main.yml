@@ -93,7 +93,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add manifests/overlays/production/kustomization.yaml
-          git commit -m "chore(deploy): update production image digests [skip ci]"
+          LEFTHOOK=0 git commit -m "chore(deploy): update production image digests [skip ci]"
           git push
       - name: Sync main back to dev
         env:
