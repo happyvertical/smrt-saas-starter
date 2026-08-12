@@ -19,6 +19,7 @@
     "typecheck": "turbo run typecheck",
     "test": "pnpm -r --if-present test && node --test scripts/__tests__/*.test.mjs",
     "test:e2e": "pnpm -r --if-present test:e2e",
+    "test:e2e:production": "pnpm build && pnpm runtime:prepare && node scripts/run-production-e2e.mjs",
     "build": "turbo run build",
     "services:up": "docker compose up -d --wait postgres",
     "services:down": "docker compose down",

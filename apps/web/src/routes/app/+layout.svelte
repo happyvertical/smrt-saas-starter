@@ -7,6 +7,7 @@
     type ShellNavItem,
     TenantNav,
   } from "@happyvertical/smrt-svelte/workspace";
+  import { APP_NAVIGATION } from "$lib/app-navigation";
   import FieldPolicyFocusTool from "$lib/components/FieldPolicyFocusTool.svelte";
   import NavIcon from "$lib/components/NavIcon.svelte";
 
@@ -15,19 +16,21 @@
   type StarterNavItem = ShellNavItem & { permission?: string };
 
   const navItems = $derived.by((): ShellNavItem[] => {
-    const candidates: Array<StarterNavItem | null> = [
-      { href: "/app", label: "Overview", icon: "bar-chart", permission: "tenant.read" },
-      { href: "/app/billing", label: "Billing", icon: "credit-card", permission: "tenant.billing.read" },
-      { href: "/app/usage", label: "Usage", icon: "gauge", permission: "tenant.usage.read" },
-      { href: "/app/settings", label: "Settings", icon: "settings", permission: "tenant.settings.read" },
-      fieldPolicyControlPanelNavItem({
-        href: "/app/settings/field-policies",
-        permissions: data.permissions,
-        label: "Field settings",
-        icon: "sliders-horizontal",
-      }),
-      { href: "/app/admin", label: "Admin", icon: "settings", permission: "super-user" },
-    ];
+    const candidates: Array<StarterNavItem | null> = APP_NAVIGATION.map((item) =>
+      item.href === "/app/settings/field-policies"
+        ? fieldPolicyControlPanelNavItem({
+            href: item.href,
+            permissions: data.permissions,
+            label: item.label,
+            icon: item.icon,
+          })
+        : {
+            href: item.href,
+            label: item.label,
+            icon: item.icon,
+            permission: item.permission,
+          },
+    );
     return candidates.filter((item): item is StarterNavItem => {
       if (!item) return false;
       const permission = item.permission;
