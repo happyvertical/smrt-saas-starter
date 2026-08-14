@@ -162,6 +162,12 @@ pnpm services:up
 pnpm test:postgres
 ```
 
+The local runner uses the host `createdb`/`dropdb` clients when available and
+automatically falls back to `docker compose exec postgres` when they are not
+installed. Hosted service and shared lanes never use that local fallback; they
+require their explicit CI PostgreSQL target and fail closed if their client is
+unavailable.
+
 The `PostgreSQL Confidence` workflow invokes this command for every pull
 request and in its daily scheduled run. It is uncached and concurrency-limited.
 By default it runs against a disposable GitHub-hosted PostgreSQL service. A

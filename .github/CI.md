@@ -29,7 +29,10 @@ PostgreSQL-only contract is `pnpm test:postgres`: it creates a database named
 with the epoch, run, attempt, suite, and process; exports `DATABASE_URL`,
 `TEST_DB_URL`, and normal libpq variables; and force-drops that database in a
 `finally` cleanup. Run it locally after `pnpm services:up`; it targets only the
-local Docker service by default.
+local Docker service by default. If host PostgreSQL client binaries are absent,
+the runner executes `createdb`, `dropdb`, and janitor commands inside the local
+Compose service. Hosted service and shared CI lanes remain explicit and fail
+closed rather than falling back to a developer's Docker daemon.
 
 The `PostgreSQL Confidence` workflow runs the registry on every pull request
 and has a daily scheduled confidence run. It disables Turbo task caching and

@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   assertCiPostgresTarget,
+  composePostgresUrl,
   createDatabaseName,
   databaseEnvironment,
   databaseUrl,
   main,
+  runPostgresCommand,
 } from "../run-with-ci-postgres.mjs";
 
 describe("CI PostgreSQL isolation", () => {
@@ -68,5 +70,68 @@ describe("CI PostgreSQL isolation", () => {
 
   it("rejects unknown runner options before touching PostgreSQL", async () => {
     await assert.rejects(() => main(["--unexpected", "--", "true"], {}), /Unknown PostgreSQL/u);
+  });
+
+  it("falls back to the Compose PostgreSQL client when a local host binary is absent", () => {
+    const baseUrl = "postgresql://smrt_saas:localdev@127.0.0.1:55432/postgres";
+    const calls = [];
+    const spawn = (command, args) => {
+      calls.push([command, args]);
+      if (command === "createdb") {
+        const error = new Error("createdb not found");
+        error.code = "ENOENT";
+        return { error, status: null };
+      }
+      return { status: 0 };
+    };
+
+    const result = runPostgresCommand(
+      "createdb",
+      [`--maintenance-db=${baseUrl}`, "smrt_ci_test"],
+      baseUrl,
+      {},
+      { stdio: "inherit" },
+      spawn,
+    );
+
+    assert.equal(result.status, 0);
+    assert.deepEqual(calls, [
+      ["createdb", [`--maintenance-db=${baseUrl}`, "smrt_ci_test"]],
+      [
+        "docker",
+        [
+          "compose",
+          "exec",
+          "-T",
+          "postgres",
+          "createdb",
+          `--maintenance-db=${composePostgresUrl(baseUrl)}`,
+          "smrt_ci_test",
+        ],
+      ],
+    ]);
+  });
+
+  it("does not fall back to local Compose from hosted CI", () => {
+    const calls = [];
+    const spawn = (command, args) => {
+      calls.push([command, args]);
+      const error = new Error("createdb not found");
+      error.code = "ENOENT";
+      return { error, status: null };
+    };
+
+    const result = runPostgresCommand(
+      "createdb",
+      ["--maintenance-db=postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres", "smrt_ci_test"],
+      "postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres",
+      { GITHUB_ACTIONS: "true" },
+      { stdio: "inherit" },
+      spawn,
+    );
+
+    assert.equal(result.error?.code, "ENOENT");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], "createdb");
   });
 });

@@ -2,7 +2,11 @@
 
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { assertCiPostgresTarget, resolveBaseUrl } from "./run-with-ci-postgres.mjs";
+import {
+  assertCiPostgresTarget,
+  resolveBaseUrl,
+  runPostgresCommand,
+} from "./run-with-ci-postgres.mjs";
 
 export function cleanupQuery(cutoffEpoch) {
   return [
@@ -12,24 +16,34 @@ export function cleanupQuery(cutoffEpoch) {
   ].join(" ");
 }
 
-export function main(environment = process.env) {
+export function main(environment = process.env, spawn = spawnSync) {
   const baseUrl = resolveBaseUrl(environment);
   assertCiPostgresTarget(baseUrl, environment);
   const cutoffEpoch = Math.floor(Date.now() / 1000) - 6 * 60 * 60;
-  const list = spawnSync(
+  const list = runPostgresCommand(
     "psql",
     [baseUrl, "--tuples-only", "--no-align", "--command", cleanupQuery(cutoffEpoch)],
+    baseUrl,
+    environment,
     { encoding: "utf8" },
+    spawn,
   );
+  if (list.error) throw list.error;
   if (list.status !== 0) return list.status ?? 1;
 
   for (const database of list.stdout
     .split("\n")
     .map((value) => value.trim())
     .filter(Boolean)) {
-    const result = spawnSync("dropdb", ["--force", `--maintenance-db=${baseUrl}`, database], {
-      stdio: "inherit",
-    });
+    const result = runPostgresCommand(
+      "dropdb",
+      ["--force", `--maintenance-db=${baseUrl}`, database],
+      baseUrl,
+      environment,
+      { stdio: "inherit" },
+      spawn,
+    );
+    if (result.error) throw result.error;
     if (result.status !== 0) return result.status ?? 1;
   }
   return 0;

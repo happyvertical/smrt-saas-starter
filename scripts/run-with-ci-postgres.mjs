@@ -78,6 +78,22 @@ function isLoopback(hostname) {
   return hostname === "127.0.0.1" || hostname === "::1" || hostname === "localhost";
 }
 
+export function isLocalComposeTarget(baseUrl, environment = process.env) {
+  if (environment.GITHUB_ACTIONS === "true" || environment.CI_POSTGRES_SHARED_LANE === "true") {
+    return false;
+  }
+  return isLoopback(new URL(baseUrl).hostname);
+}
+
+export function composePostgresUrl(baseUrl) {
+  const url = new URL(baseUrl);
+  // The host port is not necessarily the port exposed inside the Compose
+  // network. The starter service always listens on PostgreSQL's default port.
+  url.hostname = "127.0.0.1";
+  url.port = "5432";
+  return url.toString();
+}
+
 // A shared lane is opt-in and must identify its dedicated host and role. The
 // default URL is loopback-only, so a fresh clone cannot point this command at a
 // deployment database by accident.
@@ -115,13 +131,38 @@ export function resolveBaseUrl(environment = process.env) {
   return DEFAULT_BASE_URL;
 }
 
-function run(command, args, options = {}) {
-  const result = spawnSync(command, args, { stdio: "inherit", ...options });
+export function runPostgresCommand(
+  command,
+  args,
+  baseUrl,
+  environment = process.env,
+  options = {},
+  spawn = spawnSync,
+) {
+  const result = spawn(command, args, options);
+  if (result.error?.code !== "ENOENT" || !isLocalComposeTarget(baseUrl, environment)) {
+    return result;
+  }
+
+  const composeUrl = composePostgresUrl(baseUrl);
+  const composeArgs = args.map((argument) => {
+    if (argument === baseUrl) return composeUrl;
+    return argument.replace(`--maintenance-db=${baseUrl}`, `--maintenance-db=${composeUrl}`);
+  });
+  return spawn("docker", ["compose", "exec", "-T", "postgres", command, ...composeArgs], options);
+}
+
+function run(command, args, options = {}, spawn = spawnSync) {
+  const result = spawn(command, args, { stdio: "inherit", ...options });
   if (result.error) throw result.error;
   return result.status ?? 1;
 }
 
-export async function main(argv = process.argv.slice(2), environment = process.env) {
+export async function main(
+  argv = process.argv.slice(2),
+  environment = process.env,
+  spawn = spawnSync,
+) {
   const separator = argv.indexOf("--");
   const optionArgs = separator === -1 ? [] : argv.slice(0, separator);
   const commandArgs = separator === -1 ? argv : argv.slice(separator + 1);
@@ -150,18 +191,30 @@ export async function main(argv = process.argv.slice(2), environment = process.e
   let testStatus = 1;
   let testError;
   try {
-    const createStatus = run("createdb", [`--maintenance-db=${baseUrl}`, databaseName]);
+    const createResult = runPostgresCommand(
+      "createdb",
+      [`--maintenance-db=${baseUrl}`, databaseName],
+      baseUrl,
+      environment,
+      { stdio: "inherit" },
+      spawn,
+    );
+    if (createResult.error) throw createResult.error;
+    const createStatus = createResult.status ?? 1;
     if (createStatus !== 0) throw new Error(`createdb failed with status ${createStatus}`);
-    testStatus = run(command, args, { env: databaseEnvironment(testUrl, environment) });
+    testStatus = run(command, args, { env: databaseEnvironment(testUrl, environment) }, spawn);
   } catch (error) {
     testError = error;
   } finally {
-    const dropStatus = run("dropdb", [
-      "--force",
-      "--if-exists",
-      `--maintenance-db=${baseUrl}`,
-      databaseName,
-    ]);
+    const dropResult = runPostgresCommand(
+      "dropdb",
+      ["--force", "--if-exists", `--maintenance-db=${baseUrl}`, databaseName],
+      baseUrl,
+      environment,
+      { stdio: "inherit" },
+      spawn,
+    );
+    const dropStatus = dropResult.error ? 1 : (dropResult.status ?? 1);
     if (dropStatus !== 0) {
       console.error(
         `Failed to drop ${databaseName}; the CI janitor will remove it after six hours`,
