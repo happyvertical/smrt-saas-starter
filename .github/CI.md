@@ -1,9 +1,9 @@
 # Hosted CI
 
 Starter pull requests run on GitHub-hosted `ubuntu-latest` runners. The shared
-setup action installs Node `24.18.0`, then lets `pnpm/action-setup` read the
-single pnpm pin from `package.json#packageManager`. Do not copy the pnpm
-version into a workflow.
+setup action installs Node `24.18.0`, then lets Corepack activate the single
+pnpm pin from `package.json#packageManager`. Do not copy the pnpm version into
+a workflow.
 
 The `check` job installs the workspace once and reports format, lint,
 typecheck, tests, build, and PostgreSQL smoke as separate steps. The metadata

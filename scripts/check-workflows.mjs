@@ -51,8 +51,9 @@ const setupEnvironmentAction = await readFile(
 for (const phrase of [
   "uses: actions/setup-node@v6",
   'node-version: "24.18.0"',
-  "pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86",
-  "run_install: false",
+  'corepack prepare "$package_manager" --activate',
+  "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+  "pnpm store path --silent",
   "install-deps:",
   "pnpm-cache-hit:",
   "setup-seconds:",
@@ -64,8 +65,8 @@ for (const phrase of [
 if (/corepack prepare pnpm@/u.test(setupEnvironmentAction)) {
   throw new Error("setup-environment must not duplicate the packageManager pnpm pin");
 }
-if (/pnpm\/action-setup[^\n]*\n\s+with:\n\s+version:/u.test(setupEnvironmentAction)) {
-  throw new Error("setup-environment must let pnpm/action-setup read packageManager");
+if (/pnpm\/action-setup/u.test(setupEnvironmentAction)) {
+  throw new Error("setup-environment must avoid pnpm/action-setup's @pnpm/exe installer");
 }
 
 const pullRequestWorkflow = await readFile(join(workflowsDir, "on-pull-request.yml"), "utf8");

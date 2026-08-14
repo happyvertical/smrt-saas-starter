@@ -10,7 +10,7 @@ inputs:
 outputs:
   pnpm-cache-hit:
     description: Whether the pnpm store cache was restored.
-    value: ${{ steps.node.outputs.cache-hit }}
+    value: ${{ steps.pnpm-cache.outputs.cache-hit }}
   remote-cache-mode:
     description: Whether an optional Turbo remote cache is configured.
     value: ${{ steps.cache-mode.outputs.mode }}
@@ -26,19 +26,35 @@ runs:
       shell: bash
       run: echo "seconds=$(date +%s)" >> "$GITHUB_OUTPUT"
 
-    # pnpm/action-setup reads package.json#packageManager when version is omitted.
-    # Keep that field as the sole pnpm version source for local and hosted use.
-    - name: Setup pnpm from packageManager
-      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
-      with:
-        run_install: false
-
     - name: Setup Node
-      id: node
       uses: actions/setup-node@v6
       with:
         node-version: "24.18.0"
-        cache: "pnpm"
+
+    - name: Activate pnpm from packageManager
+      shell: bash
+      run: |
+        package_manager="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).packageManager')"
+        if [[ "$package_manager" != pnpm@* ]]; then
+          echo "package.json#packageManager must pin pnpm (found: $package_manager)" >&2
+          exit 1
+        fi
+        corepack enable
+        corepack prepare "$package_manager" --activate
+
+    - name: Locate pnpm store
+      id: pnpm-store
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore pnpm store
+      id: pnpm-cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-${{ runner.arch }}-
 
     - name: Detect optional Turbo remote cache
       id: cache-mode
