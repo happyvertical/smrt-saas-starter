@@ -51,15 +51,43 @@ const setupEnvironmentAction = await readFile(
 for (const phrase of [
   "uses: actions/setup-node@v6",
   'node-version: "24.18.0"',
-  "corepack prepare pnpm@11.13.0 --activate",
+  "pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86",
+  "run_install: false",
+  "install-deps:",
+  "pnpm-cache-hit:",
+  "setup-seconds:",
 ]) {
   if (!setupEnvironmentAction.includes(phrase)) {
     throw new Error(`setup-environment action must include: ${phrase}`);
   }
 }
+if (/corepack prepare pnpm@/u.test(setupEnvironmentAction)) {
+  throw new Error("setup-environment must not duplicate the packageManager pnpm pin");
+}
+if (/pnpm\/action-setup[^\n]*\n\s+with:\n\s+version:/u.test(setupEnvironmentAction)) {
+  throw new Error("setup-environment must let pnpm/action-setup read packageManager");
+}
 
 const pullRequestWorkflow = await readFile(join(workflowsDir, "on-pull-request.yml"), "utf8");
 for (const phrase of [
+  "name: Check",
+  "name: Format",
+  "name: Lint",
+  "name: Typecheck",
+  "name: Test",
+  "name: Build",
+  "name: Database smoke",
+  "metadata:",
+  'install-deps: "false"',
+  "name: Workflow validation",
+  "name: Manifest validation",
+  "name: SOPS validation",
+  "name: Deployment scaffold validation",
+  "ci-metrics:",
+  "name: CI rollout metrics",
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: literal GitHub Actions expression
+  "ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}",
+  "TURBO_REMOTE_CACHE_TIMEOUT",
   "runtime:",
   "uses: Azure/setup-kubectl@v5.1.0",
   "pnpm runtime:check",
@@ -80,6 +108,19 @@ for (const phrase of [
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
   }
+}
+if (pullRequestWorkflow.includes("run: pnpm check")) {
+  throw new Error(
+    "on-pull-request.yml must expose validation families instead of hiding them in pnpm check",
+  );
+}
+
+const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+if (!packageJson.scripts?.check?.startsWith("pnpm deps:check")) {
+  throw new Error("pnpm check must retain dependency validation");
+}
+if (packageJson.scripts?.lint?.includes("deps:check")) {
+  throw new Error("pnpm lint must stay code-only so pnpm check runs dependency validation once");
 }
 
 for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]) {

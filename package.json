@@ -14,7 +14,7 @@
     "dev": "turbo run dev --parallel",
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "lint": "pnpm deps:check && biome lint . && pnpm -r --if-present lint",
+    "lint": "biome lint . && pnpm -r --if-present lint",
     "lint:fix": "biome lint --write .",
     "typecheck": "turbo run typecheck",
     "test": "pnpm -r --if-present test && node --test scripts/__tests__/*.test.mjs",

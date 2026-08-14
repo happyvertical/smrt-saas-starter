@@ -1,26 +1,61 @@
 name: Setup environment
-description: Install Node, pnpm, and workspace dependencies.
+description: Install the repository-pinned Node and pnpm toolchain and optional workspace dependencies.
+
+inputs:
+  install-deps:
+    description: Install workspace dependencies with the frozen lockfile.
+    required: false
+    default: "true"
+
+outputs:
+  pnpm-cache-hit:
+    description: Whether the pnpm store cache was restored.
+    value: ${{ steps.node.outputs.cache-hit }}
+  remote-cache-mode:
+    description: Whether an optional Turbo remote cache is configured.
+    value: ${{ steps.cache-mode.outputs.mode }}
+  setup-seconds:
+    description: Elapsed time spent setting up the toolchain and optional dependencies.
+    value: ${{ steps.complete.outputs.seconds }}
 
 runs:
   using: composite
   steps:
-    - name: Enable pnpm for setup-node cache
+    - name: Start setup timer
+      id: started
       shell: bash
-      run: |
-        corepack enable
-        corepack prepare pnpm@11.13.0 --activate
+      run: echo "seconds=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+    # pnpm/action-setup reads package.json#packageManager when version is omitted.
+    # Keep that field as the sole pnpm version source for local and hosted use.
+    - name: Setup pnpm from packageManager
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+      with:
+        run_install: false
 
     - name: Setup Node
+      id: node
       uses: actions/setup-node@v6
       with:
         node-version: "24.18.0"
         cache: "pnpm"
 
-    - name: Activate pnpm
+    - name: Detect optional Turbo remote cache
+      id: cache-mode
       shell: bash
       run: |
-        corepack prepare pnpm@11.13.0 --activate
+        if [[ -n "${TURBO_TEAM:-}" && -n "${TURBO_TOKEN:-}" ]]; then
+          echo "mode=remote-configured" >> "$GITHUB_OUTPUT"
+        else
+          echo "mode=cold-local" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Install dependencies
+      if: inputs.install-deps == 'true'
       shell: bash
       run: pnpm install --frozen-lockfile
+
+    - name: Record setup duration
+      id: complete
+      shell: bash
+      run: echo "seconds=$(( $(date +%s) - ${{ steps.started.outputs.seconds }} ))" >> "$GITHUB_OUTPUT"

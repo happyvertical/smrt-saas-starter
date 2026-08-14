@@ -57,7 +57,7 @@ PostgreSQL 18 · pnpm workspaces + Turborepo · Kotlin Multiplatform · Kubernet
 
 ## Prerequisites
 
-- **Node.js ≥ 24** and **pnpm ≥ 10** (`packageManager` is pinned in `package.json`)
+- **Node.js ≥ 24.18.0** and **pnpm ≥ 11.13.0** (`packageManager` is pinned in `package.json` and is the hosted CI source of truth)
 - **Docker** (for the local Postgres service)
 
 ## Installing the `@happyvertical/*` packages
