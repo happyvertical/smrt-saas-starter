@@ -13,14 +13,24 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  actions: read
   contents: read
   packages: read
 
 env:
   GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GH_TOKEN }}
+  TURBO_API: ${{ vars.TURBO_API }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_REMOTE_CACHE_TIMEOUT: "5"
 
 jobs:
   check:
+    name: Check
+    outputs:
+      pnpm-cache-hit: ${{ steps.setup.outputs.pnpm-cache-hit }}
+      remote-cache-mode: ${{ steps.setup.outputs.remote-cache-mode }}
+      setup-seconds: ${{ steps.setup.outputs.setup-seconds }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -40,15 +50,56 @@ jobs:
       DATABASE_URL: postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-environment
-      - name: Validate
-        run: pnpm check
+      - id: setup
+        uses: ./.github/actions/setup-environment
+      - name: Format
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: Database smoke
+        run: pnpm db:smoke
 
-  e2e:
+  metadata:
+    name: Metadata validation
+    outputs:
+      pnpm-cache-hit: ${{ steps.setup.outputs.pnpm-cache-hit }}
+      remote-cache-mode: ${{ steps.setup.outputs.remote-cache-mode }}
+      setup-seconds: ${{ steps.setup.outputs.setup-seconds }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-environment
+      - id: setup
+        uses: ./.github/actions/setup-environment
+        with:
+          install-deps: "false"
+      - name: Dependency validation
+        run: node scripts/check-dependencies.mjs
+      - name: Workflow validation
+        run: node scripts/check-workflows.mjs
+      - name: Manifest validation
+        run: node scripts/check-manifests.mjs
+      - name: SOPS validation
+        run: node scripts/check-sops.mjs
+      - name: Deployment scaffold validation
+        run: node scripts/validate-scaffold.mjs
+
+  e2e:
+    name: Production-image E2E
+    outputs:
+      pnpm-cache-hit: ${{ steps.setup.outputs.pnpm-cache-hit }}
+      remote-cache-mode: ${{ steps.setup.outputs.remote-cache-mode }}
+      setup-seconds: ${{ steps.setup.outputs.setup-seconds }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - id: setup
+        uses: ./.github/actions/setup-environment
       - name: Install Playwright browsers
         run: pnpm --filter @happyvertical/smrt-saas-web exec playwright install --with-deps chromium
       - name: Production-image browser and migration gate
@@ -66,6 +117,11 @@ jobs:
           retention-days: 14
 
   mobile-android:
+    name: Android shell validation
+    outputs:
+      pnpm-cache-hit: ${{ steps.setup.outputs.pnpm-cache-hit }}
+      remote-cache-mode: ${{ steps.setup.outputs.remote-cache-mode }}
+      setup-seconds: ${{ steps.setup.outputs.setup-seconds }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -75,7 +131,8 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: android-actions/setup-android@v4
-      - uses: ./.github/actions/setup-environment
+      - id: setup
+        uses: ./.github/actions/setup-environment
       - name: Install Android SDK components
         run: |
           yes | sdkmanager --licenses >/dev/null || true
@@ -84,10 +141,100 @@ jobs:
         run: pnpm mobile:validate:android
 
   runtime:
+    name: Runtime validation
+    outputs:
+      pnpm-cache-hit: ${{ steps.setup.outputs.pnpm-cache-hit }}
+      remote-cache-mode: ${{ steps.setup.outputs.remote-cache-mode }}
+      setup-seconds: ${{ steps.setup.outputs.setup-seconds }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: Azure/setup-kubectl@v5.1.0
-      - uses: ./.github/actions/setup-environment
+      - id: setup
+        uses: ./.github/actions/setup-environment
       - name: Validate runtime artifacts
         run: pnpm runtime:check
+
+  ci-metrics:
+    name: CI rollout metrics
+    if: always()
+    needs: [check, metadata, e2e, mobile-android, runtime]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect validation timing and retry data
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          NEEDS_JSON: ${{ toJson(needs) }}
+        run: |
+          curl --fail --retry 2 --retry-all-errors --silent --show-error \
+            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" \
+            --output "$RUNNER_TEMP/ci-jobs.json"
+          node --input-type=module <<'NODE'
+          import { mkdir, readFile, writeFile } from "node:fs/promises";
+          import { join } from "node:path";
+
+          const response = JSON.parse(await readFile(process.env.RUNNER_TEMP + "/ci-jobs.json", "utf8"));
+          const needs = JSON.parse(process.env.NEEDS_JSON);
+          const slug = (name) => name.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-").replaceAll(/(^-|-$)/g, "");
+          const jobByName = new Map(response.jobs.map((job) => [slug(job.name), job]));
+          const jobNames = {
+            metadata: "Metadata validation",
+            e2e: "Production-image E2E",
+            "mobile-android": "Android shell validation",
+            runtime: "Runtime validation",
+          };
+          const jobs = Object.entries(needs).map(([id, need]) => {
+            const job = jobByName.get(slug(jobNames[id] || id));
+            const outputs = need.outputs ?? {};
+            const startedAt = job?.started_at ?? null;
+            const completedAt = job?.completed_at ?? null;
+            return {
+              id,
+              result: need.result,
+              setupSeconds: Number(outputs["setup-seconds"] || 0),
+              pnpmCacheHit: outputs["pnpm-cache-hit"] || "not-recorded",
+              remoteCacheMode: outputs["remote-cache-mode"] || "not-recorded",
+              startedAt,
+              completedAt,
+              wallSeconds: startedAt && completedAt ? Math.round((Date.parse(completedAt) - Date.parse(startedAt)) / 1000) : null,
+            };
+          });
+          const timestamps = jobs.flatMap((job) => [job.startedAt, job.completedAt]).filter(Boolean).map(Date.parse);
+          const metrics = {
+            schemaVersion: 1,
+            capturedAt: new Date().toISOString(),
+            run: {
+              id: process.env.GITHUB_RUN_ID,
+              attempt: Number(process.env.GITHUB_RUN_ATTEMPT),
+              event: process.env.GITHUB_EVENT_NAME,
+              workflow: process.env.GITHUB_WORKFLOW,
+            },
+            validationWallSeconds: timestamps.length ? Math.round((Math.max(...timestamps) - Math.min(...timestamps)) / 1000) : null,
+            jobs,
+          };
+          const artifactDir = join("artifacts", "ci-metrics");
+          await mkdir(artifactDir, { recursive: true });
+          await writeFile(join(artifactDir, `run-${metrics.run.id}-attempt-${metrics.run.attempt}.json`), `${JSON.stringify(metrics, null, 2)}\n`);
+          const rows = jobs.map((job) => `| ${job.id} | ${job.result} | ${job.setupSeconds || "n/a"} | ${job.wallSeconds ?? "n/a"} | ${job.pnpmCacheHit} | ${job.remoteCacheMode} |`);
+          await writeFile(process.env.GITHUB_STEP_SUMMARY, [
+            "## CI rollout metrics",
+            "",
+            `Run attempt: ${metrics.run.attempt}; validation wall time: ${metrics.validationWallSeconds ?? "n/a"}s.`,
+            "",
+            "| Job | Result | Setup (s) | Wall (s) | pnpm cache | Turbo cache |",
+            "| --- | --- | ---: | ---: | --- | --- |",
+            ...rows,
+            "",
+            "Retry/noise data is the run attempt above; compare this artifact across the rollout sample.",
+            "",
+          ].join("\n"));
+          NODE
+      - name: Upload CI rollout metrics
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ci-metrics/
+          if-no-files-found: error
+          retention-days: 14

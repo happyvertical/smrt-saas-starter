@@ -2,7 +2,8 @@
 
 The starter validates in layers. Narrow layers run constantly during
 development; the full gate runs before every push (`pnpm check`, enforced by
-the pre-push hook and CI). Layers that need heavy local toolchains or a
+the pre-push hook). CI exposes the same validation families as named steps so
+hosted failures stay attributable. Layers that need heavy local toolchains or a
 running browser stay out of `pnpm check` and are listed with their own
 triggers below.
 
@@ -142,5 +143,5 @@ through a gated test endpoint:
 - Never put real secrets in tests or fixtures; the dev-auth fallback and seed
   data cover authenticated paths locally.
 - Before shipping: narrow checks for what you touched, then the full
-  `pnpm check`. CI runs `check`, `mobile-android`, `mobile-ios`, and
-  `runtime` on every PR.
+  `pnpm check`. CI runs the `check` and no-install metadata families, Android
+  shell validation, production-image E2E, and runtime validation on every PR.
