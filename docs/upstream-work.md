@@ -217,7 +217,16 @@ field metadata inline and no runtime file lookup is needed. The local workaround
 
 ## Open Blockers
 
-_None._
+### SMRT: reusable generated manifest context
+
+[smrt#2328](https://github.com/happyvertical/smrt/issues/2328) tracks the
+public consumer/plugin API needed for a CI job to reuse a verified generated
+manifest/context artifact. In `@happyvertical/smrt-core@0.40.65`, each Vite
+consumer invocation rescans objects and regenerates routes; the plugin exposes
+no pre-generated context input or skip-scan mode. The starter therefore does
+not emulate or patch that framework behavior. Issue #30 proceeds only with its
+independent PostgreSQL isolation lane until an upstream release provides the
+public reuse surface.
 
 ## SDK: Stripe In `@happyvertical/accounting`
 

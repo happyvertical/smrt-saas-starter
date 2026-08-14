@@ -14,7 +14,7 @@ triggers below.
 | Static gates | biome, svelte-check/tsc | `pnpm format:check && pnpm lint && pnpm typecheck` | yes |
 | Unit + route tests | vitest per workspace | `pnpm test` | yes |
 | Script tests | node:test | `node --test scripts/__tests__/*.test.mjs` (part of `pnpm test`) | yes |
-| DB smoke | real Postgres | `pnpm db:smoke` | yes |
+| DB smoke | isolated real Postgres | `pnpm test:postgres` | yes |
 | Scaffold/config guards | custom scripts | `pnpm deps:check`, `workflows:check`, `manifests:check`, `sops:check`, `validate` | yes |
 | Mobile contract | generator + node:test | `pnpm mobile:generate && pnpm mobile:validate` | shell test via `pnpm test` |
 | Production-image e2e | Docker, PostgreSQL, Playwright | `pnpm test:e2e:production` | no (CI `e2e` job on PRs) |
@@ -32,8 +32,9 @@ triggers below.
   changes also need `pnpm db:smoke`.
 - **Worker jobs (`apps/worker`)** — package test + typecheck. Jobs must stay
   idempotent; test both the direct path and the SMRT-jobs adapter path.
-- **Anything touching migrations, seeds, or tenant columns** — `pnpm db:smoke`
-  against fresh Docker Compose Postgres (`pnpm services:up`). It migrates,
+- **Anything touching migrations, seeds, or tenant columns** — `pnpm test:postgres`
+  against fresh Docker Compose Postgres (`pnpm services:up`). It creates a
+  unique disposable database, then migrates,
   seeds, and asserts tenant_id columns are native UUID with no empty-string
   defaults.
 - **Mobile contract (`packages/mobile-contract`)** — `pnpm mobile:generate`,
@@ -145,3 +146,34 @@ through a gated test endpoint:
 - Before shipping: narrow checks for what you touched, then the full
   `pnpm check`. CI runs the `check` and no-install metadata families, Android
   shell validation, production-image E2E, and runtime validation on every PR.
+
+## Isolated PostgreSQL registry
+
+`pnpm test` remains the fast unit/SQLite-compatible coverage path and is not
+changed by the PostgreSQL registry. `pnpm test:postgres` is the standard
+production-sensitive schema, migration, UUID, relationship, and query command.
+It creates a `smrt_ci_<epoch>_<run>_<attempt>_<suite>_<pid>` database from the
+local Docker service by default, exports `DATABASE_URL`, `TEST_DB_URL`,
+`SMRT_TEST_POSTGRES_URL`, and normal libpq variables to the suite, then
+force-drops the exact database in cleanup. Start the local service first:
+
+```sh
+pnpm services:up
+pnpm test:postgres
+```
+
+The `PostgreSQL Confidence` workflow invokes this command for every pull
+request and in its daily scheduled run. It is uncached and concurrency-limited.
+By default it runs against a disposable GitHub-hosted PostgreSQL service. A
+shared CI cluster is opt-in only through the repository variable
+`CI_POSTGRES_SHARED_ENABLED=true`; its URL secret, expected host variable, and
+dedicated CI-role variable belong in the `ci-postgres` environment. That role
+must be restricted to the non-production CI
+cluster and have no production network path. Disable the variable to return to
+the service-container fallback without altering the fast coverage path.
+
+The shared-lane janitor validates the same host/user allowlist and force-drops
+only `smrt_ci_*` databases older than six hours. Each PostgreSQL workflow run
+uploads a metric artifact with its lane type, result, and wall time. During
+rollout, retain ten fallback/shared samples and compare setup cost, wall time,
+and retry/noise before relying on the shared lane.
