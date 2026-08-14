@@ -22,6 +22,17 @@ describe("starter scaffold", () => {
     assert.match(mergeMain, /main/);
   });
 
+  it("ships the reusable isolated PostgreSQL test fallback", async () => {
+    const workflow = await readFile(join(root, ".github/workflows/postgres-tests.yml"), "utf8");
+    const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+
+    assert.match(workflow, /Registered PostgreSQL suites \(service fallback\)/);
+    assert.match(workflow, /CI_POSTGRES_SHARED_ENABLED/);
+    assert.match(workflow, /node scripts\/cleanup-ci-postgres\.mjs/);
+    assert.match(workflow, /schedule:/);
+    assert.match(packageJson.scripts["test:postgres"], /run-with-ci-postgres\.mjs/);
+  });
+
   it("requires subscription and usage packages in the web app", async () => {
     const pkg = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
     assert.equal(pkg.dependencies["@happyvertical/smrt-saas-objects"], "workspace:*");

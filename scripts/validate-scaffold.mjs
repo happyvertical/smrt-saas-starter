@@ -44,6 +44,10 @@ const requiredFiles = [
   "scripts/render-manifests.mjs",
   "scripts/update-manifest-digests.mjs",
   "scripts/wait-for-deploy.mjs",
+  "scripts/run-with-ci-postgres.mjs",
+  "scripts/cleanup-ci-postgres.mjs",
+  "scripts/record-postgres-metrics.mjs",
+  ".github/workflows/postgres-tests.yml",
   "apps/web/playwright.config.ts",
   "apps/web/e2e/public.spec.ts",
   "apps/web/e2e/authed.spec.ts",
@@ -100,6 +104,7 @@ for (const scriptName of [
   "services:logs",
   "db:up",
   "db:smoke",
+  "test:postgres",
   "runtime:prepare",
   "images:build",
   "images:smoke",
@@ -114,6 +119,9 @@ for (const scriptName of [
 const webPackageJson = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
 if (!webPackageJson.scripts?.["db:smoke"]) {
   throw new Error("apps/web/package.json must include script: db:smoke");
+}
+if (!packageJson.scripts?.["test:postgres"]?.includes("run-with-ci-postgres.mjs")) {
+  throw new Error("package.json must isolate PostgreSQL suites through run-with-ci-postgres.mjs");
 }
 if (!webPackageJson.files?.includes("build/")) {
   throw new Error("apps/web/package.json must include production files for build/");

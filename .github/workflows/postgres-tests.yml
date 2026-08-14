@@ -1,0 +1,142 @@
+name: PostgreSQL Confidence
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+concurrency:
+  group: postgres-confidence-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  postgres-shared:
+    name: Registered PostgreSQL suites (shared lane)
+    if: vars.CI_POSTGRES_SHARED_ENABLED == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ci-postgres
+    env:
+      CI_POSTGRES_BASE_URL: ${{ secrets.CI_POSTGRES_BASE_URL }}
+      CI_POSTGRES_EXPECTED_HOST: ${{ vars.CI_POSTGRES_EXPECTED_HOST }}
+      CI_POSTGRES_EXPECTED_USER: ${{ vars.CI_POSTGRES_EXPECTED_USER }}
+      CI_POSTGRES_SHARED_LANE: "true"
+      TURBO_CACHE: "false"
+      TURBO_FORCE: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+      - id: postgres
+        name: Run uncached isolated PostgreSQL registry
+        run: |
+          started_at="$(date +%s)"
+          set +e
+          pnpm test:postgres
+          result="$?"
+          {
+            echo "started-at=$started_at"
+            echo "completed-at=$(date +%s)"
+            echo "result=$result"
+          } >> "$GITHUB_OUTPUT"
+          exit "$result"
+      - name: Record shared PostgreSQL rollout metric
+        if: always()
+        env:
+          CI_POSTGRES_COMPLETED_AT: ${{ steps.postgres.outputs.completed-at }}
+          CI_POSTGRES_RESULT: ${{ steps.postgres.outputs.result }}
+          CI_POSTGRES_RUNNER: shared
+          CI_POSTGRES_STARTED_AT: ${{ steps.postgres.outputs.started-at }}
+        run: node scripts/record-postgres-metrics.mjs
+      - name: Upload PostgreSQL rollout metric
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: postgres-ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}-shared
+          path: artifacts/postgres-ci-metrics/
+          if-no-files-found: error
+          retention-days: 14
+
+  postgres-fallback:
+    name: Registered PostgreSQL suites (service fallback)
+    if: vars.CI_POSTGRES_SHARED_ENABLED != 'true' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: localdev
+          POSTGRES_USER: smrt_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smrt_ci -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 36
+    env:
+      CI_POSTGRES_BASE_URL: postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres
+      TURBO_CACHE: "false"
+      TURBO_FORCE: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+      - id: postgres
+        name: Run uncached isolated PostgreSQL registry
+        run: |
+          started_at="$(date +%s)"
+          set +e
+          pnpm test:postgres
+          result="$?"
+          {
+            echo "started-at=$started_at"
+            echo "completed-at=$(date +%s)"
+            echo "result=$result"
+          } >> "$GITHUB_OUTPUT"
+          exit "$result"
+      - name: Record service PostgreSQL rollout metric
+        if: always()
+        env:
+          CI_POSTGRES_COMPLETED_AT: ${{ steps.postgres.outputs.completed-at }}
+          CI_POSTGRES_RESULT: ${{ steps.postgres.outputs.result }}
+          CI_POSTGRES_RUNNER: service-fallback
+          CI_POSTGRES_STARTED_AT: ${{ steps.postgres.outputs.started-at }}
+        run: node scripts/record-postgres-metrics.mjs
+      - name: Upload PostgreSQL rollout metric
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: postgres-ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}-fallback
+          path: artifacts/postgres-ci-metrics/
+          if-no-files-found: error
+          retention-days: 14
+
+  cleanup:
+    name: Remove abandoned CI databases
+    if: always() && needs.postgres-shared.result != 'skipped'
+    needs: postgres-shared
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ci-postgres
+    env:
+      CI_POSTGRES_BASE_URL: ${{ secrets.CI_POSTGRES_BASE_URL }}
+      CI_POSTGRES_EXPECTED_HOST: ${{ vars.CI_POSTGRES_EXPECTED_HOST }}
+      CI_POSTGRES_EXPECTED_USER: ${{ vars.CI_POSTGRES_EXPECTED_USER }}
+      CI_POSTGRES_SHARED_LANE: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-environment
+        with:
+          install-deps: "false"
+      - name: Force-drop isolated databases older than six hours
+        run: node scripts/cleanup-ci-postgres.mjs

@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workflowsDir = join(root, ".github/workflows");
+const postgresConcurrencyGroup = "postgres-confidence-${" + "{ github.repository }}";
 const required = [
   "on-pull-request.yml",
+  "postgres-tests.yml",
   "deploy-dev.yml",
   "promote-dev.yml",
   "deploy-staging.yml",
@@ -77,7 +79,6 @@ for (const phrase of [
   "name: Typecheck",
   "name: Test",
   "name: Build",
-  "name: Database smoke",
   "metadata:",
   'install-deps: "false"',
   "name: Workflow validation",
@@ -114,6 +115,36 @@ if (pullRequestWorkflow.includes("run: pnpm check")) {
   throw new Error(
     "on-pull-request.yml must expose validation families instead of hiding them in pnpm check",
   );
+}
+
+const postgresWorkflow = await readFile(join(workflowsDir, "postgres-tests.yml"), "utf8");
+for (const phrase of [
+  "name: PostgreSQL Confidence",
+  "pull_request:",
+  "schedule:",
+  'cron: "0 8 * * *"',
+  postgresConcurrencyGroup,
+  "cancel-in-progress: false",
+  "postgres-shared:",
+  "CI_POSTGRES_SHARED_ENABLED",
+  "CI_POSTGRES_SHARED_LANE",
+  "CI_POSTGRES_EXPECTED_HOST",
+  "CI_POSTGRES_EXPECTED_USER",
+  "postgres-fallback:",
+  "postgres:18-alpine",
+  "CI_POSTGRES_BASE_URL: postgresql://smrt_ci:localdev@127.0.0.1:5432/postgres",
+  'TURBO_CACHE: "false"',
+  'TURBO_FORCE: "true"',
+  "pnpm test:postgres",
+  "cleanup:",
+  "needs.postgres-shared.result != 'skipped'",
+  "node scripts/cleanup-ci-postgres.mjs",
+  "older than six hours",
+  "record-postgres-metrics.mjs",
+]) {
+  if (!postgresWorkflow.includes(phrase)) {
+    throw new Error(`postgres-tests.yml must include isolated PostgreSQL validation: ${phrase}`);
+  }
 }
 
 const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
