@@ -7,6 +7,7 @@ import {
   test,
 } from "@playwright/test";
 import { APP_NAVIGATION } from "../src/lib/app-navigation";
+import { isCancelledDocumentDataLoad } from "../src/lib/production-e2e-health";
 
 test.skip(
   process.env.E2E_PRODUCTION_IMAGE !== "true",
@@ -23,8 +24,13 @@ async function expectHealthyDocument(page: Page, route: string): Promise<() => P
     if (message.type() === "error") consoleErrors.push(message.text());
   };
   const onRequestFailed = (request: Request) => {
-    if (request.url().startsWith(origin)) {
-      failedRequests.push(`${request.method()} ${request.url()}: ${request.failure()?.errorText}`);
+    const errorText = request.failure()?.errorText;
+    const requestUrl = new URL(request.url());
+    if (
+      requestUrl.origin === origin &&
+      !isCancelledDocumentDataLoad(request.url(), errorText, origin, route)
+    ) {
+      failedRequests.push(`${request.method()} ${request.url()}: ${errorText}`);
     }
   };
   const onResponse = (response: Response) => {
