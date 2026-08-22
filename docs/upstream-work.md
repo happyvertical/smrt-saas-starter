@@ -138,13 +138,13 @@ ambiguous candidates. The starter callback delegates system-context and
 transaction ownership to that upstream boundary.
 
 The release also adds durable Profile/User normalized-email keys and readiness
-markers. `pnpm db:migrate` applies the schema and then runs the public,
+markers. `pnpm run db:migrate` applies the schema and then runs the public,
 transactional `backfillProfileEmailKeys()` and `backfillUserEmailKeys()` helpers
 in that order. Both are idempotent; the User backfill fails before writes while
 normalized duplicate User emails remain. Before applying the unique Profile
 ownership constraint, operators must reconcile duplicate non-null
 `users.profile_id` values as documented in `docs/runbook.md`. The starter's
-separate `pnpm db:profiles:backfill` step then attaches canonical Persons to
+separate `pnpm run db:profiles:backfill` step then attaches canonical Persons to
 active legacy Users.
 
 After 0.1.1 is published, `projects.happyvertical.com` should adopt it in a

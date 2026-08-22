@@ -4,15 +4,15 @@
 
 ```sh
 pnpm install
-pnpm services:up
-pnpm db:migrate
-pnpm db:profiles:backfill
-pnpm db:seed
-pnpm db:smoke
+pnpm run services:up
+pnpm run db:migrate
+pnpm run db:profiles:backfill
+pnpm run db:seed
+pnpm run db:smoke
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
 
-`pnpm db:migrate` loads the canonical SMRT runtime package list from
+`pnpm run db:migrate` loads the canonical SMRT runtime package list from
 `apps/web/smrt-packages.mjs` before schema generation, so local Postgres is
 prepared for the same SMRT surface used by the web app. After schema migration,
 the command transactionally backfills SMRT's durable normalized Profile email
@@ -27,10 +27,10 @@ Postgres and matches the default app connection string:
 `postgresql://smrt_saas:localdev@127.0.0.1:5432/smrt_saas`.
 
 ```sh
-pnpm services:up
-pnpm services:ps
-pnpm services:logs
-pnpm services:down
+pnpm run services:up
+pnpm run services:ps
+pnpm run services:logs
+pnpm run services:down
 ```
 
 ## Local Worker
@@ -77,30 +77,30 @@ queued job methods in this app.
 ## Validation
 
 ```sh
-pnpm deps:check
-pnpm workflows:check
-pnpm manifests:check
-pnpm manifests:render
-pnpm sops:check
+pnpm run deps:check
+pnpm run workflows:check
+pnpm run manifests:check
+pnpm run manifests:render
+pnpm run sops:check
 pnpm validate
 pnpm check
-pnpm runtime:check
-pnpm test:e2e:production
+pnpm run runtime:check
+pnpm run test:e2e:production
 ```
 
-`pnpm db:seed` idempotently creates the demo tenant, Profile-backed owner identity,
+`pnpm run db:seed` idempotently creates the demo tenant, Profile-backed owner identity,
 subscription plans, active Growth subscription, starter app settings, usage
 metrics, and demo prompt/language overrides.
 `pnpm check` runs the Postgres migration, seed, and smoke path. Start local
-services first with `pnpm services:up`; CI workflows provide an isolated
+services first with `pnpm run services:up`; CI workflows provide an isolated
 Postgres service.
 
-`pnpm runtime:check` runs `pnpm build`, creates `.runtime/web` and
+`pnpm run runtime:check` runs `pnpm build`, creates `.runtime/web` and
 `.runtime/worker` with `pnpm deploy --prod --legacy`, builds local Docker
 images, smoke-tests web and worker startup imports, and renders every kustomize
 overlay with `kubectl kustomize`.
 
-`pnpm test:e2e:production` is the release-shaped consumer gate. It creates a
+`pnpm run test:e2e:production` is the release-shaped consumer gate. It creates a
 new PostgreSQL container with no pre-existing schema, builds the actual web
 image with the current commit as `APP_VERSION`, waits for `/api/health`, checks
 the framework- and starter-owned persistence contract, and runs Playwright
@@ -143,7 +143,7 @@ instead of writing a copied default.
 
 The web app uses `smrt-users` sessions when a `sid` cookie is present. In
 non-production environments, requests without a session fall back to the seeded
-demo owner so the reference app remains explorable after `pnpm db:seed`.
+demo owner so the reference app remains explorable after `pnpm run db:seed`.
 
 Set `SMRT_STARTER_DEV_AUTH=false` to disable that fallback and require a real
 session identity locally. Tenant switching writes the
@@ -212,7 +212,7 @@ Reconcile every result and normalize legacy empty-string placeholders to
 ownership. Also reconcile duplicate normalized User emails: the User email-key
 backfill fails transactionally without changing rows while they remain.
 
-Then run the controlled, idempotent `pnpm db:profiles:backfill` command from one
+Then run the controlled, idempotent `pnpm run db:profiles:backfill` command from one
 deploy process before starting web replicas or enabling OIDC. It runs the
 schema/email-key migration first, then reconciles the complete active-User set
 in one transaction. The operator-owned backfill may reuse exactly one unowned
@@ -236,7 +236,7 @@ Tenant authorization returns `membership.profileId`. Load that global Person
 through `ProfileCollection`, then pass the loaded `profile` object to
 `AuditLogCollection.record({ profile, ... })` inside the tenant context.
 `membership.userId` remains the account/membership key and is not a valid
-substitute for a Profile UUID. `pnpm db:smoke` proves both a reconciled legacy
+substitute for a Profile UUID. `pnpm run db:smoke` proves both a reconciled legacy
 User and the seeded demo owner can write a canonical tenant-scoped AuditLog with
 this mapping.
 

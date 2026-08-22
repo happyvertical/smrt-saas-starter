@@ -12,7 +12,7 @@ See CONTRIBUTING.md for setup, validation, and the upstream-coordination rule.
 <!-- Commands run and results. -->
 
 - [ ] `pnpm check` passes
-- [ ] Targeted checks where relevant (`pnpm objects:test`, `pnpm typecheck`, `test:e2e`, `pnpm mobile:validate`)
+- [ ] Targeted checks where relevant (`pnpm run objects:test`, `pnpm typecheck`, `test:e2e`, `pnpm run mobile:validate`)
 
 ## Checklist
 

@@ -54,7 +54,7 @@ graduation, verified magic-link/mobile login, E2E auth, normal session, and
 dev-fallback paths all cross this reconciler. Merely issuing a magic link does
 not mutate Profile ownership. Upstream OIDC provisioning creates the same
 Person-backed identity. Legacy rows are repaired by the explicit
-`pnpm db:profiles:backfill` deployment command rather than an unbounded public
+`pnpm run db:profiles:backfill` deployment command rather than an unbounded public
 request hook.
 Reconciliation locks the User row, uses SMRT's canonical Person lookup and
 email-reservation boundary, and creates one Person with a User-specific slug

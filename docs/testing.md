@@ -11,37 +11,37 @@ triggers below.
 
 | Layer | Tool | Command | In `pnpm check` |
 | --- | --- | --- | --- |
-| Static gates | biome, svelte-check/tsc | `pnpm format:check && pnpm lint && pnpm typecheck` | yes |
+| Static gates | biome, svelte-check/tsc | `pnpm run format:check && pnpm lint && pnpm typecheck` | yes |
 | Unit + route tests | vitest per workspace | `pnpm test` | yes |
 | Script tests | node:test | `node --test scripts/__tests__/*.test.mjs` (part of `pnpm test`) | yes |
-| DB smoke | real Postgres | `pnpm db:smoke` | yes |
-| Scaffold/config guards | custom scripts | `pnpm deps:check`, `workflows:check`, `manifests:check`, `sops:check`, `validate` | yes |
-| Mobile contract | generator + node:test | `pnpm mobile:generate && pnpm mobile:validate` | shell test via `pnpm test` |
-| Production-image e2e | Docker, PostgreSQL, Playwright | `pnpm test:e2e:production` | no (CI `e2e` job on PRs) |
+| DB smoke | real Postgres | `pnpm run db:smoke` | yes |
+| Scaffold/config guards | custom scripts | `pnpm run deps:check`, `workflows:check`, `manifests:check`, `sops:check`, `validate` | yes |
+| Mobile contract | generator + node:test | `pnpm run mobile:generate && pnpm run mobile:validate` | shell test via `pnpm test` |
+| Production-image e2e | Docker, PostgreSQL, Playwright | `pnpm run test:e2e:production` | no (CI `e2e` job on PRs) |
 | Browser e2e (deployed) | Playwright `@public` | `PLAYWRIGHT_BASE_URL=https://... test:e2e` | no (staging deploy gate) |
-| Native mobile | Gradle / Xcode | `pnpm mobile:validate:native` | no (CI jobs) |
-| Runtime images | Docker + kustomize | `pnpm runtime:check` | no (CI `runtime` job) |
+| Native mobile | Gradle / Xcode | `pnpm run mobile:validate:native` | no (CI jobs) |
+| Runtime images | Docker + kustomize | `pnpm run runtime:check` | no (CI `runtime` job) |
 
 ## What to run for which change
 
 - **Server/lib code in `apps/web`** — `pnpm --filter @happyvertical/smrt-saas-web test`
   and `typecheck`, then `pnpm check`. Add a vitest file next to the module
   (`foo.test.ts`); route handlers get `server-route.test.ts` siblings.
-- **SMRT objects / services (`packages/app-objects`)** — `pnpm objects:test`
+- **SMRT objects / services (`packages/app-objects`)** — `pnpm run objects:test`
   and `pnpm typecheck`. Pure services are tested without a DB; schema-touching
-  changes also need `pnpm db:smoke`.
+  changes also need `pnpm run db:smoke`.
 - **Worker jobs (`apps/worker`)** — package test + typecheck. Jobs must stay
   idempotent; test both the direct path and the SMRT-jobs adapter path.
-- **Anything touching migrations, seeds, or tenant columns** — `pnpm db:smoke`
-  against fresh Docker Compose Postgres (`pnpm services:up`). It migrates,
+- **Anything touching migrations, seeds, or tenant columns** — `pnpm run db:smoke`
+  against fresh Docker Compose Postgres (`pnpm run services:up`). It migrates,
   seeds, and asserts tenant_id columns are native UUID with no empty-string
   defaults.
-- **Mobile contract (`packages/mobile-contract`)** — `pnpm mobile:generate`,
-  commit the regenerated Kotlin/Swift, `pnpm mobile:validate`. The contract
+- **Mobile contract (`packages/mobile-contract`)** — `pnpm run mobile:generate`,
+  commit the regenerated Kotlin/Swift, `pnpm run mobile:validate`. The contract
   test fails if the committed surface drifts from the generator output.
 - **UI flows (login, signup, tenant switch, billing pages)** — use the quick
   dev-server loop with `pnpm --filter @happyvertical/smrt-saas-web test:e2e`,
-  then run `pnpm test:e2e:production` before shipping. The production command
+  then run `pnpm run test:e2e:production` before shipping. The production command
   builds the adapter-node output and real web image, starts an isolated empty
   PostgreSQL container, and exercises the image's migrate → seed → server
   entrypoint. It waits on health, verifies required framework/starter tables,
@@ -49,7 +49,7 @@ triggers below.
   browser suite against the compiled image. CI runs this hermetic gate on every
   PR, including Renovate's lockstep SMRT updates.
 - **Dockerfiles, runtime trees, manifests, deploy scripts** —
-  `pnpm runtime:check` (build → prepare runtime trees → build images → smoke
+  `pnpm run runtime:check` (build → prepare runtime trees → build images → smoke
   them → render manifests). Needs Docker and `kubectl`.
 
 ## E2E: one suite, four execution profiles
@@ -69,7 +69,7 @@ environment:
   `POST /api/e2e/session` (see below) instead of relying on the dev-auth
   fallback, so they work on deployed environments. They run only when
   `E2E_AUTH_SECRET` is configured.
-- **Production image (`pnpm test:e2e:production`)** — sets a private runner
+- **Production image (`pnpm run test:e2e:production`)** — sets a private runner
   mode that runs the full local/demo-auth suite plus `production.spec.ts`
   against the compiled image. The route crawler imports
   the same typed navigation source as `/app/+layout.svelte`, so a new

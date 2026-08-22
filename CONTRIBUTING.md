@@ -11,9 +11,9 @@ The `@happyvertical/*` packages (SMRT and SDK) are on public npm, so setup is ju
 pnpm install          # resolves @happyvertical/* from public npm — no token needed
 
 cp .env.example .env
-pnpm services:up      # local Postgres via Docker Compose
-pnpm db:migrate
-pnpm db:seed
+pnpm run services:up      # local Postgres via Docker Compose
+pnpm run db:migrate
+pnpm run db:seed
 pnpm --filter @happyvertical/smrt-saas-web dev
 ```
 
@@ -44,10 +44,10 @@ pnpm check          # full repo validation (lint, typecheck, tests, db:smoke)
 Targeted checks:
 
 ```sh
-pnpm objects:test   # SMRT objects / package changes
+pnpm run objects:test   # SMRT objects / package changes
 pnpm typecheck
 pnpm --filter @happyvertical/smrt-saas-web test:e2e   # Playwright (see docs/testing.md)
-pnpm mobile:validate                                  # mobile contract changes
+pnpm run mobile:validate                                  # mobile contract changes
 ```
 
 The full testing strategy — layers, tools, and when to run what — is in

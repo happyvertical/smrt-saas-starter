@@ -33,6 +33,6 @@ settings, admin, mobile auth/session endpoints, and the runtime MCP surface.
 ```sh
 pnpm --filter @happyvertical/smrt-saas-web test
 pnpm --filter @happyvertical/smrt-saas-web typecheck
-pnpm db:smoke        # needs Docker Compose Postgres
+pnpm run db:smoke        # needs Docker Compose Postgres
 pnpm --filter @happyvertical/smrt-saas-web test:e2e   # Playwright, see docs/testing.md
 ```

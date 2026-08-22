@@ -91,10 +91,10 @@ for (const phrase of [
   "TURBO_REMOTE_CACHE_TIMEOUT",
   "runtime:",
   "uses: Azure/setup-kubectl@v5.1.0",
-  "pnpm runtime:check",
+  "pnpm run runtime:check",
   "e2e:",
   "playwright install --with-deps chromium",
-  "pnpm test:e2e:production",
+  "pnpm run test:e2e:production",
   "artifacts/production-e2e/",
   "apps/web/playwright-report/",
   "apps/web/test-results/",
@@ -104,7 +104,7 @@ for (const phrase of [
   'java-version: "21"',
   "uses: android-actions/setup-android@v4",
   'sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"',
-  "pnpm mobile:validate:android",
+  "pnpm run mobile:validate:android",
 ]) {
   if (!pullRequestWorkflow.includes(phrase)) {
     throw new Error(`on-pull-request.yml must include native mobile validation: ${phrase}`);
@@ -117,7 +117,7 @@ if (pullRequestWorkflow.includes("run: pnpm check")) {
 }
 
 const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-if (!packageJson.scripts?.check?.startsWith("pnpm deps:check")) {
+if (!packageJson.scripts?.check?.startsWith("pnpm run deps:check")) {
   throw new Error("pnpm check must retain dependency validation");
 }
 if (packageJson.scripts?.lint?.includes("deps:check")) {
@@ -128,12 +128,12 @@ for (const file of ["deploy-dev.yml", "deploy-staging.yml", "on-merge-main.yml"]
   const text = await readFile(join(workflowsDir, file), "utf8");
   for (const phrase of [
     "paths-ignore:",
-    "pnpm runtime:prepare",
+    "pnpm run runtime:prepare",
     "uses: docker/login-action@v4.2.0",
     "uses: docker/setup-buildx-action@v4.1.0",
     "uses: docker/build-push-action@v7.2.0",
     "node scripts/update-manifest-digests.mjs",
-    "pnpm manifests:render",
+    "pnpm run manifests:render",
     'LEFTHOOK=0 git commit -m "chore(deploy): update',
     "LEFTHOOK=0 git push",
   ]) {
@@ -172,7 +172,7 @@ if (smokeIndex === -1 || promotePrIndex === -1 || smokeIndex > promotePrIndex) {
 }
 
 const promoteWorkflow = await readFile(join(workflowsDir, "promote-dev.yml"), "utf8");
-if (!promoteWorkflow.includes("pnpm manifests:render")) {
+if (!promoteWorkflow.includes("pnpm run manifests:render")) {
   throw new Error("promote-dev.yml must render deploy manifests before opening a promotion PR");
 }
 

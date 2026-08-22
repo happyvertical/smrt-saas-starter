@@ -8,10 +8,10 @@
     "validate:shell": "node scripts/validate-shell.mjs",
     "validate:android": "node scripts/validate-android.mjs",
     "validate:ios": "node scripts/validate-ios.mjs",
-    "build": "pnpm validate:shell",
-    "typecheck": "pnpm validate:shell",
-    "test": "pnpm validate:shell",
-    "lint": "pnpm validate:shell"
+    "build": "pnpm run validate:shell",
+    "typecheck": "pnpm run validate:shell",
+    "test": "pnpm run validate:shell",
+    "lint": "pnpm run validate:shell"
   },
   "devDependencies": {
     "typescript": "5.9.3"

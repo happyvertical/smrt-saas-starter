@@ -40,7 +40,7 @@ jobs:
       - name: Validate dev before promotion
         run: pnpm check
       - name: Render deploy manifests
-        run: pnpm manifests:render
+        run: pnpm run manifests:render
       - name: Open dev to staging PR
         env:
           GH_TOKEN: ${{ github.token }}
