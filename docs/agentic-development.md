@@ -14,7 +14,7 @@ This repo is preconfigured for agent-assisted development.
 Both HappyVertical MCP servers launch with plain `npx` — their packages are on public npm, so no token is required.
 
 The HappyVertical MCP pins in `.mcp.json` must match the pnpm catalog;
-`pnpm deps:check` (part of `pnpm check`) fails on drift. These dev-time
+`pnpm run deps:check` (part of `pnpm check`) fails on drift. These dev-time
 servers are distinct from `@happyvertical/smrt-app-mcp`, the runtime MCP
 surface the web app exposes to tenants at `/api/mcp/*`.
 

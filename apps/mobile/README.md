@@ -28,8 +28,8 @@ The default CI validation is a shell-level check so the repo can validate on mac
 Pull request CI also runs native shell checks:
 
 ```sh
-pnpm mobile:validate:android
-pnpm mobile:validate:ios
+pnpm run mobile:validate:android
+pnpm run mobile:validate:ios
 ```
 
 Android validation uses the committed Gradle wrapper, requires Java 21, and requires `ANDROID_HOME` or `ANDROID_SDK_ROOT` when the SDK is not installed in a standard location. iOS validation requires macOS, Xcode, and XcodeGen.

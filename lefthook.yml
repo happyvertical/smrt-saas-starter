@@ -8,17 +8,17 @@ pre-commit:
   commands:
     biome:
       glob: "*.{js,mjs,cjs,ts,tsx,json,jsonc}"
-      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      run: ./node_modules/.bin/biome check --write --no-errors-on-unmatched {staged_files}
       fail_text: |
         Biome formatting/linting failed. Run `pnpm format`, then stage the fixes.
 
     validate-workflows:
       glob: ".github/workflows/*.{yml,yaml}"
-      run: pnpm workflows:check
+      run: pnpm run workflows:check
 
     validate-sops:
       glob: "manifests/**/*.{yaml,yml}"
-      run: pnpm sops:check
+      run: pnpm run sops:check
 
 commit-msg:
   skip:
@@ -27,7 +27,7 @@ commit-msg:
         - CI
   commands:
     commitlint:
-      run: pnpm exec commitlint --edit {1}
+      run: ./node_modules/.bin/commitlint --edit {1}
       fail_text: |
         Use Conventional Commits: <type>(<scope>): <subject>
 

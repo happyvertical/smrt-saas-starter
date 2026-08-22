@@ -7,7 +7,7 @@ app's mobile endpoints through `@happyvertical/smrt-saas-mobile-contract` DTOs.
 
 - Mobile consumes only the generated contract DTOs; never read raw SMRT
   manifests or invent ad-hoc response shapes. Contract changes start in
-  `packages/mobile-contract` (`pnpm mobile:generate`), and the regenerated
+  `packages/mobile-contract` (`pnpm run mobile:generate`), and the regenerated
   Kotlin/Swift surface is committed.
 - Auth uses the web app's `/api/mobile/auth/*` endpoints (OIDC + PKCE) and the
   bearer session from `/api/mobile/session`; redirect URIs must be registered
@@ -21,7 +21,7 @@ app's mobile endpoints through `@happyvertical/smrt-saas-mobile-contract` DTOs.
 ## Validation
 
 ```sh
-pnpm mobile:generate
-pnpm mobile:validate              # shell validation
-pnpm mobile:validate:native      # Android + iOS builds (local toolchains)
+pnpm run mobile:generate
+pnpm run mobile:validate              # shell validation
+pnpm run mobile:validate:native      # Android + iOS builds (local toolchains)
 ```

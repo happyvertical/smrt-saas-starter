@@ -72,7 +72,7 @@ try {
   );
   let personProfileTypeId = existingPersonType.rows[0]?.id;
   if (!personProfileTypeId) {
-    await db.upsert("profile_types", ["slug", "context", "_meta_type"], {
+    await db.upsert("profile_types", ["tenant_id", "slug", "context", "_meta_type"], {
       id: personProfileType.id,
       slug: personProfileType.slug,
       context: "",
@@ -114,7 +114,7 @@ try {
   }
   let ownerProfileId = existingOwnerProfiles.rows[0]?.id;
   if (!ownerProfileId) {
-    await db.upsert("profiles", ["slug", "context", "_meta_type"], {
+    await db.upsert("profiles", ["tenant_id", "slug", "context", "_meta_type"], {
       id: demoTenant.ownerProfile.id,
       slug: demoTenant.ownerProfile.slug,
       context: "",
@@ -258,7 +258,7 @@ try {
   );
 
   for (const metric of starterData.usageSeeds) {
-    await db.upsert("_smrt_tenant_usage_metrics", ["slug", "context"], {
+    await db.upsert("_smrt_tenant_usage_metrics", ["tenant_id", "slug", "context"], {
       id: metric.id,
       slug: metric.slug,
       context: demoTenant.id,

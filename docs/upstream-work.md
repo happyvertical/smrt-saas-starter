@@ -4,18 +4,18 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT packages (`@happyvertical/smrt-*`): **0.40.65**
-- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.86.4**
-- OCR (`@happyvertical/ocr`): **0.61.5**
+- SMRT packages (`@happyvertical/smrt-*`): **0.42.4**
+- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.88.0**
+- OCR (`@happyvertical/ocr`): **0.61.6**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
 
-The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.40.65`
-depends on the SDK line at `^0.86.1`, so the catalog/`overrides` pin the SDK family
-to `0.86.4` to match. (A prior state pinned SMRT `0.40.61` while `overrides` still
+The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.42.4`
+depends on the SDK line at `^0.88.0`, so the catalog/`overrides` pin the SDK family
+to `0.88.0` to match. (A prior state pinned SMRT `0.40.61` while `overrides` still
 forced the SDK to `0.78.1`; pnpm silently resolved SMRT's own SDK deps down to the
 older line — this bump realigns them.)
 
-### SDK DuckDB bundling (consumer-side mitigation, still required at 0.86.4)
+### SDK DuckDB bundling (consumer-side mitigation, still required at 0.88.0)
 
 `@happyvertical/sql` reaches its optional DuckDB adapter through a
 statically-analyzable `import("@duckdb/node-api")` in the package entry, which the
@@ -138,13 +138,13 @@ ambiguous candidates. The starter callback delegates system-context and
 transaction ownership to that upstream boundary.
 
 The release also adds durable Profile/User normalized-email keys and readiness
-markers. `pnpm db:migrate` applies the schema and then runs the public,
+markers. `pnpm run db:migrate` applies the schema and then runs the public,
 transactional `backfillProfileEmailKeys()` and `backfillUserEmailKeys()` helpers
 in that order. Both are idempotent; the User backfill fails before writes while
 normalized duplicate User emails remain. Before applying the unique Profile
 ownership constraint, operators must reconcile duplicate non-null
 `users.profile_id` values as documented in `docs/runbook.md`. The starter's
-separate `pnpm db:profiles:backfill` step then attaches canonical Persons to
+separate `pnpm run db:profiles:backfill` step then attaches canonical Persons to
 active legacy Users.
 
 After 0.1.1 is published, `projects.happyvertical.com` should adopt it in a

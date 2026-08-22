@@ -30,7 +30,7 @@ Kubernetes deployment — wired together and ready to fork.
   `@happyvertical/smrt-users` (HappyVertical IDP / Kanidm), plus a local dev-auth fallback
   so you can sign in immediately. Every starter-created User is bound to a canonical
   global Person profile for SMRT identity and audit trails; existing deployments
-  adopt that invariant with `pnpm db:profiles:backfill` after reconciling
+  adopt that invariant with `pnpm run db:profiles:backfill` after reconciling
   duplicate Profile ownership links. Three signup modes:
   **public**, **invite-only**, or **request-access** (a waitlist — the SMRT
   `AccessRequest` primitive; visitors request access at `/request-access` and a super
@@ -80,9 +80,9 @@ pnpm install
 cp .env.example .env            # sensible local defaults; edit as needed
 
 # 3. Database (local Docker Compose Postgres)
-pnpm services:up                # start the Postgres container
-pnpm db:migrate
-pnpm db:seed                    # demo tenant + Profile identity, plans, subscription, usage
+pnpm run services:up                # start the Postgres container
+pnpm run db:migrate
+pnpm run db:seed                    # demo tenant + Profile identity, plans, subscription, usage
 
 # 4. Run the web app
 pnpm --filter @happyvertical/smrt-saas-web dev
@@ -99,7 +99,7 @@ For an existing deployment, follow the identity preflight and ordered
 migration/backfill procedure in [docs/runbook.md](docs/runbook.md#local-auth)
 before enabling the new build's OIDC routes.
 
-To stop the database: `pnpm services:down`.
+To stop the database: `pnpm run services:down`.
 
 ## Hosted demo
 
@@ -159,10 +159,10 @@ pnpm check          # lint, typecheck, tests, build, db smoke, manifests, secret
 Targeted checks:
 
 ```sh
-pnpm objects:test                                     # SMRT objects / packages
+pnpm run objects:test                                     # SMRT objects / packages
 pnpm typecheck
 pnpm --filter @happyvertical/smrt-saas-web test:e2e   # Playwright
-pnpm mobile:validate                                  # mobile contract
+pnpm run mobile:validate                                  # mobile contract
 ```
 
 The full testing strategy — layers, tools, and when to run what — is in
@@ -174,7 +174,7 @@ Production runtime artifacts (built trees, Docker images, rendered manifests)
 are validated by:
 
 ```sh
-pnpm runtime:check
+pnpm run runtime:check
 ```
 
 Kubernetes manifests live in `manifests/` (Kustomize base + dev/demo/staging/
