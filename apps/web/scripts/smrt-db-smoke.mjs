@@ -699,7 +699,7 @@ async function verifyOidcProfileOnlyCollision(db, demoTenant) {
     if (!personTypeId) {
       throw new Error("OIDC collision smoke requires the global Person ProfileType");
     }
-    await db.upsert("profiles", ["slug", "context", "_meta_type"], {
+    await db.upsert("profiles", ["tenant_id", "slug", "context", "_meta_type"], {
       id: collision.profileId,
       slug: collision.slug,
       context: demoTenant.id,
