@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { isHappyVerticalIdpEnabled } from "./identity-providers";
+import { isHappyVerticalIdpEnabled, isHappyVerticalWebIdpEnabled } from "./identity-providers";
 
 describe("isHappyVerticalIdpEnabled", () => {
-  it("requires an issuer before exposing the provider", () => {
-    expect(isHappyVerticalIdpEnabled({})).toBe(false);
+  it("enables the provider by default", () => {
+    expect(isHappyVerticalIdpEnabled({})).toBe(true);
     expect(isHappyVerticalIdpEnabled({ SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED: "true" })).toBe(
-      false,
+      true,
     );
   });
 
-  it("enables a configured provider by default", () => {
+  it("requires an issuer before exposing the browser provider", () => {
+    expect(isHappyVerticalWebIdpEnabled({})).toBe(false);
     expect(
-      isHappyVerticalIdpEnabled({
+      isHappyVerticalWebIdpEnabled({
         HAPPYVERTICAL_IDP_ISSUER: "https://idp.example.test/oauth2/openid/starter",
       }),
     ).toBe(true);
@@ -23,9 +24,14 @@ describe("isHappyVerticalIdpEnabled", () => {
     "no",
     "off",
     " FALSE ",
-  ])("disables a configured provider for %s", (value) => {
+  ])("disables every HappyVertical identity flow for %s", (value) => {
     expect(
       isHappyVerticalIdpEnabled({
+        SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED: value,
+      }),
+    ).toBe(false);
+    expect(
+      isHappyVerticalWebIdpEnabled({
         HAPPYVERTICAL_IDP_ISSUER: "https://idp.example.test/oauth2/openid/starter",
         SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED: value,
       }),

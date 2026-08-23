@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
     createOidcCallbackHandler: vi.fn(() => oidcCallback),
     createOidcLoginHandler: vi.fn(() => oidcLogin),
     getSmrtConfig: vi.fn(() => ({})),
-    isHappyVerticalIdpEnabled: vi.fn(() => true),
+    isHappyVerticalWebIdpEnabled: vi.fn(() => true),
     loadStarterConfig: vi.fn(async () => undefined),
   };
 });
@@ -21,14 +21,14 @@ vi.mock("@happyvertical/smrt-users/sveltekit", () => ({
 vi.mock("$lib/server/smrt", () => ({ getSmrtConfig: mocks.getSmrtConfig }));
 vi.mock("$lib/server/starter-config", () => ({ loadStarterConfig: mocks.loadStarterConfig }));
 vi.mock("$lib/server/identity-providers", () => ({
-  isHappyVerticalIdpEnabled: mocks.isHappyVerticalIdpEnabled,
+  isHappyVerticalWebIdpEnabled: mocks.isHappyVerticalWebIdpEnabled,
 }));
 
 describe("production OIDC route bootstrap", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
-    mocks.isHappyVerticalIdpEnabled.mockReturnValue(true);
+    mocks.isHappyVerticalWebIdpEnabled.mockReturnValue(true);
   });
 
   it("loads starter config before constructing the login handler", async () => {
@@ -53,7 +53,7 @@ describe("production OIDC route bootstrap", () => {
   });
 
   it("does not start a disabled HappyVertical IdP flow", async () => {
-    mocks.isHappyVerticalIdpEnabled.mockReturnValue(false);
+    mocks.isHappyVerticalWebIdpEnabled.mockReturnValue(false);
     const { GET } = await import("./[provider]/login/+server");
 
     const response = await GET({

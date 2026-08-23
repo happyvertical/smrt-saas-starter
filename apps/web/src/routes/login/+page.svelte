@@ -12,9 +12,13 @@
     <header>
       <p class="eyebrow">Sign in</p>
       <h1 id="sign-in-heading">Continue to the starter.</h1>
-      <p class="lede">
-        Use email for a secure sign-in link, or continue with your configured identity provider.
-      </p>
+      {#if data.idpEnabled}
+        <p class="lede">
+          Use email for a secure sign-in link, or continue with your configured identity provider.
+        </p>
+      {:else}
+        <p class="lede">Use email for a secure sign-in link.</p>
+      {/if}
     </header>
 
     {#if form?.message}
