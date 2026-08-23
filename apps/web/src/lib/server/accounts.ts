@@ -211,8 +211,24 @@ export async function verifyEmailLink(
       try {
         return await onboardTenant({ email: result.email, tenantName: intent.tenantName });
       } catch (error) {
-        if (error instanceof AccountFlowError && error.status === 409) {
+        if (isExistingAccountConflict(error)) {
           return await signInWithEmail(result.email, { reuseExistingProfile: true });
+        }
+        if (isUniqueConstraintViolation(error)) {
+          try {
+            return await signInWithEmail(result.email, { reuseExistingProfile: true });
+          } catch (recoveryError) {
+            // A different unique constraint should not be hidden by a missing
+            // account or membership lookup. Re-throw the original database
+            // failure unless a concurrently created account can be signed in.
+            if (
+              recoveryError instanceof AccountFlowError &&
+              (recoveryError.status === 403 || recoveryError.status === 404)
+            ) {
+              throw error;
+            }
+            throw recoveryError;
+          }
         }
         throw error;
       }
@@ -721,6 +737,32 @@ function normalizeReturnTo(value: string | null | undefined): string {
 
 async function withDbTransaction<T>(db: DbLike, callback: (tx: DbLike) => Promise<T>): Promise<T> {
   return db.transaction ? db.transaction(callback) : callback(db);
+}
+
+/**
+ * A second verified signup link can reach provisioning while the first link is
+ * committing its user. The preflight read then misses that user, but the
+ * database correctly rejects the duplicate `email_key`. Both outcomes mean
+ * the verified visitor should continue through the existing-account sign-in
+ * path. If a different constraint caused the failure, the fresh lookup does
+ * not find an account and the original database error still surfaces.
+ */
+function isExistingAccountConflict(error: unknown): boolean {
+  if (
+    error instanceof AccountFlowError &&
+    error.status === 409 &&
+    error.message === "That email already has an account. Sign in instead."
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isUniqueConstraintViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+  return "code" in error && error.code === "23505";
 }
 
 async function createUniqueTenantSlug(db: DbLike, baseSlug: string): Promise<string> {
