@@ -60,17 +60,17 @@ async function expectHealthyDocument(page: Page, route: string): Promise<() => P
   };
 }
 
-test("production image serves the public entry and signup contract", async ({ page }) => {
+test("production image serves the public entry and unified email contract", async ({ page }) => {
   const assertPublicHealthy = await expectHealthyDocument(page, "/");
   await expect(
     page.getByRole("heading", { name: "Build the SaaS beneath your next product." }),
   ).toBeVisible();
   await assertPublicHealthy();
 
-  const assertSignupHealthy = await expectHealthyDocument(page, "/signup");
-  await expect(page.getByRole("heading", { name: "Create a tenant workspace" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Create workspace" })).toBeVisible();
-  await assertSignupHealthy();
+  const assertLoginHealthy = await expectHealthyDocument(page, "/login");
+  await expect(page.getByRole("heading", { name: "Continue with email." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue with email" })).toBeVisible();
+  await assertLoginHealthy();
 });
 
 for (const route of APP_NAVIGATION) {

@@ -11,11 +11,18 @@ test("landing page renders the starter hero @public", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("login page renders the sign-in form @public", async ({ page }) => {
+test("login page renders the unified email form @public", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Continue to the starter." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Continue with email." })).toBeVisible();
   await expect(page.locator('input[name="email"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: "Email me a sign-in link" })).toBeVisible();
+  await expect(page.locator('input[name="tenantName"]')).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue with email" })).toBeVisible();
+});
+
+test("signup directs public visitors to the unified email form @public", async ({ page }) => {
+  await page.goto("/signup");
+  await expect(page.getByRole("heading", { name: "Continue with email." })).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
 });
 
 test("health endpoint reports ok @public", async ({ request }) => {

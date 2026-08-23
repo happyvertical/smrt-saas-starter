@@ -13,8 +13,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     throw redirect(303, "/app");
   }
 
-  const signupMode = await getSignupAccessMode();
   const invitationToken = readInviteToken(url.searchParams);
+  if (!invitationToken) {
+    throw redirect(303, "/login");
+  }
+
+  const signupMode = await getSignupAccessMode();
   const invitationResult = invitationToken
     ? await validateTenantOwnerInvitationToken(invitationToken).catch((error: unknown) => ({
         error: toAccountFlowMessage(error) ?? "Invitation could not be validated.",
@@ -32,7 +36,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     invitationValid,
     invitationEmail,
     invitationError,
-    canSignup: signupMode === "public" || invitationValid,
+    canSignup: invitationValid,
   };
 };
 
@@ -42,16 +46,11 @@ export const actions: Actions = {
     const email = readFormString(form, "email");
     const tenantName = readFormString(form, "tenantName");
     const invitationToken = readFormString(form, "invitationToken").trim();
-    const signupMode = await getSignupAccessMode();
-
-    if (signupMode !== "public" && !invitationToken) {
+    if (!invitationToken) {
       return fail(403, {
         email,
         tenantName,
-        message:
-          signupMode === "request-access"
-            ? "Open signup is closed. Request access and an operator will follow up."
-            : "Signup is invite-only. Use an invitation link to create a workspace.",
+        message: "Use the email link to create an account.",
       });
     }
 

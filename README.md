@@ -34,7 +34,9 @@ Kubernetes deployment — wired together and ready to fork.
   duplicate Profile ownership links. Three signup modes:
   **public**, **invite-only**, or **request-access** (a waitlist — the SMRT
   `AccessRequest` primitive; visitors request access at `/request-access` and a super
-  user approves + graduates them from `/app/admin`).
+  user approves + graduates them from `/app/admin`). The public email entry flow
+  verifies email ownership before creating a default tenant, owner membership,
+  and Starter subscription; returning members simply sign in from the same form.
 - **Subscriptions & billing** — Stripe-backed checkout, customer portal, and
   webhook sync via `@happyvertical/accounting`; plans, features, and thresholds
   via `@happyvertical/smrt-subscriptions`.

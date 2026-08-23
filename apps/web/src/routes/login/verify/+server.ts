@@ -1,13 +1,18 @@
 import { type RequestHandler, redirect } from "@sveltejs/kit";
-import { AccountFlowError, verifySignInLink } from "$lib/server/accounts";
+import { AccountFlowError, verifyEmailLink } from "$lib/server/accounts";
+import { getSignupAccessMode } from "$lib/server/invitations";
 import { startAccountSession } from "$lib/server/session";
 
 export const GET: RequestHandler = async (event) => {
   const token = event.url.searchParams.get("token") ?? "";
+  const signupIntent = event.url.searchParams.get("signup");
   const returnTo = normalizeReturnTo(event.url.searchParams.get("returnTo"));
 
   try {
-    const target = await verifySignInLink(token);
+    const target = await verifyEmailLink(token, {
+      signupIntent,
+      allowSignup: signupIntent ? (await getSignupAccessMode()) === "public" : false,
+    });
     await startAccountSession(event, target);
   } catch (error) {
     if (error instanceof AccountFlowError) {
