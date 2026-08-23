@@ -13,11 +13,11 @@ Feature keys should align with `smrt-features`:
 - `languages.ai_translate`
 - `prompts.tenant_overrides`
 
-`/app/settings` renders effective prompt and language values for every tenant.
-Saving prompt templates requires `prompts.tenant_overrides`; saving language
-templates requires `languages.ai_translate`. The demo tenant starts on Growth,
-so the page shows the resolved values while the save controls remain gated until
-the tenant moves to Scale.
+`/app/settings/prompts` and `/app/settings/languages` render effective values
+for every tenant. Saving prompt templates requires `prompts.tenant_overrides`;
+saving language templates requires `languages.ai_translate`. The demo tenant
+starts on Growth, so the pages show resolved values while the save controls
+remain gated until the tenant moves to Scale.
 
 ## Thresholds
 
