@@ -40,13 +40,6 @@ export const APP_NAVIGATION: readonly AppNavigationItem[] = [
     heading: "Tenant configuration",
   },
   {
-    href: "/app/settings/field-policies",
-    label: "Field settings",
-    icon: "sliders-horizontal",
-    permission: "tenant.settings.read",
-    heading: "Field settings",
-  },
-  {
     href: "/app/admin",
     label: "Admin",
     icon: "settings",

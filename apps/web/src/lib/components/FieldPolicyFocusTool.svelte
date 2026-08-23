@@ -10,8 +10,8 @@
   onMount(() =>
     registerFieldPolicyFocusTool(shell, getStarterAppSettingObjectRef(), {
       id: "field-policy",
-      label: "Field settings",
-      description: "Organization defaults and personal form preferences",
+      label: "Signup form fields",
+      description: "Organization defaults and personal signup-form preferences",
       order: 20,
       component: FieldPolicyFocusPanel,
     }),

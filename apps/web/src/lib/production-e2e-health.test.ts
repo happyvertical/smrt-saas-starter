@@ -3,7 +3,7 @@ import { isCancelledDocumentDataLoad } from "./production-e2e-health";
 
 describe("isCancelledDocumentDataLoad", () => {
   const origin = "http://127.0.0.1:5173";
-  const route = "/app/settings/field-policies";
+  const route = "/app/settings/signup-form-fields";
 
   it("accepts only the current document's cancelled SvelteKit data load", () => {
     expect(

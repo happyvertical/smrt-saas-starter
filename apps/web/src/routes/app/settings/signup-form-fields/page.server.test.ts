@@ -17,7 +17,7 @@ vi.mock("$lib/server/field-policy", () => ({
 
 import { load } from "./+page.server";
 
-describe("field-policy control-panel load", () => {
+describe("signup form field-policy load", () => {
   it("rejects a non-manager before loading the catalog", async () => {
     mocks.requirePermission.mockImplementationOnce(() => {
       throw error(403, "Forbidden");
@@ -26,7 +26,7 @@ describe("field-policy control-panel load", () => {
     await expect(
       load({
         locals: {},
-        url: new URL("https://starter.test/app/settings/field-policies"),
+        url: new URL("https://starter.test/app/settings/signup-form-fields"),
       } as Parameters<typeof load>[0]),
     ).rejects.toMatchObject({ status: 403 });
 

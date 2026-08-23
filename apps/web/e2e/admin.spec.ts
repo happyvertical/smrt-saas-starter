@@ -59,13 +59,20 @@ test("admin signup settings use the policy basic/advanced form", async ({ page }
   await expect(page.getByRole("tab", { name: "Just me" })).toBeVisible();
 });
 
-test("admin shell exposes the field-policy control-panel destination", async ({ page }) => {
-  await page.goto("/app");
+test("settings sub-navigation exposes the signup form fields destination", async ({ page }) => {
+  await page.goto("/app/settings");
   const workspaceTools = page.getByRole("navigation", { name: "Workspace tools" });
   await expect(workspaceTools).toBeInViewport();
   await expect(workspaceTools.getByRole("button", { name: "Chat tool" })).toBeInViewport();
 
-  await page.getByRole("link", { name: "Field settings" }).click();
-  await expect(page).toHaveURL(/\/app\/settings\/field-policies$/);
-  await expect(page.getByRole("heading", { name: "Field settings" })).toBeVisible();
+  const settingsNavigation = page.getByRole("navigation", { name: "Settings navigation" });
+  await expect(settingsNavigation.getByRole("link", { name: "Members" })).toBeVisible();
+  await expect(settingsNavigation.getByRole("link", { name: "Prompts" })).toBeVisible();
+  await expect(settingsNavigation.getByRole("link", { name: "Languages" })).toBeVisible();
+  await settingsNavigation.getByRole("link", { name: "Signup form fields" }).click();
+  await expect(page).toHaveURL(/\/app\/settings\/signup-form-fields$/);
+  await expect(page.getByRole("heading", { name: "Signup form fields" })).toBeVisible();
+
+  await page.goto("/app/settings/field-policies");
+  await expect(page).toHaveURL(/\/app\/settings\/signup-form-fields$/);
 });

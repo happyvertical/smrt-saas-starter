@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { fieldPolicyControlPanelNavItem } from "@happyvertical/smrt-fields/svelte";
   import { AssistantDock } from "@happyvertical/smrt-saas-ui";
   import {
     AdminShell,
@@ -16,21 +15,12 @@
   type StarterNavItem = ShellNavItem & { permission?: string };
 
   const navItems = $derived.by((): ShellNavItem[] => {
-    const candidates: Array<StarterNavItem | null> = APP_NAVIGATION.map((item) =>
-      item.href === "/app/settings/field-policies"
-        ? fieldPolicyControlPanelNavItem({
-            href: item.href,
-            permissions: data.permissions,
-            label: item.label,
-            icon: item.icon,
-          })
-        : {
-            href: item.href,
-            label: item.label,
-            icon: item.icon,
-            permission: item.permission,
-          },
-    );
+    const candidates: StarterNavItem[] = APP_NAVIGATION.map((item) => ({
+      href: item.href,
+      label: item.label,
+      icon: item.icon,
+      permission: item.permission,
+    }));
     return candidates.filter((item): item is StarterNavItem => {
       if (!item) return false;
       const permission = item.permission;
