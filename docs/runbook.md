@@ -247,13 +247,18 @@ retention is required, then archive or delete the affected `agent_sessions` and
 rooms through the supported chat service before cutover. Do not bulk rewrite
 `participant_profile_id`; new sessions are created automatically on first use.
 
-`/signup` creates a tenant, owner user, owner membership, and active Starter
-subscription, then starts a SMRT session for that owner. `/login` uses
-`MagicLinkService` from `smrt-users`; local development shows the generated
-single-use link inline when `SMRT_STARTER_AUTH_INLINE_LINKS` is not `false`.
-Production does not expose inline links and should use HappyVertical IDP or a
-configured email delivery adapter before enabling magic-link login. `/logout`
-destroys the SMRT session and clears the local tenant switch cookie.
+`/login` is the public email entry point. It uses `MagicLinkService` from
+`smrt-users`; after verification, an existing member receives a session and a
+new person receives a tenant, owner user, owner membership, and active Starter
+subscription before receiving that same session. The signed signup intent is
+bound to the issued magic-link token and rechecks the current signup policy at
+verification time, so no account is created merely by requesting a link.
+`/signup` remains for tenant-owner invitations only. Local development shows
+the generated single-use link inline when `SMRT_STARTER_AUTH_INLINE_LINKS` is
+not `false`. Production does not expose inline links and should use
+HappyVertical IDP or a configured email delivery adapter before enabling
+magic-link login. `/logout` destroys the SMRT session and clears the local
+tenant switch cookie.
 
 Mobile clients use the same `smrt-users` session store with bearer tokens.
 `/api/mobile/auth/providers` lists configured `@happyvertical/auth` providers,

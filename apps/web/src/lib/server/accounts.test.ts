@@ -41,8 +41,10 @@ import {
   inviteTenantMember,
   listTenants,
   onboardTenant,
+  requestEmailLink,
   requestSignInLink,
   signInWithEmail,
+  verifyEmailLink,
   verifySignInLink,
 } from "$lib/server/accounts";
 
@@ -230,6 +232,157 @@ describe("account onboarding flows", () => {
     });
     expect(accountMocks.magicLinkGenerate).toHaveBeenCalledWith("member@example.com");
     expect(accountMocks.ensureUserProfile).not.toHaveBeenCalled();
+  });
+
+  it("uses the same email link for an existing member without a signup intent", async () => {
+    accountMocks.query.mockResolvedValueOnce({
+      rows: [{ id: userId, email: "member@example.com" }],
+    });
+
+    await expect(
+      requestEmailLink({
+        email: "member@example.com",
+        tenantName: "Ignored for existing members",
+        origin: "http://localhost:5173",
+        allowSignup: false,
+      }),
+    ).resolves.toMatchObject({
+      email: "member@example.com",
+      verificationUrl: "http://localhost:5173/login/verify?token=signed-token",
+      createsAccount: false,
+    });
+  });
+
+  it("attaches a signed provisioning intent for a new public signup without creating records", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    accountMocks.magicLinkGenerate.mockResolvedValueOnce({
+      token: "signup-token",
+      expiresAt: futureExpiry,
+    });
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+
+    const result = await requestEmailLink({
+      email: "founder@example.com",
+      tenantName: "Acme Labs",
+      origin: "http://localhost:5173",
+      returnTo: "/app/settings",
+      allowSignup: true,
+    });
+
+    const url = new URL(result.verificationUrl ?? "");
+    expect(result).toMatchObject({ email: "founder@example.com", createsAccount: true });
+    expect(url.searchParams.get("token")).toBe("signup-token");
+    expect(url.searchParams.get("signup")).toBeTruthy();
+    expect(url.searchParams.get("returnTo")).toBe("/app/settings");
+    expect(accountMocks.transaction).not.toHaveBeenCalled();
+    expect(accountMocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("creates the starter account only after a public signup link is verified", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    accountMocks.magicLinkGenerate.mockResolvedValueOnce({
+      token: "signup-token",
+      expiresAt: futureExpiry,
+    });
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+    const request = await requestEmailLink({
+      email: "founder@example.com",
+      tenantName: "Acme Labs",
+      origin: "http://localhost:5173",
+      allowSignup: true,
+    });
+    const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
+    const queryImplementation = async (sql: string) => {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM tenants") && sql.includes("slug = ?")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM roles")) {
+        return { rows: [{ id: ownerRoleId, slug: "owner", name: "Owner" }] };
+      }
+      if (sql.includes("FROM _smrt_subscription_plans")) {
+        return { rows: [{ id: starterPlanId, plan_key: "starter" }] };
+      }
+      return { rows: [] };
+    };
+    accountMocks.txQuery.mockImplementation(queryImplementation);
+    accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
+
+    await expect(
+      verifyEmailLink("signup-token", { signupIntent, allowSignup: true }),
+    ).resolves.toMatchObject({
+      userEmail: "founder@example.com",
+      tenantSlug: "acme-labs",
+      tenantLabel: "Acme Labs",
+    });
+    expect(accountMocks.transaction).toHaveBeenCalledOnce();
+    expect(accountMocks.txUpsert).toHaveBeenCalledWith(
+      "tenants",
+      ["slug", "context", "_meta_type"],
+      expect.objectContaining({ name: "Acme Labs" }),
+    );
+  });
+
+  it("refuses a new email before issuing a link when public signup is unavailable", async () => {
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+
+    await expect(
+      requestEmailLink({
+        email: "founder@example.com",
+        origin: "http://localhost:5173",
+        allowSignup: false,
+      }),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(accountMocks.magicLinkGenerate).not.toHaveBeenCalled();
+    expect(accountMocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a tampered public signup intent before provisioning", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    accountMocks.magicLinkGenerate.mockResolvedValueOnce({
+      token: "signup-token",
+      expiresAt: futureExpiry,
+    });
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+    const request = await requestEmailLink({
+      email: "founder@example.com",
+      tenantName: "Acme Labs",
+      origin: "http://localhost:5173",
+      allowSignup: true,
+    });
+    const signupIntent = `${new URL(request.verificationUrl ?? "").searchParams.get("signup")}tampered`;
+    accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
+
+    await expect(
+      verifyEmailLink("signup-token", { signupIntent, allowSignup: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(accountMocks.transaction).not.toHaveBeenCalled();
+    expect(accountMocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("does not provision a verified signup link after public signup is disabled", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    accountMocks.magicLinkGenerate.mockResolvedValueOnce({
+      token: "signup-token",
+      expiresAt: futureExpiry,
+    });
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+    const request = await requestEmailLink({
+      email: "founder@example.com",
+      tenantName: "Acme Labs",
+      origin: "http://localhost:5173",
+      allowSignup: true,
+    });
+    const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
+    accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
+
+    await expect(
+      verifyEmailLink("signup-token", { signupIntent, allowSignup: false }),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(accountMocks.transaction).not.toHaveBeenCalled();
+    expect(accountMocks.upsert).not.toHaveBeenCalled();
   });
 
   it("does not look up emails when local magic links are disabled", async () => {

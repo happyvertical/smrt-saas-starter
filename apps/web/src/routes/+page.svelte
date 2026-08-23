@@ -24,7 +24,7 @@
     </a>
 
     <nav class="header-actions" aria-label="Account and appearance">
-      <a class="header-link" href="/login">Sign in</a>
+      <a class="header-link" href="/login">Continue with email</a>
       <button
         class="icon-link mode-toggle"
         type="button"
@@ -50,9 +50,9 @@
 
     <aside class="access-card" aria-label="Starter access">
       <p class="card-label">Explore the starter</p>
-      <a class="primary-action" href="/app">Open the seeded demo</a>
-      <a class="secondary-action" href="/signup">Create an account</a>
-      <a class="brief-link" href="/login">Sign in with email <span aria-hidden="true">→</span></a>
+      <a class="primary-action" href="/login">Continue with email</a>
+      <a class="secondary-action" href="/app">Open the seeded demo</a>
+      <p class="brief-link">New accounts get a workspace after email verification.</p>
     </aside>
   </section>
 

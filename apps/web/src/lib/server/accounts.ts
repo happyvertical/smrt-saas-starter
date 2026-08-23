@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { MagicLinkError, MagicLinkService } from "@happyvertical/smrt-users";
 import { getAppDatabase } from "$lib/server/db";
 import {
@@ -53,6 +53,10 @@ export interface SignInLinkRequestResult {
   verificationUrl: string | null;
 }
 
+export interface EmailLinkRequestResult extends SignInLinkRequestResult {
+  createsAccount: boolean;
+}
+
 export interface WelcomeMagicLink {
   email: string;
   expiresAt: Date;
@@ -104,6 +108,58 @@ export async function requestSignInLink(input: {
 }
 
 /**
+ * Start the unified email entry flow. Existing users get a normal sign-in
+ * link; eligible new users get a signed provisioning intent attached to the
+ * same magic link. Nothing is created until that link is verified.
+ */
+export async function requestEmailLink(input: {
+  email: string;
+  tenantName?: string | null;
+  origin: string;
+  returnTo?: string | null;
+  allowSignup: boolean;
+}): Promise<EmailLinkRequestResult> {
+  const email = normalizeEmail(input.email);
+  if (!isMagicLinkDeliveryConfigured()) {
+    throw new AccountFlowError(
+      501,
+      "Magic link email delivery is not configured. Use HappyVertical IDP or enable local inline links.",
+    );
+  }
+
+  const db = (await getAppDatabase()) as DbLike;
+  const existingUser = await findUserByEmail(db, email);
+  if (!existingUser && !input.allowSignup) {
+    throw new AccountFlowError(403, "Open signup is not available for this starter.");
+  }
+
+  const magicLinks = await createMagicLinkService();
+  const result = await magicLinks.generate(email);
+  const tenantName = existingUser ? null : resolveNewTenantName(input.tenantName);
+  const signupIntent = tenantName
+    ? createSignupIntent({
+        email,
+        tenantName,
+        token: result.token,
+        expiresAt: result.expiresAt,
+      })
+    : null;
+  const verificationUrl = buildVerificationUrl(
+    input.origin,
+    result.token,
+    input.returnTo,
+    signupIntent,
+  );
+
+  return {
+    email,
+    expiresAt: result.expiresAt,
+    verificationUrl: shouldExposeInlineMagicLinks() ? verificationUrl : null,
+    createsAccount: !existingUser,
+  };
+}
+
+/**
  * Generate a single-use welcome sign-in link for a freshly graduated user.
  * Mirrors {@link requestSignInLink}'s magic-link generation but skips the
  * membership lookup (graduation just created the user + membership) and always
@@ -131,6 +187,13 @@ export async function generateWelcomeMagicLink(input: {
 }
 
 export async function verifySignInLink(token: string): Promise<AccountSessionTarget> {
+  return await verifyEmailLink(token);
+}
+
+export async function verifyEmailLink(
+  token: string,
+  options: { signupIntent?: string | null; allowSignup?: boolean } = {},
+): Promise<AccountSessionTarget> {
   const trimmedToken = token.trim();
   if (!trimmedToken) {
     throw new AccountFlowError(400, "Sign-in link is missing a token.");
@@ -139,6 +202,21 @@ export async function verifySignInLink(token: string): Promise<AccountSessionTar
   const magicLinks = await createMagicLinkService();
   try {
     const result = await magicLinks.verify(trimmedToken);
+    if (options.signupIntent) {
+      const intent = verifySignupIntent(options.signupIntent, result.email, trimmedToken);
+      if (!options.allowSignup) {
+        throw new AccountFlowError(403, "Open signup is not available for this starter.");
+      }
+
+      try {
+        return await onboardTenant({ email: result.email, tenantName: intent.tenantName });
+      } catch (error) {
+        if (error instanceof AccountFlowError && error.status === 409) {
+          return await signInWithEmail(result.email, { reuseExistingProfile: true });
+        }
+        throw error;
+      }
+    }
     return await signInWithEmail(result.email, { reuseExistingProfile: true });
   } catch (error) {
     if (error instanceof MagicLinkError) {
@@ -495,6 +573,11 @@ function normalizeTenantName(value: string): string {
   return tenantName;
 }
 
+function resolveNewTenantName(value: string | null | undefined): string {
+  const provided = value?.trim();
+  return normalizeTenantName(provided || "My team");
+}
+
 function normalizeInviteRole(value: string): string {
   const roleSlug = value.trim().toLowerCase();
   if (!allowedInviteRoles.has(roleSlug)) {
@@ -535,14 +618,101 @@ function buildVerificationUrl(
   origin: string,
   token: string,
   returnTo: string | null | undefined,
+  signupIntent?: string | null,
 ): string {
   const url = new URL("/login/verify", origin);
   url.searchParams.set("token", token);
+  if (signupIntent) {
+    url.searchParams.set("signup", signupIntent);
+  }
   const normalizedReturnTo = normalizeReturnTo(returnTo);
   if (normalizedReturnTo !== "/app") {
     url.searchParams.set("returnTo", normalizedReturnTo);
   }
   return url.toString();
+}
+
+interface SignupIntent {
+  email: string;
+  tenantName: string;
+  tokenHash: string;
+  expiresAt: string;
+}
+
+function createSignupIntent(input: {
+  email: string;
+  tenantName: string;
+  token: string;
+  expiresAt: Date;
+}): string {
+  const payload: SignupIntent = {
+    email: input.email,
+    tenantName: input.tenantName,
+    tokenHash: hashMagicLinkToken(input.token),
+    expiresAt: input.expiresAt.toISOString(),
+  };
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = createHmac("sha256", getAuthSecret())
+    .update(encodedPayload)
+    .digest("base64url");
+  return `${encodedPayload}.${signature}`;
+}
+
+function verifySignupIntent(intentInput: string, emailInput: string, token: string): SignupIntent {
+  const [encodedPayload, signature, extra] = intentInput.split(".");
+  if (!encodedPayload || !signature || extra) {
+    throw new AccountFlowError(400, "Sign-in link has an invalid signup intent.");
+  }
+
+  const expectedSignature = createHmac("sha256", getAuthSecret())
+    .update(encodedPayload)
+    .digest("base64url");
+  if (!hasMatchingSignature(signature, expectedSignature)) {
+    throw new AccountFlowError(400, "Sign-in link has an invalid signup intent.");
+  }
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
+  } catch {
+    throw new AccountFlowError(400, "Sign-in link has an invalid signup intent.");
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new AccountFlowError(400, "Sign-in link has an invalid signup intent.");
+  }
+
+  const value = payload as Partial<SignupIntent>;
+  if (
+    typeof value.email !== "string" ||
+    typeof value.tenantName !== "string" ||
+    typeof value.tokenHash !== "string" ||
+    typeof value.expiresAt !== "string" ||
+    value.email !== normalizeEmail(emailInput) ||
+    value.tokenHash !== hashMagicLinkToken(token) ||
+    Number.isNaN(Date.parse(value.expiresAt)) ||
+    Date.parse(value.expiresAt) <= Date.now()
+  ) {
+    throw new AccountFlowError(400, "Sign-in link has an invalid signup intent.");
+  }
+
+  return {
+    email: value.email,
+    tenantName: normalizeTenantName(value.tenantName),
+    tokenHash: value.tokenHash,
+    expiresAt: value.expiresAt,
+  };
+}
+
+function hashMagicLinkToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function hasMatchingSignature(actual: string, expected: string): boolean {
+  const actualBuffer = Buffer.from(actual, "base64url");
+  const expectedBuffer = Buffer.from(expected, "base64url");
+  return (
+    actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer)
+  );
 }
 
 function normalizeReturnTo(value: string | null | undefined): string {

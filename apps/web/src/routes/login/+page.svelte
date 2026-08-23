@@ -3,21 +3,22 @@
 </script>
 
 <svelte:head>
-  <title>Sign in | SMRT SaaS Starter</title>
+  <title>Continue with email | SMRT SaaS Starter</title>
 </svelte:head>
 
 <main class="auth-page">
-  <section class="panel" aria-labelledby="sign-in-heading">
+  <section class="panel" aria-labelledby="email-entry-heading">
     <a class="brand" href="/">SMRT <span>SaaS Starter</span></a>
     <header>
-      <p class="eyebrow">Sign in</p>
-      <h1 id="sign-in-heading">Continue to the starter.</h1>
+      <p class="eyebrow">Get started</p>
+      <h1 id="email-entry-heading">Continue with email.</h1>
       {#if data.idpEnabled}
         <p class="lede">
-          Use email for a secure sign-in link, or continue with your configured identity provider.
+          We’ll verify your email, then sign you in or create your starter workspace. You can also
+          use your configured identity provider.
         </p>
       {:else}
-        <p class="lede">Use email for a secure sign-in link.</p>
+        <p class="lede">We’ll verify your email, then take you straight to your starter.</p>
       {/if}
     </header>
 
@@ -40,18 +41,29 @@
           required
         />
       </label>
-      <button type="submit" class="primary">Email me a sign-in link</button>
+      <label>
+        <span>Workspace name <em>(optional for new accounts)</em></span>
+        <input
+          name="tenantName"
+          autocomplete="organization"
+          value={form?.tenantName ?? ""}
+          placeholder="Acme Labs"
+        />
+      </label>
+      <button type="submit" class="primary">Continue with email</button>
     </form>
 
     {#if form?.verificationUrl}
-      <a class="dev-link" href={form.verificationUrl}>Continue with local sign-in link</a>
+      <a class="dev-link" href={form.verificationUrl}>Open local development link</a>
     {/if}
 
     {#if data.idpEnabled}
       <a class="secondary" href="/auth/happyvertical/login">Continue with HappyVertical IDP</a>
     {/if}
 
-    <p class="alternate">New to the starter? <a href="/signup">Create an account</a></p>
+    {#if data.signupMode === "request-access"}
+      <p class="alternate">Need access? <a href="/request-access">Request access</a></p>
+    {/if}
   </section>
 </main>
 
@@ -112,6 +124,11 @@
   .alternate {
     color: var(--smrt-color-on-surface-variant);
     font: var(--smrt-typography-label-large-font);
+  }
+
+  label em {
+    font: inherit;
+    color: var(--smrt-color-on-surface-variant);
   }
 
   .eyebrow {

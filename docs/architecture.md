@@ -70,16 +70,21 @@ multiply owned Profile links before
 exposing `profileId`, which is the actor id for canonical `AuditLog` and chat
 surfaces; a User id must never be substituted for it.
 
-Signup creates the tenant, owner user, owner membership, and Starter
-subscription in one transaction-backed onboarding service. A starter app
-setting controls whether signup is public or invite-only. Super users, resolved
+The public email entry flow creates the tenant, owner user, owner membership,
+and Starter subscription in one transaction-backed onboarding service only
+after the magic link verifies the email. Its signed provisioning intent binds
+the requested tenant name and issued link token; it is checked again against the
+current signup policy before the transaction runs. Existing members use the
+same form and receive a normal session without a second tenant. A starter app
+setting controls whether public provisioning is allowed; super users, resolved
 from `SMRT_STARTER_SUPERUSER_EMAILS` plus the local demo-owner fallback, manage
 that setting and create tenant-owner invitations from `/app/admin`.
 
 Tenant-owner invitation records live in `packages/app-objects` as
 starter-local SMRT objects. They store hashed tokens, purpose, target email,
 expiry, status, and use counts. `/invite/[token]` redirects to signup with the
-token, and signup redeems the invite after the tenant owner account is created.
+token, and the invitation-only signup route redeems it after the tenant owner
+account is created.
 Tenant-member management lives on the settings page and grants active
 memberships through starter roles; it is deliberately small until SMRT ships a
 richer invitation workflow.
