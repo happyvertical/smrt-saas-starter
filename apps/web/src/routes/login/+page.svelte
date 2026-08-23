@@ -7,11 +7,14 @@
 </svelte:head>
 
 <main class="auth-page">
-  <section class="panel">
-    <a class="brand" href="/">SMRT SaaS Starter</a>
+  <section class="panel" aria-labelledby="sign-in-heading">
+    <a class="brand" href="/">SMRT <span>SaaS Starter</span></a>
     <header>
-      <p>Sign in</p>
-      <h1>Open your workspace</h1>
+      <p class="eyebrow">Sign in</p>
+      <h1 id="sign-in-heading">Continue to the starter.</h1>
+      <p class="lede">
+        Use email for a secure sign-in link, or continue with your configured identity provider.
+      </p>
     </header>
 
     {#if form?.message}
@@ -33,121 +36,175 @@
           required
         />
       </label>
-      <button type="submit">Sign in</button>
+      <button type="submit" class="primary">Email me a sign-in link</button>
     </form>
 
     {#if form?.verificationUrl}
       <a class="dev-link" href={form.verificationUrl}>Continue with local sign-in link</a>
     {/if}
 
-    <a class="idp-link" href="/auth/happyvertical/login">Continue with HappyVertical IDP</a>
+    {#if data.idpEnabled}
+      <a class="secondary" href="/auth/happyvertical/login">Continue with HappyVertical IDP</a>
+    {/if}
 
-    <p class="alternate">No workspace yet? <a href="/signup">Create one</a></p>
+    <p class="alternate">New to the starter? <a href="/signup">Create an account</a></p>
   </section>
 </main>
 
 <style>
   :global(body) {
     margin: 0;
-    font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--smrt-color-on-background);
   }
 
   .auth-page {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: grid;
     place-items: center;
-    padding: 1rem;
-    background: #f7f8fa;
+    padding: clamp(1rem, 4vw, 2rem);
+    background:
+      radial-gradient(circle at 82% 10%, var(--smrt-color-primary-container), transparent 31%),
+      var(--smrt-color-background);
   }
 
   .panel {
-    width: min(100%, 420px);
+    width: min(100%, 29rem);
     display: grid;
-    gap: 1.1rem;
-    border: 1px solid #d7dce2;
-    border-radius: 8px;
-    background: #fff;
-    padding: clamp(1rem, 4vw, 1.5rem);
+    gap: 1.15rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
+    border: 1px solid var(--smrt-color-outline-variant);
+    border-radius: var(--smrt-radius-md);
+    background: var(--smrt-color-surface);
+    box-shadow: var(--smrt-elevation-2);
   }
 
   .brand {
-    color: #155eef;
-    font-weight: 800;
+    color: var(--smrt-color-on-surface);
+    font: var(--smrt-typography-title-large-font);
+    letter-spacing: var(--smrt-typography-title-large-tracking);
     text-decoration: none;
+  }
+
+  .brand span {
+    color: var(--smrt-color-on-surface-variant);
   }
 
   header,
   form,
   label {
     display: grid;
-    gap: 0.65rem;
+    gap: 0.7rem;
   }
 
-  header p,
+  .eyebrow,
   h1,
+  .lede,
   .alternate {
     margin: 0;
   }
 
-  header p,
+  .eyebrow,
   label span,
   .alternate {
-    color: #5e6470;
+    color: var(--smrt-color-on-surface-variant);
+    font: var(--smrt-typography-label-large-font);
+  }
+
+  .eyebrow {
+    color: var(--smrt-color-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   h1 {
-    font-size: 2rem;
-    line-height: 1.1;
-    letter-spacing: 0;
+    color: var(--smrt-color-on-surface);
+    font-family: var(--smrt-typography-headline-large-font-family);
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    font-weight: var(--smrt-typography-headline-large-weight);
+    letter-spacing: var(--smrt-typography-headline-large-tracking);
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--smrt-color-on-surface-variant);
+    font: var(--smrt-typography-body-medium-font);
   }
 
   input {
-    min-height: 2.6rem;
-    border: 1px solid #cbd3dc;
-    border-radius: 6px;
-    padding: 0 0.75rem;
-    font: inherit;
+    min-height: 2.8rem;
+    border: 1px solid var(--smrt-color-outline);
+    border-radius: var(--smrt-radius-sm);
+    background: var(--smrt-color-surface);
+    color: var(--smrt-color-on-surface);
+    padding: 0 0.8rem;
+    font: var(--smrt-typography-body-large-font);
   }
 
-  button {
-    min-height: 2.6rem;
-    border: 1px solid #155eef;
-    border-radius: 6px;
-    background: #155eef;
-    color: #fff;
-    font: inherit;
-    font-weight: 800;
-    cursor: pointer;
+  input:focus-visible {
+    outline: 2px solid var(--smrt-color-primary);
+    outline-offset: 2px;
   }
 
+  .primary,
   .dev-link,
-  .idp-link {
-    display: grid;
-    min-height: 2.6rem;
+  .secondary {
+    min-height: 2.8rem;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #cbd3dc;
-    border-radius: 6px;
-    color: #155eef;
-    font-weight: 800;
-    overflow-wrap: anywhere;
-    padding: 0 0.75rem;
+    border: 1px solid var(--smrt-color-primary);
+    border-radius: var(--smrt-radius-sm);
+    padding: 0 0.85rem;
+    font: var(--smrt-typography-label-large-font);
     text-align: center;
     text-decoration: none;
   }
 
+  .primary {
+    background: var(--smrt-color-primary);
+    color: var(--smrt-color-on-primary);
+    cursor: pointer;
+  }
+
+  .primary:hover {
+    background: var(--smrt-color-primary-container);
+    color: var(--smrt-color-on-primary-container);
+  }
+
+  .secondary {
+    border-color: var(--smrt-color-outline-variant);
+    color: var(--smrt-color-on-surface);
+  }
+
+  .secondary:hover {
+    border-color: var(--smrt-color-primary);
+    color: var(--smrt-color-primary);
+  }
+
   .dev-link {
-    border-color: #155eef;
-    background: #eef4ff;
+    background: var(--smrt-color-primary-container);
+    color: var(--smrt-color-on-primary-container);
   }
 
   .notice {
     margin: 0;
-    border: 1px solid #98a2b3;
-    border-radius: 6px;
-    background: #f8fafc;
-    color: #344054;
-    padding: 0.75rem;
+    border: 1px solid var(--smrt-color-outline);
+    border-radius: var(--smrt-radius-sm);
+    background: var(--smrt-color-surface-variant);
+    color: var(--smrt-color-on-surface-variant);
+    padding: 0.8rem;
+    font: var(--smrt-typography-body-medium-font);
+  }
+
+  .alternate a {
+    color: var(--smrt-color-primary);
+    text-underline-offset: 0.18em;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--smrt-color-primary);
+    outline-offset: 3px;
   }
 </style>

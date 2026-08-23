@@ -2,11 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const oidcCallback = vi.fn(async () => new Response(null, { status: 303 }));
+  const oidcLogin = vi.fn(async () => new Response(null, { status: 303 }));
   return {
     oidcCallback,
+    oidcLogin,
     createOidcCallbackHandler: vi.fn(() => oidcCallback),
-    createOidcLoginHandler: vi.fn(() => vi.fn()),
+    createOidcLoginHandler: vi.fn(() => oidcLogin),
     getSmrtConfig: vi.fn(() => ({})),
+    isHappyVerticalIdpEnabled: vi.fn(() => true),
     loadStarterConfig: vi.fn(async () => undefined),
   };
 });
@@ -17,11 +20,15 @@ vi.mock("@happyvertical/smrt-users/sveltekit", () => ({
 }));
 vi.mock("$lib/server/smrt", () => ({ getSmrtConfig: mocks.getSmrtConfig }));
 vi.mock("$lib/server/starter-config", () => ({ loadStarterConfig: mocks.loadStarterConfig }));
+vi.mock("$lib/server/identity-providers", () => ({
+  isHappyVerticalIdpEnabled: mocks.isHappyVerticalIdpEnabled,
+}));
 
 describe("production OIDC route bootstrap", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    mocks.isHappyVerticalIdpEnabled.mockReturnValue(true);
   });
 
   it("loads starter config before constructing the login handler", async () => {
@@ -41,7 +48,19 @@ describe("production OIDC route bootstrap", () => {
       mocks.createOidcCallbackHandler.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
     );
 
-    await GET({} as Parameters<typeof GET>[0]);
+    await GET({ params: { provider: "happyvertical" } } as Parameters<typeof GET>[0]);
     expect(mocks.oidcCallback).toHaveBeenCalledOnce();
+  });
+
+  it("does not start a disabled HappyVertical IdP flow", async () => {
+    mocks.isHappyVerticalIdpEnabled.mockReturnValue(false);
+    const { GET } = await import("./[provider]/login/+server");
+
+    const response = await GET({
+      params: { provider: "happyvertical" },
+    } as Parameters<typeof GET>[0]);
+
+    expect(response.status).toBe(404);
+    expect(mocks.oidcLogin).not.toHaveBeenCalled();
   });
 });

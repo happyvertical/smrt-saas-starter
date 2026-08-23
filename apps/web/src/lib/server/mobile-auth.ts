@@ -7,6 +7,7 @@ import {
 import { type SessionContext, SessionService } from "@happyvertical/smrt-users";
 import { AccountFlowError, type AccountSessionTarget, signInWithEmail } from "$lib/server/accounts";
 import { resolveMembershipContext, type StarterMembershipContext } from "$lib/server/authz";
+import { isHappyVerticalIdpEnabled } from "$lib/server/identity-providers";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { getBillingOverview } from "$lib/server/subscriptions";
 
@@ -484,6 +485,10 @@ function readJsonProviders(): MobileAuthProviderConfig[] {
 }
 
 function readHappyVerticalProvider(): MobileAuthProviderConfig | null {
+  if (!isHappyVerticalIdpEnabled()) {
+    return null;
+  }
+
   const clientId =
     normalizeOptionalString(process.env.MOBILE_OIDC_CLIENT_ID) ??
     normalizeOptionalString(process.env.OIDC_CLIENT_ID);

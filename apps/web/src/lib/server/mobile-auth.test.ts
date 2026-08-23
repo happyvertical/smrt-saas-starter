@@ -129,6 +129,12 @@ describe("mobile auth", () => {
     ]);
   });
 
+  it("does not expose the HappyVertical provider when it is disabled", () => {
+    vi.stubEnv("SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED", "false");
+
+    expect(listMobileAuthProviders()).toEqual([]);
+  });
+
   it("starts an OIDC PKCE flow through the SDK auth provider", async () => {
     mobileAuthMocks.getAuthorizationUrl.mockResolvedValue({
       url: "https://idp.example.test/oauth2/authorize",
