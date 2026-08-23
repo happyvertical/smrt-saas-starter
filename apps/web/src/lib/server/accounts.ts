@@ -214,21 +214,8 @@ export async function verifyEmailLink(
         if (isExistingAccountConflict(error)) {
           return await signInWithEmail(result.email, { reuseExistingProfile: true });
         }
-        if (isUniqueConstraintViolation(error)) {
-          try {
-            return await signInWithEmail(result.email, { reuseExistingProfile: true });
-          } catch (recoveryError) {
-            // A different unique constraint should not be hidden by a missing
-            // account or membership lookup. Re-throw the original database
-            // failure unless a concurrently created account can be signed in.
-            if (
-              recoveryError instanceof AccountFlowError &&
-              (recoveryError.status === 403 || recoveryError.status === 404)
-            ) {
-              throw error;
-            }
-            throw recoveryError;
-          }
+        if (isUserEmailUniqueConstraintViolation(error)) {
+          return await signInWithEmail(result.email, { reuseExistingProfile: true });
         }
         throw error;
       }
@@ -744,8 +731,8 @@ async function withDbTransaction<T>(db: DbLike, callback: (tx: DbLike) => Promis
  * committing its user. The preflight read then misses that user, but the
  * database correctly rejects the duplicate `email_key`. Both outcomes mean
  * the verified visitor should continue through the existing-account sign-in
- * path. If a different constraint caused the failure, the fresh lookup does
- * not find an account and the original database error still surfaces.
+ * path. The recovery is deliberately constrained to `users.email_key`; other
+ * database conflicts surface normally.
  */
 function isExistingAccountConflict(error: unknown): boolean {
   if (
@@ -758,11 +745,16 @@ function isExistingAccountConflict(error: unknown): boolean {
   return false;
 }
 
-function isUniqueConstraintViolation(error: unknown): boolean {
+function isUserEmailUniqueConstraintViolation(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
   }
-  return "code" in error && error.code === "23505";
+  return (
+    "code" in error &&
+    error.code === "23505" &&
+    "constraint" in error &&
+    error.constraint === "users_email_key_key"
+  );
 }
 
 async function createUniqueTenantSlug(db: DbLike, baseSlug: string): Promise<string> {

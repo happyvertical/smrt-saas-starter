@@ -407,6 +407,70 @@ describe("account onboarding flows", () => {
     );
   });
 
+  it("does not hide an unrelated unique-constraint failure behind an existing account", async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    accountMocks.magicLinkGenerate.mockResolvedValueOnce({
+      token: "signup-token",
+      expiresAt: futureExpiry,
+    });
+    accountMocks.query.mockResolvedValueOnce({ rows: [] });
+    const request = await requestEmailLink({
+      email: "founder@example.com",
+      tenantName: "Acme Labs",
+      origin: "http://localhost:5173",
+      allowSignup: true,
+    });
+    const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
+    const conflict = Object.assign(new Error("duplicate profile"), {
+      code: "23505",
+      constraint: "users_profile_id_key",
+    });
+
+    accountMocks.txQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM tenants") && sql.includes("slug = ?")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM roles")) {
+        return { rows: [{ id: ownerRoleId, slug: "owner", name: "Owner" }] };
+      }
+      return { rows: [] };
+    });
+    accountMocks.txUpsert.mockImplementation(async (table: string) => {
+      if (table === "users") {
+        throw conflict;
+      }
+      return {};
+    });
+    accountMocks.query.mockImplementation(async (sql: string) => {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) {
+        return { rows: [{ id: userId, email: "founder@example.com" }] };
+      }
+      if (sql.includes("FROM memberships") && sql.includes("INNER JOIN tenants")) {
+        return {
+          rows: [
+            {
+              user_id: userId,
+              user_email: "founder@example.com",
+              tenant_id: tenantId,
+              tenant_slug: "acme-labs",
+              tenant_name: "Acme Labs",
+            },
+          ],
+        };
+      }
+      return { rows: [], rowCount: 1 };
+    });
+    accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
+
+    await expect(verifyEmailLink("signup-token", { signupIntent, allowSignup: true })).rejects.toBe(
+      conflict,
+    );
+    expect(accountMocks.ensureUserProfile).not.toHaveBeenCalled();
+  });
+
   it("refuses a new email before issuing a link when public signup is unavailable", async () => {
     accountMocks.query.mockResolvedValueOnce({ rows: [] });
 
