@@ -59,7 +59,7 @@ test("admin signup settings use the policy basic/advanced form", async ({ page }
   await expect(page.getByRole("tab", { name: "Just me" })).toBeVisible();
 });
 
-test("settings sub-navigation exposes the signup form fields destination", async ({ page }) => {
+test("settings sub-navigation exposes the signup form destination", async ({ page }) => {
   await page.goto("/app/settings");
   const workspaceTools = page.getByRole("navigation", { name: "Workspace tools" });
   await expect(workspaceTools).toBeInViewport();
@@ -69,9 +69,12 @@ test("settings sub-navigation exposes the signup form fields destination", async
   await expect(settingsNavigation.getByRole("link", { name: "Members" })).toBeVisible();
   await expect(settingsNavigation.getByRole("link", { name: "Prompts" })).toBeVisible();
   await expect(settingsNavigation.getByRole("link", { name: "Languages" })).toBeVisible();
-  await settingsNavigation.getByRole("link", { name: "Signup form fields" }).click();
+  await settingsNavigation.getByRole("link", { name: "Signup form" }).click();
   await expect(page).toHaveURL(/\/app\/settings\/signup-form-fields$/);
-  await expect(page.getByRole("heading", { name: "Signup form fields" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Signup form" })).toBeVisible();
+  await expect(
+    page.getByText("This does not change the public registration page.", { exact: false }),
+  ).toBeVisible();
 
   await page.goto("/app/settings/field-policies");
   await expect(page).toHaveURL(/\/app\/settings\/signup-form-fields$/);

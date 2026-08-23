@@ -9,7 +9,7 @@
     { href: "/app/settings/prompts", label: "Prompts" },
     { href: "/app/settings/languages", label: "Languages" },
     ...(data.canConfigureSignupForm
-      ? [{ href: "/app/settings/signup-form-fields", label: "Signup form fields" }]
+      ? [{ href: "/app/settings/signup-form-fields", label: "Signup form" }]
       : []),
   ]);
 </script>

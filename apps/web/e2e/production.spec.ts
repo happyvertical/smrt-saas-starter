@@ -83,11 +83,11 @@ for (const route of APP_NAVIGATION) {
   });
 }
 
-test("signup-form-fields page loads server data and supports create/update/read", async ({
+test("signup-form page loads server data and supports create/update/read", async ({
   page,
 }, testInfo) => {
   const assertHealthy = await expectHealthyDocument(page, "/app/settings/signup-form-fields");
-  await expect(page.getByRole("heading", { name: "Signup form fields" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Signup form" })).toBeVisible();
   await expect(page.getByText("Stable application setting identifier.")).toBeVisible();
   await page.getByRole("link", { name: /Value StarterAppSetting/u }).click();
   await expect(

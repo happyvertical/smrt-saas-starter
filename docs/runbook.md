@@ -114,10 +114,10 @@ failure, inspect `artifacts/production-e2e`, `apps/web/test-results`, and
 Use an owner or admin identity to manage organization policy and a member or
 viewer identity to verify personal policy behavior.
 
-1. As the owner, open **Settings**, then select **Signup form fields**. Use the
+1. As the owner, open **Settings**, then select **Signup form**. Use the
    Organization tab to set a default, move the field between Basic and
    Advanced, and lock the organization policy. Save each change.
-2. As the member, use the **Signup form fields** focus tool from the AdminShell
+2. As the member, use the **Signup form** focus tool from the AdminShell
    **Tools** region. The Organization
    tab and control-panel navigation are unavailable; **Just me** remains
    available only for fields the organization has not locked.
@@ -126,7 +126,7 @@ viewer identity to verify personal policy behavior.
 4. Use **Reset to inherited** as the member to return to the organization
    policy. Then use it as the owner to return the organization layer to the app
    definition.
-5. As the owner, open **Signup form fields** from Settings and
+5. As the owner, open **Signup form** from Settings and
    verify the control panel reports the organization customization and personal
    override count without exposing another user's values.
 

@@ -7,15 +7,21 @@
 </script>
 
 <svelte:head>
-  <title>Signup form fields | SMRT SaaS Starter</title>
+  <title>Signup form | SMRT SaaS Starter</title>
 </svelte:head>
 
 <section class="settings-page">
   <header>
     <p>Settings</p>
-    <h1>Signup form fields</h1>
+    <h1>Signup form</h1>
     <p class="description">
-      Customize the form super users use to choose public, invite-only, or request-access signup.
+      This does not change the public registration page. It changes the internal form a super user
+      uses to choose whether people can join this workspace through public signup, invitations only,
+      or access requests.
+    </p>
+    <p class="help">
+      Use the controls below to set a field’s label, help text, default value, and whether it
+      appears in the basic or advanced view.
     </p>
   </header>
 
@@ -41,7 +47,8 @@
   }
 
   .settings-page > header > p:first-child,
-  .description {
+  .description,
+  .help {
     color: var(--smrt-color-on-surface-variant, #5e6470);
   }
 
