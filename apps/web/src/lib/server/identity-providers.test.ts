@@ -9,11 +9,17 @@ describe("isHappyVerticalIdpEnabled", () => {
     );
   });
 
-  it("requires an issuer before exposing the browser provider", () => {
+  it("requires an issuer and client ID before exposing the browser provider", () => {
     expect(isHappyVerticalWebIdpEnabled({})).toBe(false);
     expect(
       isHappyVerticalWebIdpEnabled({
         HAPPYVERTICAL_IDP_ISSUER: "https://idp.example.test/oauth2/openid/starter",
+      }),
+    ).toBe(false);
+    expect(
+      isHappyVerticalWebIdpEnabled({
+        HAPPYVERTICAL_IDP_ISSUER: "https://idp.example.test/oauth2/openid/starter",
+        OIDC_CLIENT_ID: "starter-web",
       }),
     ).toBe(true);
   });
@@ -33,6 +39,7 @@ describe("isHappyVerticalIdpEnabled", () => {
     expect(
       isHappyVerticalWebIdpEnabled({
         HAPPYVERTICAL_IDP_ISSUER: "https://idp.example.test/oauth2/openid/starter",
+        OIDC_CLIENT_ID: "starter-web",
         SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED: value,
       }),
     ).toBe(false);

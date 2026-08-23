@@ -12,9 +12,11 @@ export function isHappyVerticalIdpEnabled(environment: Environment = process.env
   return !requestedState || !disabledValues.has(requestedState);
 }
 
-/** The browser OIDC route additionally needs a browser-facing issuer. */
+/** The browser OIDC route additionally needs its issuer and client ID. */
 export function isHappyVerticalWebIdpEnabled(environment: Environment = process.env): boolean {
   return (
-    Boolean(environment.HAPPYVERTICAL_IDP_ISSUER?.trim()) && isHappyVerticalIdpEnabled(environment)
+    Boolean(environment.HAPPYVERTICAL_IDP_ISSUER?.trim()) &&
+    Boolean(environment.OIDC_CLIENT_ID?.trim()) &&
+    isHappyVerticalIdpEnabled(environment)
   );
 }
