@@ -1,5 +1,6 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { AccountFlowError, requestSignInLink } from "$lib/server/accounts";
+import { isHappyVerticalWebIdpEnabled } from "$lib/server/identity-providers";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -9,6 +10,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   return {
     errorMessage: url.searchParams.get("error") ?? "",
     returnTo: normalizeReturnTo(url.searchParams.get("returnTo")),
+    idpEnabled: isHappyVerticalWebIdpEnabled(),
   };
 };
 

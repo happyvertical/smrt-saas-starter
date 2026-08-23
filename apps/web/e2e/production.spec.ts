@@ -62,7 +62,9 @@ async function expectHealthyDocument(page: Page, route: string): Promise<() => P
 
 test("production image serves the public entry and signup contract", async ({ page }) => {
   const assertPublicHealthy = await expectHealthyDocument(page, "/");
-  await expect(page.getByRole("heading", { name: "SMRT SaaS Starter" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Build the SaaS beneath your next product." }),
+  ).toBeVisible();
   await assertPublicHealthy();
 
   const assertSignupHealthy = await expectHealthyDocument(page, "/signup");

@@ -6,14 +6,16 @@ import { expect, test } from "@playwright/test";
 
 test("landing page renders the starter hero @public", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "SMRT SaaS Starter" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Build the SaaS beneath your next product." }),
+  ).toBeVisible();
 });
 
 test("login page renders the sign-in form @public", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Open your workspace" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Continue to the starter." })).toBeVisible();
   await expect(page.locator('input[name="email"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Email me a sign-in link" })).toBeVisible();
 });
 
 test("health endpoint reports ok @public", async ({ request }) => {
@@ -34,6 +36,7 @@ test("request-access page renders the waitlist form @public", async ({ page }) =
 // full suite (the service de-dups open requests by email, so it's idempotent).
 test("request-access form captures a waitlist submission", async ({ page }) => {
   await page.goto("/request-access");
+  await page.waitForLoadState("networkidle");
   await page.locator('input[name="email"]').fill("waitlist+e2e@example.com");
   await page.locator('input[name="name"]').fill("Waitlist E2E");
   await page.getByRole("button", { name: "Request access" }).click();

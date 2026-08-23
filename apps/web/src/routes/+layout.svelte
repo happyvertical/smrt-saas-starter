@@ -1,12 +1,25 @@
 <script lang="ts">
   import { Provider } from "@happyvertical/smrt-svelte";
-  import { ThemeProvider } from "@happyvertical/smrt-ui/theme";
+  import { ThemeProvider, themeScript } from "@happyvertical/smrt-ui/themes";
+  import "@happyvertical/smrt-ui/themes/styles/happyvertical-fonts.css";
+  import "@happyvertical/smrt-ui/themes/styles/happyvertical.css";
 
   let { children } = $props();
+
+  const themeStorageKey = "smrt-saas-starter-theme";
+  const themeBootstrap = themeScript({
+    preset: "happyvertical",
+    storageKey: themeStorageKey,
+  });
 </script>
 
+<svelte:head>
+  <!-- Split the tag name so Vite does not parse the interpolated bootstrap as source code. -->
+  {@html `<scr${"ipt"}>${themeBootstrap}</scr${"ipt"}>`}
+</svelte:head>
+
 <Provider>
-  <ThemeProvider>
+  <ThemeProvider preset="happyvertical" storageKey={themeStorageKey}>
     {@render children()}
   </ThemeProvider>
 </Provider>
@@ -19,6 +32,6 @@
   }
 
   :global(body) {
-    background: var(--smrt-color-background, #f7f8fa);
+    background: var(--smrt-color-background);
   }
 </style>

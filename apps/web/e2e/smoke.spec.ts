@@ -6,7 +6,9 @@ import { expect, test } from "@playwright/test";
 // coverage lives in authed.spec.ts via the session-mint endpoint.
 test("public site opens the demo workspace", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "SMRT SaaS Starter" })).toBeVisible();
-  await page.getByRole("link", { name: "Open demo workspace" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Build the SaaS beneath your next product." }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Open the seeded demo" }).click();
   await expect(page).toHaveURL(/\/app$/);
 });

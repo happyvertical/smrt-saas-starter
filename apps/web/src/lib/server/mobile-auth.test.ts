@@ -129,6 +129,26 @@ describe("mobile auth", () => {
     ]);
   });
 
+  it("does not expose the HappyVertical provider when it is disabled", () => {
+    vi.stubEnv("SMRT_STARTER_HAPPYVERTICAL_IDP_ENABLED", "false");
+
+    expect(listMobileAuthProviders()).toEqual([]);
+  });
+
+  it("keeps a mobile-only HappyVertical provider available by default", () => {
+    vi.stubEnv("HAPPYVERTICAL_IDP_ISSUER", "");
+    vi.stubEnv("MOBILE_AUTH_HAPPYVERTICAL_SERVER_URL", "https://mobile-idp.example.test");
+
+    expect(listMobileAuthProviders()).toEqual([
+      {
+        id: "happyvertical",
+        label: "HappyVertical IDP",
+        type: "kanidm",
+        supportsPkce: true,
+      },
+    ]);
+  });
+
   it("starts an OIDC PKCE flow through the SDK auth provider", async () => {
     mobileAuthMocks.getAuthorizationUrl.mockResolvedValue({
       url: "https://idp.example.test/oauth2/authorize",
