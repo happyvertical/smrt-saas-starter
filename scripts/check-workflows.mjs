@@ -16,7 +16,12 @@ for (const file of required) {
   await access(join(workflowsDir, file));
 }
 
-const workflowFiles = (await readdir(workflowsDir)).filter((file) => file.endsWith(".yml"));
+// The signed, centrally generated lifecycle workflow validates its own pinned
+// dependencies. The starter's CI convention checks apply to repository-owned
+// workflows only.
+const workflowFiles = (await readdir(workflowsDir)).filter(
+  (file) => file.endsWith(".yml") && file !== "agent-policy.yml",
+);
 for (const file of workflowFiles) {
   const text = await readFile(join(workflowsDir, file), "utf8");
   if (!text.includes("uses: actions/checkout@v6")) {
