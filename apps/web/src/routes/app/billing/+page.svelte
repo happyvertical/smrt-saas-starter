@@ -1,10 +1,15 @@
 <script lang="ts">
-  import { BillingSummary, PlanPicker } from "@happyvertical/smrt-saas-ui";
-  import { usageMetricUnit } from "$lib/usage-metrics";
+  import {
+    PlanPicker,
+    type PlanPickerPlan,
+    SubscriptionSummary,
+    UsageThresholds,
+  } from "@happyvertical/smrt-subscriptions/svelte";
 
   let { data } = $props();
 
-  function choosePlan(plan: { id: string }) {
+  function choosePlan(plan: PlanPickerPlan) {
+    if (!plan.id) return;
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "?/checkout";
@@ -17,13 +22,6 @@
     form.requestSubmit();
   }
 
-  function openPortal() {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "?/portal";
-    document.body.append(form);
-    form.requestSubmit();
-  }
 </script>
 
 <svelte:head>
@@ -36,23 +34,24 @@
     <h1>Plans and subscription</h1>
   </header>
 
-  <BillingSummary
-    planName={data.currentPlan.name}
-    status={data.snapshot.status}
+  <SubscriptionSummary
+    resolution={data.snapshot}
     periodEnd={data.periodEnd}
-    portalAvailable={data.billingPortalAvailable}
-    thresholds={data.snapshot.thresholdEvaluations.map((evaluation) => ({
-      metricKey: evaluation.threshold.metricKey,
-      label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
-      used: evaluation.usage.quantity,
-      limit: evaluation.threshold.limit,
-      unit: usageMetricUnit(evaluation.threshold.metricKey),
-      action: evaluation.threshold.enforcement,
-    }))}
-    onportal={openPortal}
+    periodDisposition="renews"
   />
+  <UsageThresholds evaluations={data.snapshot.thresholdEvaluations} />
 
-  <PlanPicker plans={data.plans} onselect={choosePlan} />
+  {#if data.billingPortalAvailable}
+    <form method="POST" action="?/portal">
+      <button type="submit">Manage billing</button>
+    </form>
+  {/if}
+
+  <PlanPicker
+    plans={data.plans}
+    selectedPlanKey={data.currentPlan.planKey}
+    onSelect={choosePlan}
+  />
 </section>
 
 <style>

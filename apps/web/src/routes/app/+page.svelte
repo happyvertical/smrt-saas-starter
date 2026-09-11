@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { BillingSummary } from "@happyvertical/smrt-saas-ui";
-  import { usageMetricUnit } from "$lib/usage-metrics";
+  import { SubscriptionSummary, UsageThresholds } from "@happyvertical/smrt-subscriptions/svelte";
 
   let { data } = $props();
 </script>
@@ -15,19 +14,12 @@
     <h1>Tenant overview</h1>
   </header>
 
-  <BillingSummary
-    planName={data.currentPlan.name}
-    status={data.snapshot.status}
+  <SubscriptionSummary
+    resolution={data.snapshot}
     periodEnd={data.periodEnd}
-    thresholds={data.snapshot.thresholdEvaluations.map((evaluation) => ({
-      metricKey: evaluation.threshold.metricKey,
-      label: evaluation.threshold.label ?? evaluation.threshold.metricKey,
-      used: evaluation.usage.quantity,
-      limit: evaluation.threshold.limit,
-      unit: usageMetricUnit(evaluation.threshold.metricKey),
-      action: evaluation.threshold.enforcement,
-    }))}
+    periodDisposition="renews"
   />
+  <UsageThresholds evaluations={data.snapshot.thresholdEvaluations} />
 </section>
 
 <style>

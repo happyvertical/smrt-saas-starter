@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const overview = await getBillingOverview(membership.tenantId);
   return {
     ...overview,
-    plans: await getPlanCards(overview.currentPlan.id),
+    plans: await getPlanCards(),
   };
 };
 

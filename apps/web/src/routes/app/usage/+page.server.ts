@@ -14,21 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   return {
     planName: overview.currentPlan.name,
     periodEnd: overview.periodEnd,
-    thresholds: overview.snapshot.thresholdEvaluations.map((evaluation) => ({
-      metricKey: evaluation.threshold.metricKey,
-      label: evaluation.threshold.label ?? readableMetricLabel(evaluation.threshold.metricKey),
-      enforcement: evaluation.threshold.enforcement,
-      state: evaluation.state,
-      allowed: evaluation.allowed,
-      used: evaluation.usage.quantity,
-      limit: evaluation.threshold.limit,
-      remaining: evaluation.remaining,
-      ratio: evaluation.ratio,
-      unit: usageMetricUnit(evaluation.threshold.metricKey),
-      window: evaluation.threshold.window,
-      windowStart: evaluation.usage.windowStart.toISOString(),
-      windowEnd: evaluation.usage.windowEnd.toISOString(),
-    })),
+    snapshot: overview.snapshot,
     summaries: summaries.map((summary) => ({
       metricKey: summary.metricKey,
       label: readableMetricLabel(summary.metricKey),

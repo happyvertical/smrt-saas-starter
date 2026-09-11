@@ -75,17 +75,19 @@ export async function getBillingOverview(tenantId?: string | null): Promise<Bill
   });
 }
 
-export async function getPlanCards(currentPlanId: string) {
+export async function getPlanCards() {
   const plans = await getActivePlans();
   return plans.map((plan) => ({
     id: plan.id,
-    slug: plan.planKey,
+    planKey: plan.planKey,
     name: plan.name,
     description: plan.description,
-    monthlyPrice: plan.priceAmount,
+    priceAmount: plan.priceAmount,
     currency: plan.currency,
-    current: plan.id === currentPlanId,
-    features: plan.features.filter((feature) => feature.enabled).map((feature) => feature.label),
+    billingInterval: plan.billingInterval,
+    featureKeys: plan.features
+      .filter((feature) => feature.enabled)
+      .map((feature) => feature.featureKey),
   }));
 }
 

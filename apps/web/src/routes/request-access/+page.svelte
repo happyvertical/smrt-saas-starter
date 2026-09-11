@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Input, Textarea } from "@happyvertical/smrt-ui/forms";
+
   let { form } = $props();
 </script>
 
@@ -32,7 +34,7 @@
       <form method="POST">
         <label>
           <span>Work email</span>
-          <input
+          <Input
             name="email"
             type="email"
             autocomplete="email"
@@ -43,7 +45,7 @@
         </label>
         <label>
           <span>Your name</span>
-          <input
+          <Input
             name="name"
             autocomplete="name"
             value={form?.name ?? ""}
@@ -52,7 +54,7 @@
         </label>
         <label>
           <span>Company</span>
-          <input
+          <Input
             name="company"
             autocomplete="organization"
             value={form?.company ?? ""}
@@ -61,7 +63,12 @@
         </label>
         <label>
           <span>What do you want to use it for?</span>
-          <textarea name="message" rows="3" placeholder="A sentence or two…">{form?.message ?? ""}</textarea>
+          <Textarea
+            name="message"
+            rows={3}
+            placeholder="A sentence or two…"
+            value={form?.message ?? ""}
+          />
         </label>
         <button type="submit">Request access</button>
       </form>
@@ -127,22 +134,6 @@
     font-size: 2rem;
     line-height: 1.1;
     letter-spacing: 0;
-  }
-
-  input,
-  textarea {
-    border: 1px solid #cbd3dc;
-    border-radius: 6px;
-    padding: 0.6rem 0.75rem;
-    font: inherit;
-  }
-
-  input {
-    min-height: 2.6rem;
-  }
-
-  textarea {
-    resize: vertical;
   }
 
   button {
