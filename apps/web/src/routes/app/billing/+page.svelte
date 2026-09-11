@@ -5,18 +5,22 @@
     SubscriptionSummary,
     UsageThresholds,
   } from "@happyvertical/smrt-subscriptions/svelte";
+  import { submitPlanSelection } from "$lib/billing-plan-selection";
 
   let { data } = $props();
 
   function choosePlan(plan: PlanPickerPlan) {
-    if (!plan.id) return;
+    submitPlanSelection(plan, data.currentPlan.planKey, submitCheckout);
+  }
+
+  function submitCheckout(planId: string) {
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "?/checkout";
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = "planId";
-    input.value = plan.id;
+    input.value = planId;
     form.append(input);
     document.body.append(form);
     form.requestSubmit();
