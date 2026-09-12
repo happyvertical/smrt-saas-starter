@@ -78,6 +78,7 @@ export default defineConfig({
       ? {
           launchOptions: {
             ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
+            chromiumSandbox: true,
             ...(webMcpTesting ? { args: ["--enable-blink-features=WebMCPTesting"] } : {}),
           },
         }
