@@ -51,6 +51,11 @@ export default defineConfig({
             command: "pnpm dev -- --port 5173",
             url: "http://127.0.0.1:5173",
             reuseExistingServer: !process.env.CI,
+            env: {
+              ...process.env,
+              SMRT_STARTER_DEMO_AUTH: "true",
+              SMRT_STARTER_DEMO_TENANT_ID: "00000000-0000-4000-8000-000000000001",
+            },
           },
         }),
   use: {
