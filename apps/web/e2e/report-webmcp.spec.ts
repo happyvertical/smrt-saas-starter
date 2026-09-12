@@ -82,8 +82,16 @@ test("report query sanitizes unsupported controls and rejects a nonmember tenant
   await page.goto("/app/reports");
   await expect.poll(() => toolNames(page)).toContain(reportTool);
 
+  const forbidden = JSON.parse(
+    await executeReport(page, { fields: ["source", "unknown_column"] }),
+  ) as { ok: boolean; reason: string };
+  expect(forbidden).toEqual({ ok: false, reason: "query_failed" });
+  await expect(page).toHaveURL(/\/app\/reports$/);
+  await expect(page.locator("[data-report-webmcp-ack]")).toHaveText("");
+
   // Chromium's WebMCP testing implementation forwards unsupported keys. The
-  // server adapter remains the authorization and validation boundary.
+  // server adapter remains the authorization and validation boundary. Generic
+  // extras are ignored, while field-selection keys are rejected above.
   const raw = await executeReport(page, {
     tenantId: deniedTenant,
     source: "private",

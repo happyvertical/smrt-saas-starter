@@ -254,6 +254,14 @@ function readPromptKey(input: unknown): string | undefined {
 function readActivityReportQuery(input: unknown): TenantActivityReportQuery {
   if (!input || typeof input !== "object" || Array.isArray(input)) return {};
   const candidate = input as Record<string, unknown>;
+  for (const key of ["fields", "projection", "select", "columns"]) {
+    if (Object.hasOwn(candidate, key)) {
+      throw new RuntimeToolExecutionError(
+        400,
+        "Tenant activity reports use the descriptor's fixed field projection",
+      );
+    }
+  }
   const page = positiveInteger(candidate.page);
   const pageSize = positiveInteger(candidate.pageSize);
   const sort = readActivityReportSort(candidate.sort);

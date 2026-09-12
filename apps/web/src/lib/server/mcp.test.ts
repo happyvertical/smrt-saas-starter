@@ -104,7 +104,7 @@ describe("tenant MCP runtime tools", () => {
     });
   });
 
-  it("drops forbidden report fields and malformed query controls before querying", async () => {
+  it("sanitizes unknown report arguments and malformed query controls before querying", async () => {
     mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
     mocks.getTenantActivityReport.mockResolvedValue({
       descriptor: {},
@@ -138,6 +138,28 @@ describe("tenant MCP runtime tools", () => {
         },
       },
     });
+  });
+
+  it.each([
+    "fields",
+    "projection",
+    "select",
+    "columns",
+  ])("rejects the unsupported %s selector before reading a report payload", async (selector) => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+
+    await expect(
+      executeRuntimeToolForTenant(
+        "tenant.activity-report.query",
+        { [selector]: ["source", "unknown_column"] },
+        tenantId,
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Tenant activity reports use the descriptor's fixed field projection",
+    });
+    expect(mocks.getTenantActivityReport).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 
   it("executes available tools and records tenant-scoped MCP usage", async () => {
