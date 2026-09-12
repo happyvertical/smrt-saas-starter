@@ -56,7 +56,8 @@
       },
     },
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    execute: async (args) => {
+    execute: async (args, options) => {
+      if (options?.signal?.aborted) return reject("cancelled");
       const href = typeof args.href === "string" ? args.href : "";
       const destination = destinations.find((candidate) => candidate.href === href);
       if (!destination) return reject("not_available");
@@ -86,7 +87,8 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    execute: (args) => {
+    execute: (args, options) => {
+      if (options?.signal?.aborted) return reject("cancelled");
       const colorScheme = args.colorScheme;
       if (colorScheme !== "light" && colorScheme !== "dark" && colorScheme !== "system") {
         return reject("invalid_request");
@@ -111,7 +113,7 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    execute: (args) => lifetime.run(async (signal) => {
+    execute: (args, options) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const tenantId = typeof args.tenantId === "string" ? args.tenantId : "";
       const tenant = tenants.find((candidate) => candidate.tenantId === tenantId);
@@ -133,7 +135,7 @@
       // before its completion response is delivered.
       void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "switched", tenantId });
-    }),
+    }, options?.signal),
   }));
 
   useWebMcpTool(() => ({
@@ -148,7 +150,7 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
-    execute: (args) => lifetime.run(async (signal) => {
+    execute: (args, options) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const response = await fetch("/api/billing/portal?format=json", {
         credentials: "same-origin",
@@ -168,7 +170,7 @@
         completion: "provider_continuation_required",
         portalUrl,
       });
-    }),
+    }, options?.signal),
   }));
 
   useWebMcpTool(() => ({
@@ -184,7 +186,7 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
-    execute: (args) => lifetime.run(async (signal) => {
+    execute: (args, options) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const planId = typeof args.planId === "string" ? args.planId : "";
       if (!planId) return reject("invalid_request");
@@ -208,7 +210,7 @@
         completion: "provider_continuation_required",
         checkoutUrl,
       });
-    }),
+    }, options?.signal),
   }));
 
   useWebMcpTool(() => ({
@@ -219,7 +221,8 @@
       properties: { action: { type: "string" }, fields: { type: "object" } },
     },
     annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    execute: (args) => {
+    execute: (args, options) => {
+      if (options?.signal?.aborted) return reject("cancelled");
       const form = formFor(args.action);
       if (!form || !args.fields || typeof args.fields !== "object" || Array.isArray(args.fields)) return reject("not_available");
       const fields = Array.from(form.elements).filter((element): element is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement =>
@@ -245,7 +248,7 @@
       properties: { action: { type: "string" } },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: false },
-    execute: (args) => lifetime.run(async (signal) => {
+    execute: (args, options) => lifetime.run(async (signal) => {
       const form = formFor(args.action);
       if (!form) return reject("not_available");
       const response = await fetch(form.action, {
@@ -265,7 +268,7 @@
       acknowledge("Existing authorized form submitted.");
       void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "submitted" });
-    }),
+    }, options?.signal),
   }));
 </script>
 

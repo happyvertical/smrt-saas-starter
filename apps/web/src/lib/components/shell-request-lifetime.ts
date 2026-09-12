@@ -3,16 +3,23 @@ export function createShellRequestLifetime() {
   const pending = new Set<AbortController>();
   let disposed = false;
   return {
-    async run(execute: (signal: AbortSignal) => Promise<string>): Promise<string> {
-      if (disposed) return JSON.stringify({ ok: false, reason: "cancelled" });
+    async run(
+      execute: (signal: AbortSignal) => Promise<string>,
+      callerSignal?: AbortSignal,
+    ): Promise<string> {
+      if (disposed || callerSignal?.aborted)
+        return JSON.stringify({ ok: false, reason: "cancelled" });
       const controller = new AbortController();
+      const signal = callerSignal
+        ? AbortSignal.any([controller.signal, callerSignal])
+        : controller.signal;
       pending.add(controller);
       try {
-        const result = await execute(controller.signal);
-        controller.signal.throwIfAborted();
+        const result = await execute(signal);
+        signal.throwIfAborted();
         return result;
       } catch (error) {
-        if (controller.signal.aborted) {
+        if (signal.aborted) {
           return JSON.stringify({ ok: false, reason: "cancelled" });
         }
         throw error;

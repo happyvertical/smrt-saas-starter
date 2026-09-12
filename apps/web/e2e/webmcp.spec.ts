@@ -46,12 +46,14 @@ async function expectShellTools(page: Page, names: string[]) {
 test("mounted shell tools execute through the native Chromium WebMCP API", async ({ page }) => {
   await page.goto("/app");
 
-  await expectShellTools(page, [
-    "starter_shell_navigate",
-    "starter_shell_set_theme",
-    "starter_shell_prepare_billing_portal",
-    "starter_shell_prepare_subscription_checkout",
-  ]);
+  await expectShellTools(page, shellToolNames);
+  const registeredNames = await page.evaluate(async () => {
+    const context = document.modelContext as unknown as NativeModelContext;
+    return (await context.getTools()).map((tool) => tool.name);
+  });
+  expect(registeredNames.filter((name) => shellToolNames.includes(name)).sort()).toEqual(
+    [...shellToolNames].sort(),
+  );
 
   await expect(
     executeShellTool(page, "starter_shell_set_theme", { colorScheme: "dark" }),

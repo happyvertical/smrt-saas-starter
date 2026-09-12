@@ -47,3 +47,64 @@ describe("mounted shell request lifetime", () => {
     ).rejects.toThrow("ordinary failure");
   });
 });
+
+describe("native caller cancellation within a mounted shell", () => {
+  it("does not start already-aborted callers", async () => {
+    const lifetime = createShellRequestLifetime();
+    const caller = new AbortController();
+    caller.abort();
+    const execute = vi.fn(async () => "unexpected");
+    expect(JSON.parse(await lifetime.run(execute, caller.signal))).toEqual({
+      ok: false,
+      reason: "cancelled",
+    });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("aborts only its invocation and suppresses late caller success", async () => {
+    const lifetime = createShellRequestLifetime();
+    const caller = new AbortController();
+    let resolve!: () => void;
+    const deferred = new Promise<void>((done) => {
+      resolve = done;
+    });
+    const signals: AbortSignal[] = [];
+    const acknowledge = vi.fn();
+    const execute = async (signal: AbortSignal) => {
+      signals.push(signal);
+      await deferred;
+      signal.throwIfAborted();
+      acknowledge();
+      return "applied";
+    };
+    const cancelled = lifetime.run(execute, caller.signal);
+    const sibling = lifetime.run(execute);
+    caller.abort();
+    expect(signals.map((signal) => signal.aborted)).toEqual([true, false]);
+    resolve();
+    expect(JSON.parse(await cancelled)).toEqual({ ok: false, reason: "cancelled" });
+    expect(await sibling).toBe("applied");
+    expect(acknowledge).toHaveBeenCalledTimes(1);
+  });
+
+  it("mount disposal cancels caller-bound work without aborting the caller's controller", async () => {
+    const lifetime = createShellRequestLifetime();
+    const caller = new AbortController();
+    let resolve!: () => void;
+    const deferred = new Promise<void>((done) => {
+      resolve = done;
+    });
+    let operationSignal!: AbortSignal;
+    const result = lifetime.run(async (signal) => {
+      operationSignal = signal;
+      await deferred;
+      return "late success";
+    }, caller.signal);
+    lifetime.dispose();
+    expect(operationSignal.aborted).toBe(true);
+    expect(caller.signal.aborted).toBe(false);
+    caller.abort();
+    resolve();
+    expect(JSON.parse(await result)).toEqual({ ok: false, reason: "cancelled" });
+  });
+});
