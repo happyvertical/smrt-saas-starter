@@ -1,3 +1,7 @@
+import {
+  getTenantActivityReport,
+  type TenantActivityReportQuery,
+} from "$lib/server/activity-report";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import { getBillingOverview } from "$lib/server/subscriptions";
 import {
@@ -24,6 +28,13 @@ export const runtimeTools: RuntimeTool[] = [
   {
     name: "tenant.subscription.summary",
     description: "Summarize the tenant subscription, feature grants, and billing period.",
+    readOnly: true,
+    requiredFeature: "mcp.read_tools",
+  },
+  {
+    name: "tenant.activity-report.query",
+    description:
+      "Read the visible tenant activity report table with server paging, sorting, and an optional activity filter.",
     readOnly: true,
     requiredFeature: "mcp.read_tools",
   },
@@ -153,6 +164,30 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
     };
   }
 
+  if (name === "tenant.activity-report.query") {
+    const query = readActivityReportQuery(input);
+    const report = await getTenantActivityReport(context.tenantId, query);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Tenant activity report page ${report.page} of ${Math.max(1, Math.ceil(report.total / report.pageSize))} loaded (${report.total} rows total).`,
+        },
+      ],
+      structuredContent: {
+        tenantId: context.tenantId,
+        report: {
+          descriptor: report.descriptor,
+          rows: report.rows,
+          total: report.total,
+          page: report.page,
+          pageSize: report.pageSize,
+          queryFingerprint: report.queryFingerprint,
+        },
+      },
+    };
+  }
+
   if (name === "tenant.prompt.preview") {
     const prompt = await resolveStarterPromptPreview(context.tenantId, readPromptKey(input));
 
@@ -205,4 +240,40 @@ function readPromptKey(input: unknown): string | undefined {
 
   const key = (input as { key?: unknown }).key;
   return typeof key === "string" && key.trim().length > 0 ? key : undefined;
+}
+
+function readActivityReportQuery(input: unknown): TenantActivityReportQuery {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const candidate = input as Record<string, unknown>;
+  const page = positiveInteger(candidate.page);
+  const pageSize = positiveInteger(candidate.pageSize);
+  const sort = readActivityReportSort(candidate.sort);
+  const direction =
+    candidate.direction === "asc" || candidate.direction === "desc"
+      ? candidate.direction
+      : undefined;
+  const metricKey =
+    typeof candidate.metricKey === "string" && candidate.metricKey.trim().length <= 120
+      ? candidate.metricKey.trim() || undefined
+      : undefined;
+  return {
+    ...(page ? { page } : {}),
+    ...(pageSize ? { pageSize } : {}),
+    ...(sort ? { sort } : {}),
+    ...(direction ? { direction } : {}),
+    ...(metricKey ? { metricKey } : {}),
+  };
+}
+
+function positiveInteger(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : undefined;
+}
+
+function readActivityReportSort(value: unknown): TenantActivityReportQuery["sort"] | undefined {
+  return value === "id" ||
+    value === "metric_key" ||
+    value === "window_start" ||
+    value === "quantity"
+    ? value
+    : undefined;
 }
