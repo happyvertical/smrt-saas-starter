@@ -40,6 +40,7 @@ test("mounted shell tools execute through the native Chromium WebMCP API", async
     "starter_shell_navigate",
     "starter_shell_set_theme",
     "starter_shell_prepare_billing_portal",
+    "starter_shell_prepare_subscription_checkout",
   ]);
 
   await expect(
@@ -50,6 +51,13 @@ test("mounted shell tools execute through the native Chromium WebMCP API", async
 
   await expect(
     executeShellTool(page, "starter_shell_prepare_billing_portal", { confirm: false }),
+  ).resolves.toContain('"reason":"confirmation_required"');
+
+  await expect(
+    executeShellTool(page, "starter_shell_prepare_subscription_checkout", {
+      planId: "growth",
+      confirm: false,
+    }),
   ).resolves.toContain('"reason":"confirmation_required"');
 
   const navigation = executeShellTool(page, "starter_shell_navigate", { href: "/app/settings" });

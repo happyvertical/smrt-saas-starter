@@ -32,6 +32,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   });
 
   if (session.url) {
+    if (url.searchParams.get("format") === "json") {
+      return json({ checkoutUrl: session.url, continuationRequired: true });
+    }
     throw redirect(303, session.url);
   }
 

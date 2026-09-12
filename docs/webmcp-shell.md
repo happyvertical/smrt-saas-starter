@@ -8,7 +8,8 @@ Browser tools are only mounted when `document.modelContext` is available. They d
 | `starter_shell_set_theme` | local preference | ThemeProvider public context; visible acknowledgement. |
 | `starter_shell_switch_tenant` | write | Existing `/api/tenant/switch` membership authorization; invalidated route and visible acknowledgement. |
 | `starter_shell_prepare_billing_portal` | provider continuation | Existing `/api/billing/portal` authorization and provider session; explicit confirmation prepares a portal URL for human/provider continuation without opening or approving it. |
+| `starter_shell_prepare_subscription_checkout` | provider continuation | Existing `/api/billing/checkout` authorization and plan validation; explicit confirmation prepares a checkout URL for human/provider continuation without opening or approving it. |
 | `starter_shell_fill_form` | staged UI | Only enabled non-hidden fields in a marked mounted form; no server effect. |
 | `starter_shell_submit_form` | existing non-financial action | The existing route must return a successful authorized SvelteKit action before the visible acknowledgement. Server denials remain denials. |
 
-Marked current forms are member invitation, prompt override, and language override. Billing portal is a dedicated confirmed provider-continuation tool; subscription checkout remains the existing PlanPicker flow until its mounted control has a stable action identity and an approval contract. Report/job tools are owned by issue #87 and remain pending its server command and approval contract.
+Marked current forms are member invitation, prompt override, and language override. Billing portal and subscription checkout are dedicated confirmed provider-continuation tools. Checkout uses the existing public endpoint's JSON representation, while the `PlanPicker` remains the normal interactive selection flow. Report/job tools are owned by issue #87 and remain pending its server command and approval contract.

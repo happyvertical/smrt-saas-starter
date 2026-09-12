@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
-  import { deserialize } from "$app/forms";
-  import { getThemeContext } from "@happyvertical/smrt-ui/themes";
   import { useWebMcpTool } from "@happyvertical/smrt-svelte";
+  import { getThemeContext } from "@happyvertical/smrt-ui/themes";
+  import { deserialize } from "$app/forms";
+  import { goto, invalidateAll } from "$app/navigation";
 
   export interface ShellDestination {
     href: string;
@@ -163,6 +163,44 @@
         acknowledgement: "visible",
         completion: "provider_continuation_required",
         portalUrl,
+      });
+    },
+  }));
+
+  useWebMcpTool(() => ({
+    name: "starter_shell_prepare_subscription_checkout",
+    description: "Prepare the existing authorized subscription checkout for a plan and return its provider continuation URL; this does not open or approve it.",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["planId", "confirm"],
+      properties: {
+        planId: { type: "string", description: "Existing subscription plan key." },
+        confirm: { type: "boolean", description: "Must be true to prepare the provider checkout." },
+      },
+    },
+    annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    execute: async (args) => {
+      if (args.confirm !== true) return reject("confirmation_required");
+      const planId = typeof args.planId === "string" ? args.planId : "";
+      if (!planId) return reject("invalid_request");
+
+      const response = await fetch(`/api/billing/checkout?format=json&planId=${encodeURIComponent(planId)}`, {
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
+      });
+      if (!response.ok) {
+        return reject(response.status === 403 ? "forbidden" : "provider_unavailable");
+      }
+      const payload = (await response.json()) as { checkoutUrl?: unknown; continuationRequired?: unknown };
+      const checkoutUrl = typeof payload.checkoutUrl === "string" ? payload.checkoutUrl : null;
+      if (!checkoutUrl) return reject("provider_unavailable");
+
+      acknowledge("Subscription checkout is ready for provider continuation.");
+      return respond({
+        acknowledgement: "visible",
+        completion: "provider_continuation_required",
+        checkoutUrl,
       });
     },
   }));
