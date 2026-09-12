@@ -82,6 +82,9 @@ try {
       E2E_PRODUCTION_IMAGE: "true",
       E2E_PRODUCTION_RUN_ID: runId,
       PLAYWRIGHT_BASE_URL: primaryBaseUrl,
+      // The production suite includes the native WebMCP contract. Chromium
+      // exposes that test API only when this feature is enabled.
+      PLAYWRIGHT_WEBMCP_TESTING: "true",
     },
   });
   console.log(`Production-image E2E passed for ${expectedVersion} at ${primaryBaseUrl}.`);
