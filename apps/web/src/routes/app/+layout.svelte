@@ -96,7 +96,7 @@
     {/snippet}
 
     <FieldPolicyFocusTool />
-    {#key JSON.stringify([data.tenantId, data.userLabel, data.currentRole, data.permissions])}
+    {#key JSON.stringify([data.tenantId, data.userId, data.currentRole, data.permissions])}
       <WebMcpShellContext activePath={data.activePath} destinations={navItems} tenants={data.tenants} />
     {/key}
     {@render children()}
