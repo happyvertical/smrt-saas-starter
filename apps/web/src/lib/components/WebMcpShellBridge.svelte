@@ -66,10 +66,8 @@
       acknowledge(`Opening ${destination.label}.`);
       void goto(destination.href);
       return respond({
-        acknowledgement: "visible",
         completion: "navigation_started",
         href: destination.href,
-        heading: destination.label,
       });
     },
   }));
