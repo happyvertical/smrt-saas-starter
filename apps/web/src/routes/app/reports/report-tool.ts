@@ -13,7 +13,7 @@ export interface ReportToolOptions {
   tenantId: string;
   currentTenantId: () => string;
   fetch: typeof globalThis.fetch;
-  goto: (url: string) => Promise<void>;
+  goto: (url: string, options?: { invalidateAll?: boolean }) => Promise<void>;
   acknowledge: (message: string) => void;
   signal?: AbortSignal;
 }
@@ -64,7 +64,7 @@ export async function executeReportTool(
       url.searchParams.set(key, String(value));
   }
   if (options.signal?.aborted || options.currentTenantId() !== requestTenantId) return cancelled();
-  await options.goto(`${url.pathname}?${url.searchParams.toString()}`);
+  await options.goto(`${url.pathname}?${url.searchParams.toString()}`, { invalidateAll: true });
   if (options.signal?.aborted || options.currentTenantId() !== requestTenantId) return cancelled();
   options.acknowledge(`Visible activity table updated: ${report.total ?? 0} rows.`);
   return JSON.stringify({ ok: true, acknowledgement: "visible_table", report });
