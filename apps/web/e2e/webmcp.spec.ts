@@ -1,5 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
 
+const shellToolNames = [
+  "starter_shell_navigate",
+  "starter_shell_set_theme",
+  "starter_shell_switch_tenant",
+  "starter_shell_prepare_billing_portal",
+  "starter_shell_prepare_subscription_checkout",
+  "starter_shell_fill_form",
+  "starter_shell_submit_form",
+];
+
 interface NativeTool {
   name: string;
 }
@@ -131,10 +141,11 @@ test("mounted form filling stays client-side and tenant switching keeps its conf
   await page.goto("/");
   await expect
     .poll(async () => {
-      return await page.evaluate(async () => {
+      const names = await page.evaluate(async () => {
         const context = document.modelContext as unknown as NativeModelContext | undefined;
         return context ? (await context.getTools()).map((tool) => tool.name) : [];
       });
+      return names.filter((name) => shellToolNames.includes(name));
     })
-    .not.toEqual(expect.arrayContaining(["starter_shell_navigate", "starter_shell_fill_form"]));
+    .toEqual([]);
 });

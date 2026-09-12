@@ -2,9 +2,10 @@
   import { useWebMcpTool } from "@happyvertical/smrt-svelte";
   import { getThemeContext } from "@happyvertical/smrt-ui/themes";
   import { onDestroy } from "svelte";
-  import { createShellRequestLifetime } from "./shell-request-lifetime";
   import { deserialize } from "$app/forms";
   import { goto, invalidateAll } from "$app/navigation";
+  import { planShellFormFill } from "./shell-form-fill";
+  import { createShellRequestLifetime } from "./shell-request-lifetime";
 
   export interface ShellDestination {
     href: string;
@@ -16,16 +17,16 @@
     tenantLabel: string;
   }
 
-  let { activePath, destinations, tenants }: {
+  let { activePath, destinations, tenants, acknowledge }: {
     activePath: string;
     destinations: readonly ShellDestination[];
     tenants: readonly ShellTenant[];
+    acknowledge: (message: string) => void;
   } = $props();
 
   const lifetime = createShellRequestLifetime();
   onDestroy(() => lifetime.dispose());
   const theme = getThemeContext();
-  let acknowledgement = $state("");
 
   function respond(value: Record<string, unknown>): string {
     return JSON.stringify({ ok: true, ...value });
@@ -33,10 +34,6 @@
 
   function reject(reason: string): string {
     return JSON.stringify({ ok: false, reason });
-  }
-
-  function acknowledge(message: string): void {
-    acknowledgement = message;
   }
 
   function formFor(action: unknown): HTMLFormElement | undefined {
@@ -225,13 +222,12 @@
     execute: (args) => {
       const form = formFor(args.action);
       if (!form || !args.fields || typeof args.fields !== "object" || Array.isArray(args.fields)) return reject("not_available");
-      for (const [name, value] of Object.entries(args.fields)) {
-        const field = Array.from(form.elements).find((element) =>
-          element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement
-            ? element.name === name && element.type !== "hidden" && !element.disabled
-            : false,
-        ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined;
-        if (!field || typeof value !== "string") return reject("invalid_field");
+      const fields = Array.from(form.elements).filter((element): element is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement =>
+        element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement,
+      );
+      const updates = planShellFormFill(fields, args.fields as Record<string, unknown>);
+      if (!updates) return reject("invalid_field");
+      for (const { field, value } of updates) {
         field.value = value;
         field.dispatchEvent(new Event("input", { bubbles: true }));
         field.dispatchEvent(new Event("change", { bubbles: true }));
@@ -273,18 +269,3 @@
   }));
 </script>
 
-<p class="sr-only" aria-live="polite" aria-atomic="true" data-webmcp-ack>{acknowledgement}</p>
-
-<style>
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-</style>
