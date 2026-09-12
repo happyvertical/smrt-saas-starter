@@ -118,17 +118,19 @@ class TenantActivityReportCollection {
 
   private async rows(): Promise<Array<Record<string, unknown>>> {
     const summaries = await getUsageSummaries(this.tenantId);
-    return summaries.map((summary) => {
-      const windowStart = summary.windowStart.toISOString();
-      return {
-        id: createHash("sha256")
-          .update(`${this.tenantId}:${summary.metricKey}:${windowStart}`)
-          .digest("hex"),
-        metricKey: summary.metricKey,
-        windowStart,
-        quantity: summary.quantity,
-      };
-    });
+    return summaries
+      .filter((summary) => summary.tenantId === this.tenantId)
+      .map((summary) => {
+        const windowStart = summary.windowStart.toISOString();
+        return {
+          id: createHash("sha256")
+            .update(`${this.tenantId}:${summary.metricKey}:${windowStart}`)
+            .digest("hex"),
+          metricKey: summary.metricKey,
+          windowStart,
+          quantity: summary.quantity,
+        };
+      });
   }
 }
 

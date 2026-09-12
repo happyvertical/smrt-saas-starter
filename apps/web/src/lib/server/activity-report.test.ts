@@ -36,6 +36,13 @@ describe("tenant activity report descriptor", () => {
         windowStart: new Date("2026-09-02T00:00:00.000Z"),
         windowEnd: new Date("2026-10-02T00:00:00.000Z"),
       },
+      {
+        tenantId: "tenant-b",
+        metricKey: "mcp.calls",
+        quantity: 99,
+        windowStart: new Date("2026-09-03T00:00:00.000Z"),
+        windowEnd: new Date("2026-10-03T00:00:00.000Z"),
+      },
     ]);
     const { getTenantActivityReport } = await import("$lib/server/activity-report");
 
@@ -53,5 +60,29 @@ describe("tenant activity report descriptor", () => {
     ]);
     expect(report.queryFingerprint).toEqual(expect.any(String));
     expect(usage.getUsageSummaries).toHaveBeenCalledWith("tenant-a");
+  });
+
+  it("rejects an out-of-scope source row and clamps a hostile page request", async () => {
+    const usage = await import("$lib/server/usage");
+    vi.mocked(usage.getUsageSummaries).mockResolvedValue([
+      {
+        tenantId: "tenant-b",
+        metricKey: "private.activity",
+        quantity: 99,
+        windowStart: new Date("2026-09-03T00:00:00.000Z"),
+        windowEnd: new Date("2026-10-03T00:00:00.000Z"),
+      },
+    ]);
+    const { getTenantActivityReport } = await import("$lib/server/activity-report");
+
+    const report = await getTenantActivityReport("tenant-a", {
+      page: 99_999,
+      pageSize: 99_999,
+    });
+
+    expect(report.rows).toEqual([]);
+    expect(report.total).toBe(0);
+    expect(report.page).toBe(10_000);
+    expect(report.pageSize).toBe(100);
   });
 });
