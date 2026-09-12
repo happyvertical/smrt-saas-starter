@@ -7,6 +7,6 @@ export const GET: RequestHandler = async ({ locals }) => {
   const membership = await requirePermission(locals, starterPermissions.mcpRead);
   const overview = await getBillingOverview(membership.tenantId);
   return json({
-    tools: listRuntimeTools(overview.snapshot.featureKeys),
+    tools: listRuntimeTools(overview.snapshot.featureKeys, membership),
   });
 };

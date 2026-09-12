@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   resolveStarterPromptPreview: vi.fn(),
   getUsageSummaries: vi.fn(),
   recordTenantUsageSignal: vi.fn(),
+  getTenantActivityReport: vi.fn(),
 }));
 
 vi.mock("$lib/server/subscriptions", () => ({
@@ -20,7 +21,12 @@ vi.mock("$lib/server/usage", () => ({
   recordTenantUsageSignal: mocks.recordTenantUsageSignal,
 }));
 
+vi.mock("$lib/server/activity-report", () => ({
+  getTenantActivityReport: mocks.getTenantActivityReport,
+}));
+
 import {
+  executeRuntimeToolForMembership,
   executeRuntimeToolForTenant,
   listRuntimeTools,
   RuntimeToolExecutionError,
@@ -48,7 +54,207 @@ describe("tenant MCP runtime tools", () => {
     expect(listRuntimeTools(["mcp.read_tools"]).map((tool) => tool.name)).toEqual([
       "tenant.usage.summary",
       "tenant.subscription.summary",
+      "tenant.activity-report.query",
     ]);
+  });
+
+  it("exposes the report query to usage readers while retaining MCP call for every other tool", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+    mocks.getTenantActivityReport.mockResolvedValue({
+      descriptor: {},
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 25,
+      queryFingerprint: "empty",
+    });
+
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).resolves.toMatchObject({ tool: { name: "tenant.activity-report.query" } });
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.subscription.update",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.mcp.call" });
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.subscription.summary",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.mcp.call" });
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.mcp.call"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.usage.read" });
+  });
+
+  it("filters discovery with the same membership mapping", () => {
+    expect(
+      listRuntimeTools(["mcp.read_tools"], { permissions: ["tenant.usage.read"] }).map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["tenant.activity-report.query"]);
+  });
+
+  it("retains report feature and MCP quota enforcement after principal authorization", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview([]));
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({
+      status: 403,
+      message: "Tool is not available for the current tenant",
+    });
+
+    mocks.getBillingOverview.mockResolvedValue(
+      overview(["mcp.read_tools"], { metricKey: "mcp.calls", allowed: false }),
+    );
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 429, message: "Tenant exceeded the MCP calls threshold" });
+    expect(mocks.getTenantActivityReport).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
+  });
+
+  it("uses the report's server query contract and acknowledges the visible table result", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+    mocks.getTenantActivityReport.mockResolvedValue({
+      descriptor: { columns: [{ id: "metric_key" }] },
+      rows: [{ id: "row-a", metric_key: "mcp.calls", window_start: "2026-06-01", quantity: 3 }],
+      total: 3,
+      page: 2,
+      pageSize: 1,
+      queryFingerprint: "fixture-query",
+    });
+
+    await expect(
+      executeRuntimeToolForTenant(
+        "tenant.activity-report.query",
+        { page: 2, pageSize: 1, sort: "quantity", direction: "asc", metricKey: "mcp.calls" },
+        tenantId,
+      ),
+    ).resolves.toMatchObject({
+      response: {
+        content: [{ text: "Tenant activity report page 2 of 3 loaded (3 rows total)." }],
+        structuredContent: {
+          tenantId,
+          report: {
+            total: 3,
+            page: 2,
+            pageSize: 1,
+            queryFingerprint: "fixture-query",
+            query: {
+              page: 2,
+              pageSize: 1,
+              sort: "quantity",
+              direction: "asc",
+              metricKey: "mcp.calls",
+            },
+          },
+        },
+      },
+    });
+    expect(mocks.getTenantActivityReport).toHaveBeenCalledWith(tenantId, {
+      page: 2,
+      pageSize: 1,
+      sort: "quantity",
+      direction: "asc",
+      metricKey: "mcp.calls",
+    });
+  });
+
+  it("sanitizes unknown report arguments and malformed query controls before querying", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+    mocks.getTenantActivityReport.mockResolvedValue({
+      descriptor: {},
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 25,
+      queryFingerprint: "empty",
+    });
+
+    const execution = await executeRuntimeToolForTenant(
+      "tenant.activity-report.query",
+      {
+        page: -1,
+        pageSize: "100",
+        sort: "source",
+        direction: "sideways",
+        metricKey: "x".repeat(121),
+        source: "private",
+      },
+      tenantId,
+    );
+    expect(mocks.getTenantActivityReport).toHaveBeenCalledWith(tenantId, {});
+    expect(execution.response.structuredContent).toMatchObject({
+      report: {
+        query: {
+          page: 1,
+          pageSize: 25,
+          sort: "window_start",
+          direction: "desc",
+        },
+      },
+    });
+  });
+
+  it.each([
+    "fields",
+    "projection",
+    "select",
+    "columns",
+  ])("rejects the unsupported %s selector before reading a report payload", async (selector) => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+
+    await expect(
+      executeRuntimeToolForTenant(
+        "tenant.activity-report.query",
+        { [selector]: ["source", "unknown_column"] },
+        tenantId,
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Tenant activity reports use the descriptor's fixed field projection",
+    });
+    expect(mocks.getTenantActivityReport).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 
   it("executes available tools and records tenant-scoped MCP usage", async () => {

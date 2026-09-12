@@ -1,3 +1,12 @@
+import {
+  getTenantActivityReport,
+  type TenantActivityReportQuery,
+} from "$lib/server/activity-report";
+import {
+  hasStarterPermission,
+  requiredRuntimeToolPermission,
+  type StarterMembershipContext,
+} from "$lib/server/authz";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import { getBillingOverview } from "$lib/server/subscriptions";
 import {
@@ -28,6 +37,13 @@ export const runtimeTools: RuntimeTool[] = [
     requiredFeature: "mcp.read_tools",
   },
   {
+    name: "tenant.activity-report.query",
+    description:
+      "Read the visible tenant activity report table with server paging, sorting, and an optional activity filter.",
+    readOnly: true,
+    requiredFeature: "mcp.read_tools",
+  },
+  {
     name: "tenant.prompt.preview",
     description: "Preview the effective prompt after tenant overrides.",
     readOnly: true,
@@ -41,9 +57,16 @@ export const runtimeTools: RuntimeTool[] = [
   },
 ];
 
-export function listRuntimeTools(enabledFeatureKeys: Iterable<string>) {
+export function listRuntimeTools(
+  enabledFeatureKeys: Iterable<string>,
+  membership?: Pick<StarterMembershipContext, "permissions">,
+) {
   const enabledFeatures = new Set(enabledFeatureKeys);
-  return runtimeTools.filter((tool) => enabledFeatures.has(tool.requiredFeature));
+  return runtimeTools.filter(
+    (tool) =>
+      enabledFeatures.has(tool.requiredFeature) &&
+      (!membership || hasStarterPermission(membership, requiredRuntimeToolPermission(tool.name))),
+  );
 }
 
 export interface RuntimeToolContext {
@@ -88,7 +111,7 @@ export async function executeRuntimeToolForTenant(
   }
   const mcpUsageWindow = getContainedThresholdUsageWindow(mcpThresholds);
 
-  const response = await callRuntimeTool(name, input, { tenantId });
+  let response = await callRuntimeTool(name, input, { tenantId });
   await recordTenantUsageSignal({
     tenantId,
     metricKey: "mcp.calls",
@@ -106,7 +129,28 @@ export async function executeRuntimeToolForTenant(
     },
   });
 
+  if (name === "tenant.activity-report.query") {
+    response = await callRuntimeTool(name, input, { tenantId });
+  }
   return { tool, response };
+}
+
+/**
+ * Authorize a command against a freshly resolved starter membership before
+ * passing its tenant to the shared runtime executor.
+ */
+export async function executeRuntimeToolForMembership(
+  name: string,
+  input: unknown,
+  membership: Pick<StarterMembershipContext, "tenantId" | "permissions">,
+): Promise<RuntimeToolExecution> {
+  if (!hasStarterPermission(membership, requiredRuntimeToolPermission(name))) {
+    throw new RuntimeToolExecutionError(
+      403,
+      `Missing permission: ${requiredRuntimeToolPermission(name)}`,
+    );
+  }
+  return await executeRuntimeToolForTenant(name, input, membership.tenantId);
 }
 
 export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {
@@ -149,6 +193,39 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
           })),
         },
         input,
+      },
+    };
+  }
+
+  if (name === "tenant.activity-report.query") {
+    const query = readActivityReportQuery(input);
+    const report = await getTenantActivityReport(context.tenantId, query);
+    const visibleQuery: Required<Omit<TenantActivityReportQuery, "metricKey">> &
+      Pick<TenantActivityReportQuery, "metricKey"> = {
+      page: report.page,
+      pageSize: report.pageSize,
+      sort: query.sort ?? "window_start",
+      direction: query.direction ?? "desc",
+      ...(query.metricKey ? { metricKey: query.metricKey } : {}),
+    };
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Tenant activity report page ${report.page} of ${Math.max(1, Math.ceil(report.total / report.pageSize))} loaded (${report.total} rows total).`,
+        },
+      ],
+      structuredContent: {
+        tenantId: context.tenantId,
+        report: {
+          descriptor: report.descriptor,
+          rows: report.rows,
+          total: report.total,
+          page: report.page,
+          pageSize: report.pageSize,
+          queryFingerprint: report.queryFingerprint,
+          query: visibleQuery,
+        },
       },
     };
   }
@@ -205,4 +282,48 @@ function readPromptKey(input: unknown): string | undefined {
 
   const key = (input as { key?: unknown }).key;
   return typeof key === "string" && key.trim().length > 0 ? key : undefined;
+}
+
+function readActivityReportQuery(input: unknown): TenantActivityReportQuery {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const candidate = input as Record<string, unknown>;
+  for (const key of ["fields", "projection", "select", "columns"]) {
+    if (Object.hasOwn(candidate, key)) {
+      throw new RuntimeToolExecutionError(
+        400,
+        "Tenant activity reports use the descriptor's fixed field projection",
+      );
+    }
+  }
+  const page = positiveInteger(candidate.page);
+  const pageSize = positiveInteger(candidate.pageSize);
+  const sort = readActivityReportSort(candidate.sort);
+  const direction =
+    candidate.direction === "asc" || candidate.direction === "desc"
+      ? candidate.direction
+      : undefined;
+  const metricKey =
+    typeof candidate.metricKey === "string" && candidate.metricKey.trim().length <= 120
+      ? candidate.metricKey.trim() || undefined
+      : undefined;
+  return {
+    ...(page ? { page } : {}),
+    ...(pageSize ? { pageSize } : {}),
+    ...(sort ? { sort } : {}),
+    ...(direction ? { direction } : {}),
+    ...(metricKey ? { metricKey } : {}),
+  };
+}
+
+function positiveInteger(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : undefined;
+}
+
+function readActivityReportSort(value: unknown): TenantActivityReportQuery["sort"] | undefined {
+  return value === "id" ||
+    value === "metric_key" ||
+    value === "window_start" ||
+    value === "quantity"
+    ? value
+    : undefined;
 }

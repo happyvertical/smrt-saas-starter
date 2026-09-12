@@ -138,7 +138,7 @@ describe("starter authorization", () => {
   });
 
   it("blocks role permissions that are not granted", async () => {
-    authzMocks.query.mockResolvedValueOnce({
+    authzMocks.query.mockResolvedValue({
       rows: [membershipRow({ userId: memberUserId, roleSlug: "viewer", roleName: "Viewer" })],
     });
 
@@ -154,6 +154,16 @@ describe("starter authorization", () => {
       status: 403,
       body: { message: `Missing permission: ${starterPermissions.mcpCall}` },
     });
+
+    await expect(
+      requirePermission(
+        {
+          tenantId,
+          user: { id: memberUserId, email: "viewer@example.com" },
+        },
+        starterPermissions.usageRead,
+      ),
+    ).resolves.toMatchObject({ roleSlug: "viewer" });
   });
 
   it("requires a real identity when the dev fallback is disabled", async () => {
