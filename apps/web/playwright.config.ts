@@ -14,6 +14,7 @@ import { defineConfig } from "@playwright/test";
 //   forwards an ambient host E2E_AUTH_SECRET into that container.
 const remoteBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim();
 const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim();
+const webMcpTesting = process.env.PLAYWRIGHT_WEBMCP_TESTING === "true";
 const e2eAuthConfigured = Boolean(process.env.E2E_AUTH_SECRET?.trim());
 const productionImage = process.env.E2E_PRODUCTION_IMAGE === "true";
 const productionRunId = process.env.E2E_PRODUCTION_RUN_ID?.trim();
@@ -73,8 +74,13 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    ...(chromiumExecutablePath
-      ? { launchOptions: { executablePath: chromiumExecutablePath } }
+    ...(chromiumExecutablePath || webMcpTesting
+      ? {
+          launchOptions: {
+            ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
+            ...(webMcpTesting ? { args: ["--enable-blink-features=WebMCPTesting"] } : {}),
+          },
+        }
       : {}),
   },
   outputDir: productionRunId ? `test-results/${productionRunId}` : "test-results",

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from "$app/navigation";
+  import { deserialize } from "$app/forms";
   import { getThemeContext } from "@happyvertical/smrt-ui/themes";
   import { useWebMcpTool } from "@happyvertical/smrt-svelte";
 
@@ -58,14 +59,17 @@
       const destination = destinations.find((candidate) => candidate.href === href);
       if (!destination) return reject("not_available");
 
-      await goto(destination.href);
-      const heading = document.querySelector("main h1, h1")?.textContent?.trim();
-      acknowledge(`Opened ${heading || destination.label}.`);
+      // A native WebMCP execution is tied to this document. Awaiting SvelteKit
+      // navigation tears down the tool registration before Chromium can settle
+      // the command promise. Acknowledge the accepted destination first, then
+      // hand navigation to the existing client router after the response.
+      acknowledge(`Opening ${destination.label}.`);
+      void goto(destination.href);
       return respond({
         acknowledgement: "visible",
-        completion: "navigated",
+        completion: "navigation_started",
         href: destination.href,
-        heading: heading || destination.label,
+        heading: destination.label,
       });
     },
   }));
@@ -121,9 +125,45 @@
       });
       if (!response.ok) return reject(response.status === 403 ? "forbidden" : "switch_failed");
 
-      await invalidateAll();
       acknowledge(`Switched to ${tenant.tenantLabel}.`);
+      // The endpoint has completed the membership-authorized switch. Like
+      // navigation, invalidating the document must not abort the native tool
+      // before its completion response is delivered.
+      void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "switched", tenantId });
+    },
+  }));
+
+  useWebMcpTool(() => ({
+    name: "starter_shell_prepare_billing_portal",
+    description: "Prepare the existing authorized billing portal and return its provider continuation URL; this does not open or approve it.",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["confirm"],
+      properties: {
+        confirm: { type: "boolean", description: "Must be true to prepare the provider portal." },
+      },
+    },
+    annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    execute: async (args) => {
+      if (args.confirm !== true) return reject("confirmation_required");
+      const response = await fetch("/api/billing/portal?format=json", {
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
+      });
+      if (!response.ok) {
+        return reject(response.status === 403 ? "forbidden" : "provider_unavailable");
+      }
+      const payload = (await response.json()) as { portalUrl?: unknown; continuationRequired?: unknown };
+      const portalUrl = typeof payload.portalUrl === "string" ? payload.portalUrl : null;
+      if (!portalUrl) return reject("provider_unavailable");
+      acknowledge("Billing portal is ready for provider continuation.");
+      return respond({
+        acknowledgement: "visible",
+        completion: "provider_continuation_required",
+        portalUrl,
+      });
     },
   }));
 
@@ -156,17 +196,29 @@
 
   useWebMcpTool(() => ({
     name: "starter_shell_submit_form",
-    description: "Submit a mounted existing workspace form through its normal server action.",
+    description: "Submit a mounted non-financial workspace form through its normal authorized server action.",
     inputSchema: {
       type: "object", additionalProperties: false, required: ["action"],
       properties: { action: { type: "string" } },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: false },
-    execute: (args) => {
+    execute: async (args) => {
       const form = formFor(args.action);
       if (!form) return reject("not_available");
-      acknowledge("Submitting existing authorized form.");
-      form.requestSubmit();
+      const response = await fetch(form.action, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { accept: "application/json", "x-sveltekit-action": "true" },
+        body: new FormData(form),
+      });
+      if (!response.ok) return reject(response.status === 403 ? "forbidden" : "submission_failed");
+
+      const result = deserialize(await response.text());
+      if (result.type === "failure") return reject(result.status === 403 ? "forbidden" : "submission_failed");
+      if (result.type !== "success") return reject("submission_failed");
+
+      acknowledge("Existing authorized form submitted.");
+      void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "submitted" });
     },
   }));
