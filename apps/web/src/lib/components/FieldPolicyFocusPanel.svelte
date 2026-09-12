@@ -13,9 +13,9 @@
   const objectRef = getStarterAppSettingObjectRef();
 </script>
 
-<section class="focus-panel" aria-label="Field settings">
-  <h2>Field settings</h2>
-  <p>Set organization defaults or personalize the application-settings form.</p>
+<section class="focus-panel" aria-label="Signup form">
+  <h2>Signup form</h2>
+  <p>Set the labels, help text, defaults, and field placement for the signup-access form.</p>
   <FieldPolicyGearProvider
     {objectRef}
     fields={definition.fields}

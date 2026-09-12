@@ -13,6 +13,7 @@ import { defineConfig } from "@playwright/test";
 //   This profile uses the isolated demo-auth container and deliberately never
 //   forwards an ambient host E2E_AUTH_SECRET into that container.
 const remoteBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim();
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim();
 const e2eAuthConfigured = Boolean(process.env.E2E_AUTH_SECRET?.trim());
 const productionImage = process.env.E2E_PRODUCTION_IMAGE === "true";
 const productionRunId = process.env.E2E_PRODUCTION_RUN_ID?.trim();
@@ -65,6 +66,9 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    ...(chromiumExecutablePath
+      ? { launchOptions: { executablePath: chromiumExecutablePath } }
+      : {}),
   },
   outputDir: productionRunId ? `test-results/${productionRunId}` : "test-results",
   reporter: process.env.CI
