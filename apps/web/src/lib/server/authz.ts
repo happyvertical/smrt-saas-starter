@@ -178,6 +178,17 @@ export function hasStarterPermission(
   return Boolean(membership?.permissions.includes(permission));
 }
 
+/**
+ * Runtime commands use the same live membership permission as their matching
+ * application surface. Keep this exact-name mapping here so callers never
+ * infer authority from tool metadata supplied by a browser or agent.
+ */
+export function requiredRuntimeToolPermission(name: string): StarterPermission {
+  return name === "tenant.activity-report.query"
+    ? starterPermissions.usageRead
+    : starterPermissions.mcpCall;
+}
+
 function resolveRequestIdentity(
   locals: Pick<RequestLocals, "user">,
 ): { userId: string; email?: string; devFallback: boolean } | null {

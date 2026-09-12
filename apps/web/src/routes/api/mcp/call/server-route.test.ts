@@ -13,24 +13,24 @@ const routeMocks = vi.hoisted(() => {
 
   return {
     RuntimeToolExecutionError,
-    executeRuntimeToolForTenant: vi.fn(),
+    executeRuntimeToolForMembership: vi.fn(),
     requirePermission: vi.fn(async (locals: { tenantId?: string | null }) => ({
       tenantId: locals.tenantId ?? "demo-tenant",
     })),
-    starterPermissions: {
-      mcpCall: "tenant.mcp.call",
-    },
+    requiredRuntimeToolPermission: vi.fn((name: string) =>
+      name === "tenant.activity-report.query" ? "tenant.usage.read" : "tenant.mcp.call",
+    ),
   };
 });
 
 vi.mock("$lib/server/mcp", () => ({
   RuntimeToolExecutionError: routeMocks.RuntimeToolExecutionError,
-  executeRuntimeToolForTenant: routeMocks.executeRuntimeToolForTenant,
+  executeRuntimeToolForMembership: routeMocks.executeRuntimeToolForMembership,
 }));
 
 vi.mock("$lib/server/authz", () => ({
   requirePermission: routeMocks.requirePermission,
-  starterPermissions: routeMocks.starterPermissions,
+  requiredRuntimeToolPermission: routeMocks.requiredRuntimeToolPermission,
 }));
 
 import { POST } from "./+server";
@@ -57,7 +57,7 @@ describe("/api/mcp/call", () => {
         message: "Invalid JSON body",
       },
     });
-    expect(routeMocks.executeRuntimeToolForTenant).not.toHaveBeenCalled();
+    expect(routeMocks.executeRuntimeToolForMembership).not.toHaveBeenCalled();
     expect(routeMocks.requirePermission).not.toHaveBeenCalled();
   });
 
@@ -79,7 +79,7 @@ describe("/api/mcp/call", () => {
   });
 
   it("trims tool names before execution and maps runtime errors", async () => {
-    routeMocks.executeRuntimeToolForTenant.mockRejectedValueOnce(
+    routeMocks.executeRuntimeToolForMembership.mockRejectedValueOnce(
       new routeMocks.RuntimeToolExecutionError(429, "Tenant exceeded the MCP calls threshold"),
     );
     const request = new Request("http://localhost/api/mcp/call", {
@@ -96,14 +96,34 @@ describe("/api/mcp/call", () => {
         message: "Tenant exceeded the MCP calls threshold",
       },
     });
-    expect(routeMocks.executeRuntimeToolForTenant).toHaveBeenCalledWith(
+    expect(routeMocks.executeRuntimeToolForMembership).toHaveBeenCalledWith(
       "tenant.usage.summary",
       { message: "usage" },
-      tenantId,
-    );
-    expect(routeMocks.requirePermission).toHaveBeenCalledWith(
       { tenantId },
-      routeMocks.starterPermissions.mcpCall,
+    );
+    expect(routeMocks.requirePermission).toHaveBeenCalledWith({ tenantId }, "tenant.mcp.call");
+  });
+
+  it("uses usage read for the exact report query and preserves other tool authority", async () => {
+    routeMocks.executeRuntimeToolForMembership.mockResolvedValueOnce({
+      response: { content: [] },
+    });
+    const request = new Request("http://localhost/api/mcp/call", {
+      method: "POST",
+      body: JSON.stringify({ name: " tenant.activity-report.query ", input: {} }),
+      headers: { "content-type": "application/json" },
+    });
+
+    await POST({ locals: { tenantId }, request } as Parameters<typeof POST>[0]);
+
+    expect(routeMocks.requiredRuntimeToolPermission).toHaveBeenCalledWith(
+      "tenant.activity-report.query",
+    );
+    expect(routeMocks.requirePermission).toHaveBeenCalledWith({ tenantId }, "tenant.usage.read");
+    expect(routeMocks.executeRuntimeToolForMembership).toHaveBeenCalledWith(
+      "tenant.activity-report.query",
+      {},
+      { tenantId },
     );
   });
 });

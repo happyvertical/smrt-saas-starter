@@ -2,6 +2,11 @@ import {
   getTenantActivityReport,
   type TenantActivityReportQuery,
 } from "$lib/server/activity-report";
+import {
+  hasStarterPermission,
+  requiredRuntimeToolPermission,
+  type StarterMembershipContext,
+} from "$lib/server/authz";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import { getBillingOverview } from "$lib/server/subscriptions";
 import {
@@ -52,9 +57,16 @@ export const runtimeTools: RuntimeTool[] = [
   },
 ];
 
-export function listRuntimeTools(enabledFeatureKeys: Iterable<string>) {
+export function listRuntimeTools(
+  enabledFeatureKeys: Iterable<string>,
+  membership?: Pick<StarterMembershipContext, "permissions">,
+) {
   const enabledFeatures = new Set(enabledFeatureKeys);
-  return runtimeTools.filter((tool) => enabledFeatures.has(tool.requiredFeature));
+  return runtimeTools.filter(
+    (tool) =>
+      enabledFeatures.has(tool.requiredFeature) &&
+      (!membership || hasStarterPermission(membership, requiredRuntimeToolPermission(tool.name))),
+  );
 }
 
 export interface RuntimeToolContext {
@@ -118,6 +130,24 @@ export async function executeRuntimeToolForTenant(
   });
 
   return { tool, response };
+}
+
+/**
+ * Authorize a command against a freshly resolved starter membership before
+ * passing its tenant to the shared runtime executor.
+ */
+export async function executeRuntimeToolForMembership(
+  name: string,
+  input: unknown,
+  membership: Pick<StarterMembershipContext, "tenantId" | "permissions">,
+): Promise<RuntimeToolExecution> {
+  if (!hasStarterPermission(membership, requiredRuntimeToolPermission(name))) {
+    throw new RuntimeToolExecutionError(
+      403,
+      `Missing permission: ${requiredRuntimeToolPermission(name)}`,
+    );
+  }
+  return await executeRuntimeToolForTenant(name, input, membership.tenantId);
 }
 
 export async function callRuntimeTool(name: string, input: unknown, context: RuntimeToolContext) {

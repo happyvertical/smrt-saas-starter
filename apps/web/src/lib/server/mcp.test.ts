@@ -26,6 +26,7 @@ vi.mock("$lib/server/activity-report", () => ({
 }));
 
 import {
+  executeRuntimeToolForMembership,
   executeRuntimeToolForTenant,
   listRuntimeTools,
   RuntimeToolExecutionError,
@@ -55,6 +56,57 @@ describe("tenant MCP runtime tools", () => {
       "tenant.subscription.summary",
       "tenant.activity-report.query",
     ]);
+  });
+
+  it("exposes the report query to usage readers while retaining MCP call for every other tool", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview(["mcp.read_tools"]));
+    mocks.getTenantActivityReport.mockResolvedValue({
+      descriptor: {},
+      rows: [],
+      total: 0,
+      page: 1,
+      pageSize: 25,
+      queryFingerprint: "empty",
+    });
+
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).resolves.toMatchObject({ tool: { name: "tenant.activity-report.query" } });
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.subscription.summary",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.mcp.call" });
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.mcp.call"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.usage.read" });
+  });
+
+  it("filters discovery with the same membership mapping", () => {
+    expect(
+      listRuntimeTools(["mcp.read_tools"], { permissions: ["tenant.usage.read"] }).map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(["tenant.activity-report.query"]);
   });
 
   it("uses the report's server query contract and acknowledges the visible table result", async () => {
