@@ -90,6 +90,23 @@ test("mounted shell tools execute through the native Chromium WebMCP API", async
   await expect(page.locator("[data-webmcp-ack]")).toHaveText(
     "Subscription checkout is ready for provider continuation.",
   );
+  // Text alone also passes for the former clipped screen-reader-only notice.
+  const notice = page.locator("[data-webmcp-ack]");
+  await expect(notice).toBeVisible();
+  const presentation = await notice.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const bounds = element.getBoundingClientRect();
+    return {
+      clip: style.clip,
+      clipPath: style.clipPath,
+      width: bounds.width,
+      height: bounds.height,
+    };
+  });
+  expect(presentation.clip).toBe("auto");
+  expect(presentation.clipPath).toBe("none");
+  expect(presentation.width).toBeGreaterThan(10);
+  expect(presentation.height).toBeGreaterThan(10);
 
   const navigation = await executeShellTool(page, "starter_shell_navigate", {
     href: "/app/settings",
