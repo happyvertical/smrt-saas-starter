@@ -1,14 +1,16 @@
 import { getTenantId, withTenant } from "@happyvertical/smrt-tenancy";
-import { DEMO_TENANT_ID, getActiveTenantId } from "$lib/server/starter-data";
+import { isUuid } from "$lib/server/starter-data";
 
 export async function withActiveTenant<T>(
   tenantId: string | null | undefined,
   fn: (tenantId: string) => Promise<T>,
 ): Promise<T> {
   const currentTenantId = getTenantId();
-  const activeTenantId = tenantId
-    ? getActiveTenantId(tenantId)
-    : (currentTenantId ?? DEMO_TENANT_ID);
+  const activeTenantId = tenantId ?? currentTenantId;
+
+  if (!activeTenantId || !isUuid(activeTenantId)) {
+    throw new Error("An explicit active tenant context is required.");
+  }
 
   if (currentTenantId && currentTenantId !== activeTenantId) {
     throw new Error(

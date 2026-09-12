@@ -192,6 +192,8 @@ async function startWeb(name) {
     "-e",
     "SMRT_STARTER_DEMO_AUTH=true",
     "-e",
+    "SMRT_STARTER_DEMO_TENANT_ID=00000000-0000-4000-8000-000000000001",
+    "-e",
     `SMRT_PRODUCTION_E2E_RUN_ID=${runId}`,
     "-e",
     "PUBLIC_APP_NAME=SMRT Production E2E",

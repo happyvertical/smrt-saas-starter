@@ -146,10 +146,6 @@ export const DEMO_TENANT_ID = starterData.demoTenant.id;
 export const DEMO_TENANT_SLUG = starterData.demoTenant.slug;
 export const DEMO_OWNER_EMAIL = starterData.demoTenant.ownerUser.email;
 
-export function getActiveTenantId(tenantId: string | null | undefined): string {
-  return tenantId && isUuid(tenantId) ? tenantId : DEMO_TENANT_ID;
-}
-
 export function isUuid(value: string | null | undefined): value is string {
   return Boolean(
     value &&

@@ -25,13 +25,11 @@ export const actions: Actions = {
     const returnTo = normalizeReturnTo(readFormString(form, "returnTo"));
 
     try {
-      const signupMode = await getSignupAccessMode();
       const link = await requestEmailLink({
         email,
         tenantName,
         origin: event.url.origin,
         returnTo,
-        allowSignup: signupMode === "public",
       });
       return {
         email: link.email,

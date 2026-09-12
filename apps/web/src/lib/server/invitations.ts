@@ -42,7 +42,6 @@ export type DbOverride = NonNullable<
 >["db"];
 
 const signupAccessModeKey = "signup.access_mode";
-const defaultSignupAccessMode: SignupAccessMode = "public";
 
 export async function getSignupAccessMode(): Promise<SignupAccessMode> {
   return (await getSignupAccessSetting()).mode;
@@ -54,12 +53,12 @@ export async function getSignupAccessSetting(): Promise<SignupAccessSetting> {
     const setting = await withSystemContext(() => settings.findByKey(signupAccessModeKey));
     return {
       id: setting?.id ?? null,
-      mode: normalizeSignupAccessMode(setting?.value),
+      mode: resolveSignupAccessMode(setting?.value),
       metadata: normalizeSignupAccessMetadata(setting?.metadata),
     };
   } catch (queryError) {
     if (isMissingStarterTableError(queryError)) {
-      return { id: null, mode: defaultSignupAccessMode, metadata: {} };
+      return { id: null, mode: resolveSignupAccessMode(null), metadata: {} };
     }
     throw queryError;
   }
@@ -70,7 +69,10 @@ export async function setSignupAccessMode(
   updatedByUserId: string,
   metadataInput?: string,
 ): Promise<SignupAccessMode> {
-  const mode = normalizeSignupAccessMode(modeInput);
+  const mode = parseSignupAccessMode(modeInput);
+  if (!mode) {
+    throw new Error("Signup access mode must be public, invite-only, or request-access.");
+  }
   const settings = await getAppSettingCollection();
   const now = new Date();
 
@@ -176,14 +178,24 @@ export function toAccountFlowMessage(error: unknown): string | null {
   return error instanceof StarterInvitationError ? error.message : null;
 }
 
-function normalizeSignupAccessMode(value: string | null | undefined): SignupAccessMode {
-  if (value === "invite-only") {
-    return "invite-only";
-  }
-  if (value === "request-access") {
-    return "request-access";
-  }
-  return "public";
+/**
+ * Public self-service enrollment is opt-in in production. The seeded public
+ * reference config is an explicit opt-in; an absent or malformed setting
+ * cannot accidentally open a production deployment.
+ */
+export function resolveSignupAccessMode(
+  value: string | null | undefined,
+  production = process.env.NODE_ENV === "production",
+): SignupAccessMode {
+  return parseSignupAccessMode(value) ?? (production ? "invite-only" : "public");
+}
+
+export async function isPublicSignupAllowed(): Promise<boolean> {
+  return (await getSignupAccessMode()) === "public";
+}
+
+function parseSignupAccessMode(value: string | null | undefined): SignupAccessMode | null {
+  return value === "public" || value === "invite-only" || value === "request-access" ? value : null;
 }
 
 export function normalizeSignupAccessMetadata(value: unknown): Record<string, unknown> {

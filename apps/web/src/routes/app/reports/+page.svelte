@@ -1,5 +1,6 @@
 <script lang="ts">
   import { DataTable, type DataTableColumn, type SortState } from "@happyvertical/smrt-ui/data";
+  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
 
@@ -22,6 +23,11 @@
   const sort = $derived<SortState>({ columnId: page.url.searchParams.get("sort") ?? "window_start", direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc" });
   let pendingUpdate: Record<string, string | number | undefined> | undefined;
   let navigationScheduled = false;
+  let clientReady = $state(false);
+
+  onMount(() => {
+    clientReady = true;
+  });
 
   function update(values: Record<string, string | number | undefined>) {
     pendingUpdate = { ...pendingUpdate, ...values };
@@ -59,7 +65,7 @@
 
 <svelte:head><title>Activity reports | SMRT SaaS Starter</title></svelte:head>
 
-<section class="page">
+<section class="page" data-client-ready={clientReady}>
   <header>
     <p>Reports</p>
     <h1>Tenant activity reports</h1>

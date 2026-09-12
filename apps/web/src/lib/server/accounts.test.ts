@@ -7,6 +7,9 @@ const accountMocks = vi.hoisted(() => ({
   magicLinkVerify: vi.fn(),
   ensureUserProfile: vi.fn(),
   ensureUserProfileInTransaction: vi.fn(),
+  isPublicSignupAllowed: vi.fn(),
+  validateTenantOwnerInvitationToken: vi.fn(),
+  redeemTenantOwnerInvitationToken: vi.fn(),
   query: vi.fn(),
   transaction: vi.fn(),
   txQuery: vi.fn(),
@@ -33,6 +36,13 @@ vi.mock("$lib/server/db", () => ({
 vi.mock("$lib/server/profile-identity", () => ({
   ensureUserProfile: accountMocks.ensureUserProfile,
   ensureUserProfileInTransaction: accountMocks.ensureUserProfileInTransaction,
+}));
+
+vi.mock("$lib/server/invitations", () => ({
+  isPublicSignupAllowed: accountMocks.isPublicSignupAllowed,
+  validateTenantOwnerInvitationToken: accountMocks.validateTenantOwnerInvitationToken,
+  redeemTenantOwnerInvitationToken: accountMocks.redeemTenantOwnerInvitationToken,
+  toAccountFlowMessage: (error: unknown) => (error instanceof Error ? error.message : null),
 }));
 
 import {
@@ -85,6 +95,7 @@ describe("account onboarding flows", () => {
       email: "member@example.com",
       nonce: "nonce-1",
     });
+    accountMocks.isPublicSignupAllowed.mockResolvedValue(true);
     accountMocks.ensureUserProfile.mockResolvedValue({
       profileId: "66666666-6666-4666-8666-666666666666",
       created: false,
@@ -244,7 +255,6 @@ describe("account onboarding flows", () => {
         email: "member@example.com",
         tenantName: "Ignored for existing members",
         origin: "http://localhost:5173",
-        allowSignup: false,
       }),
     ).resolves.toMatchObject({
       email: "member@example.com",
@@ -266,7 +276,6 @@ describe("account onboarding flows", () => {
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
       returnTo: "/app/settings",
-      allowSignup: true,
     });
 
     const url = new URL(result.verificationUrl ?? "");
@@ -289,7 +298,6 @@ describe("account onboarding flows", () => {
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
     const queryImplementation = async (sql: string) => {
@@ -310,9 +318,7 @@ describe("account onboarding flows", () => {
     accountMocks.txQuery.mockImplementation(queryImplementation);
     accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
 
-    await expect(
-      verifyEmailLink("signup-token", { signupIntent, allowSignup: true }),
-    ).resolves.toMatchObject({
+    await expect(verifyEmailLink("signup-token", { signupIntent })).resolves.toMatchObject({
       userEmail: "founder@example.com",
       tenantSlug: "acme-labs",
       tenantLabel: "Acme Labs",
@@ -336,13 +342,11 @@ describe("account onboarding flows", () => {
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const secondRequest = await requestEmailLink({
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const secondIntent = new URL(secondRequest.verificationUrl ?? "").searchParams.get("signup");
 
@@ -389,7 +393,7 @@ describe("account onboarding flows", () => {
     accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
 
     await expect(
-      verifyEmailLink("second-signup-token", { signupIntent: secondIntent, allowSignup: true }),
+      verifyEmailLink("second-signup-token", { signupIntent: secondIntent }),
     ).resolves.toMatchObject({
       userId,
       userEmail: "founder@example.com",
@@ -418,7 +422,6 @@ describe("account onboarding flows", () => {
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
     const conflict = Object.assign(new Error("duplicate profile"), {
@@ -465,20 +468,18 @@ describe("account onboarding flows", () => {
     });
     accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
 
-    await expect(verifyEmailLink("signup-token", { signupIntent, allowSignup: true })).rejects.toBe(
-      conflict,
-    );
+    await expect(verifyEmailLink("signup-token", { signupIntent })).rejects.toBe(conflict);
     expect(accountMocks.ensureUserProfile).not.toHaveBeenCalled();
   });
 
   it("refuses a new email before issuing a link when public signup is unavailable", async () => {
     accountMocks.query.mockResolvedValueOnce({ rows: [] });
+    accountMocks.isPublicSignupAllowed.mockResolvedValueOnce(false);
 
     await expect(
       requestEmailLink({
         email: "founder@example.com",
         origin: "http://localhost:5173",
-        allowSignup: false,
       }),
     ).rejects.toMatchObject({ status: 403 });
     expect(accountMocks.magicLinkGenerate).not.toHaveBeenCalled();
@@ -496,14 +497,13 @@ describe("account onboarding flows", () => {
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const signupIntent = `${new URL(request.verificationUrl ?? "").searchParams.get("signup")}tampered`;
     accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
 
-    await expect(
-      verifyEmailLink("signup-token", { signupIntent, allowSignup: true }),
-    ).rejects.toMatchObject({ status: 400 });
+    await expect(verifyEmailLink("signup-token", { signupIntent })).rejects.toMatchObject({
+      status: 400,
+    });
     expect(accountMocks.transaction).not.toHaveBeenCalled();
     expect(accountMocks.upsert).not.toHaveBeenCalled();
   });
@@ -519,16 +519,56 @@ describe("account onboarding flows", () => {
       email: "founder@example.com",
       tenantName: "Acme Labs",
       origin: "http://localhost:5173",
-      allowSignup: true,
     });
     const signupIntent = new URL(request.verificationUrl ?? "").searchParams.get("signup");
     accountMocks.magicLinkVerify.mockResolvedValueOnce({ email: "founder@example.com" });
+    accountMocks.isPublicSignupAllowed.mockResolvedValueOnce(false);
 
-    await expect(
-      verifyEmailLink("signup-token", { signupIntent, allowSignup: false }),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(verifyEmailLink("signup-token", { signupIntent })).rejects.toMatchObject({
+      status: 403,
+    });
     expect(accountMocks.transaction).not.toHaveBeenCalled();
     expect(accountMocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("enforces the shared enrollment policy for direct tenant onboarding", async () => {
+    accountMocks.isPublicSignupAllowed.mockResolvedValueOnce(false);
+
+    await expect(
+      onboardTenant({ email: "founder@example.com", tenantName: "Acme Labs" }),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(accountMocks.transaction).not.toHaveBeenCalled();
+  });
+
+  it("allows a validated owner invitation while self-service enrollment is closed", async () => {
+    const queryImplementation = async (sql: string) => {
+      if (sql.includes("FROM users") && sql.includes("email_key =")) return { rows: [] };
+      if (sql.includes("FROM tenants") && sql.includes("slug = ?")) return { rows: [] };
+      if (sql.includes("FROM roles")) {
+        return { rows: [{ id: ownerRoleId, slug: "owner", name: "Owner" }] };
+      }
+      if (sql.includes("FROM _smrt_subscription_plans")) {
+        return { rows: [{ id: starterPlanId, plan_key: "starter" }] };
+      }
+      return { rows: [] };
+    };
+    accountMocks.txQuery.mockImplementation(queryImplementation);
+    accountMocks.validateTenantOwnerInvitationToken.mockResolvedValue({ id: "invite-1" });
+    accountMocks.redeemTenantOwnerInvitationToken.mockResolvedValue({ id: "invite-1" });
+    accountMocks.isPublicSignupAllowed.mockResolvedValueOnce(false);
+
+    await expect(
+      onboardTenant({
+        email: "founder@example.com",
+        tenantName: "Acme Labs",
+        invitationToken: "owner-invite-token",
+      }),
+    ).resolves.toMatchObject({ userEmail: "founder@example.com" });
+    expect(accountMocks.isPublicSignupAllowed).not.toHaveBeenCalled();
+    expect(accountMocks.validateTenantOwnerInvitationToken).toHaveBeenCalledWith(
+      "owner-invite-token",
+      expect.objectContaining({ email: "founder@example.com", db: transactionDb }),
+    );
   });
 
   it("does not look up emails when local magic links are disabled", async () => {

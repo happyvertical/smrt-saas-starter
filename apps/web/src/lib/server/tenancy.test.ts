@@ -38,4 +38,34 @@ describe("resolveTenant tenant header gating", () => {
       tenantId,
     });
   });
+
+  it("uses only a valid explicitly configured demo tenant for root-host demo routing", async () => {
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
+    vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", tenantId);
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "false");
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId,
+    });
+    vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", "not-a-tenant");
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
+  });
+
+  it("preserves subdomain tenant routing when root-host demo routing is enabled", async () => {
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
+    vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", "22222222-2222-4222-8222-222222222222");
+    vi.stubEnv("PUBLIC_BASE_DOMAIN", "example.test");
+
+    await expect(
+      resolveTenant(makeEvent({ hostname: `${tenantId}.example.test` })),
+    ).resolves.toEqual({ tenantId });
+  });
 });

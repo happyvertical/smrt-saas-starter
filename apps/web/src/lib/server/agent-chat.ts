@@ -10,7 +10,6 @@ import {
   type RuntimeTool as StarterRuntimeTool,
 } from "$lib/server/mcp";
 import { getSmrtConfig } from "$lib/server/smrt";
-import { getActiveTenantId } from "$lib/server/starter-data";
 import { type BillingOverview, getBillingOverview } from "$lib/server/subscriptions";
 import { withActiveTenant } from "$lib/server/tenant-context";
 import {
@@ -400,8 +399,4 @@ function getStarterAgentId(tenantId: string): string {
     16,
     20,
   )}-${hex.slice(20, 32)}`;
-}
-
-export function resolveChatTenantId(tenantId: string | null | undefined): string {
-  return getActiveTenantId(tenantId);
 }
