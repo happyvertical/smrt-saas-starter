@@ -91,20 +91,23 @@ test("mounted form filling stays client-side and tenant switching keeps its conf
 }) => {
   await page.goto("/app/settings/members");
   await expectShellTools(page, ["starter_shell_fill_form", "starter_shell_switch_tenant"]);
+  const inviteEmail = `webmcp-${Date.now()}@example.test`;
 
   await expect(
     executeShellTool(page, "starter_shell_fill_form", {
       action: "settings.invite-member",
-      fields: { email: "webmcp@example.test", roleSlug: "viewer" },
+      fields: { email: inviteEmail, roleSlug: "viewer" },
     }),
   ).resolves.toContain('"completion":"filled"');
-  await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue("webmcp@example.test");
+  await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue(inviteEmail);
   await expect(page.locator("[data-webmcp-ack]")).toHaveText("Form fields updated.");
 
   await expect(
     executeShellTool(page, "starter_shell_submit_form", { action: "settings.invite-member" }),
   ).resolves.toContain('"completion":"submitted"');
   await expect(page.locator("[data-webmcp-ack]")).toHaveText("Existing authorized form submitted.");
+  await page.reload();
+  await expectShellTools(page, ["starter_shell_switch_tenant"]);
 
   await expect(
     executeShellTool(page, "starter_shell_switch_tenant", {
