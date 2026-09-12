@@ -41,13 +41,21 @@ describe("resolveTenant tenant header gating", () => {
 
   it("uses only a valid explicitly configured demo tenant for root-host demo routing", async () => {
     vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
-    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({ tenantId: null });
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
     vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", tenantId);
     vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "false");
-    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({ tenantId: null });
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
     vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
-    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({ tenantId });
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId,
+    });
     vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", "not-a-tenant");
-    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({ tenantId: null });
+    await expect(resolveTenant(makeEvent({ hostname: "127.0.0.1" }))).resolves.toEqual({
+      tenantId: null,
+    });
   });
 });
