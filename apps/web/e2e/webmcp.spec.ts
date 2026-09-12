@@ -60,6 +60,25 @@ test("mounted shell tools execute through the native Chromium WebMCP API", async
     }),
   ).resolves.toContain('"reason":"confirmation_required"');
 
+  await page.route("**/api/billing/checkout?format=json&planId=growth", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        checkoutUrl: "https://billing.example.test/checkout",
+        continuationRequired: true,
+      }),
+    }),
+  );
+  await expect(
+    executeShellTool(page, "starter_shell_prepare_subscription_checkout", {
+      planId: "growth",
+      confirm: true,
+    }),
+  ).resolves.toContain('"completion":"provider_continuation_required"');
+  await expect(page.locator("[data-webmcp-ack]")).toHaveText(
+    "Subscription checkout is ready for provider continuation.",
+  );
+
   const navigation = executeShellTool(page, "starter_shell_navigate", { href: "/app/settings" });
   await expect(navigation).resolves.toContain('"completion":"navigation_started"');
   await expect(page).toHaveURL(/\/app\/settings$/);
@@ -81,6 +100,11 @@ test("mounted form filling stays client-side and tenant switching keeps its conf
   ).resolves.toContain('"completion":"filled"');
   await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue("webmcp@example.test");
   await expect(page.locator("[data-webmcp-ack]")).toHaveText("Form fields updated.");
+
+  await expect(
+    executeShellTool(page, "starter_shell_submit_form", { action: "settings.invite-member" }),
+  ).resolves.toContain('"completion":"submitted"');
+  await expect(page.locator("[data-webmcp-ack]")).toHaveText("Existing authorized form submitted.");
 
   await expect(
     executeShellTool(page, "starter_shell_switch_tenant", {
