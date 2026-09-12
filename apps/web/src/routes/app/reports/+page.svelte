@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import ReportWebMcpTool from "./ReportWebMcpTool.svelte";
 
   let { data } = $props();
   type Row = (typeof data.rows)[number];
@@ -66,6 +67,7 @@
 <svelte:head><title>Activity reports | SMRT SaaS Starter</title></svelte:head>
 
 <section class="page" data-client-ready={clientReady}>
+  <ReportWebMcpTool tenantId={data.tenantId} />
   <header>
     <p>Reports</p>
     <h1>Tenant activity reports</h1>
