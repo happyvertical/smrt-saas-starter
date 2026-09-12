@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import ReportActions from "./ReportActions.svelte";
   import ReportWebMcpTool from "./ReportWebMcpTool.svelte";
 
   let { data } = $props();
@@ -26,9 +27,7 @@
   let navigationScheduled = false;
   let clientReady = $state(false);
 
-  onMount(() => {
-    clientReady = true;
-  });
+  onMount(() => { clientReady = true; });
 
   function update(values: Record<string, string | number | undefined>) {
     pendingUpdate = { ...pendingUpdate, ...values };
@@ -62,6 +61,17 @@
   function onPageChange(next: number) {
     update({ page: next });
   }
+
+  function readSort(value: string | null): "id" | "metric_key" | "window_start" | "quantity" | undefined {
+    return value === "id" || value === "metric_key" || value === "window_start" || value === "quantity"
+      ? value
+      : undefined;
+  }
+
+  function boundedMetricKey(value: string | null): string | undefined {
+    const trimmed = value?.trim();
+    return trimmed && trimmed.length <= 120 ? trimmed : undefined;
+  }
 </script>
 
 <svelte:head><title>Activity reports | SMRT SaaS Starter</title></svelte:head>
@@ -73,6 +83,21 @@
     <h1>Tenant activity reports</h1>
     <span>Aggregate synthetic activity for the active tenant.</span>
   </header>
+
+  {#if data.canExport}
+    <ReportActions
+      tenantId={data.tenantId}
+      query={{
+        page: data.page,
+        pageSize: data.pageSize,
+        sort: readSort(page.url.searchParams.get("sort")) ?? "window_start",
+        direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc",
+        ...(boundedMetricKey(page.url.searchParams.get("metricKey"))
+          ? { metricKey: boundedMetricKey(page.url.searchParams.get("metricKey")) }
+          : {}),
+      }}
+    />
+  {/if}
 
   <form class="filters" onsubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); update({ page: 1, metricKey: String(form.get("metricKey") ?? "") }); }}>
     <label>Activity <input name="metricKey" value={page.url.searchParams.get("metricKey") ?? ""} maxlength="120" /></label>
@@ -102,6 +127,7 @@
   header { display: grid; gap: .4rem; margin-bottom: 1.5rem; }
   header span { color: var(--smrt-color-on-surface-variant, #5e6470); }
   .filters { display: flex; align-items: end; gap: .75rem; margin-bottom: 1rem; }
+  :global(.report-actions) { margin-bottom: 1rem; }
   .filters label { display: grid; gap: .3rem; }
   .filters input { min-height: 2.25rem; }
   .filters button, .filters a { min-height: 2.25rem; padding: 0 .8rem; }

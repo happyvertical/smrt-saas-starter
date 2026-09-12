@@ -162,6 +162,17 @@ declare module '@happyvertical/smrt-virt-types' {
     updated_at?: string;
   }
 
+  export interface TenantActivityReportData {
+    id?: string;
+    refreshedAt?: string;
+    tenantId: string;
+    metricKey: string;
+    windowStart: string;
+    quantity: number;
+    created_at?: string;
+    updated_at?: string;
+  }
+
   export default types;
 }
 

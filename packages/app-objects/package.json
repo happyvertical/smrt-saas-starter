@@ -26,6 +26,8 @@
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
     "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-reports": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:"
   },
   "peerDependencies": {

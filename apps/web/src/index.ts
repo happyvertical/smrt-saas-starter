@@ -1,6 +1,8 @@
 export {
   StarterAppSetting,
   StarterInvitation,
+  TenantActivityReport,
+  TenantActivityReportCollection,
 } from "@happyvertical/smrt-saas-objects";
 
 export {
