@@ -1,3 +1,7 @@
+<script lang="ts">
+  let { data } = $props();
+</script>
+
 <svelte:head>
   <title>Settings | SMRT SaaS Starter</title>
 </svelte:head>
@@ -5,7 +9,7 @@
 <section class="overview">
   <header>
     <p>Settings</p>
-    <h1>Tenant configuration</h1>
+    <h1>{data.settingsHeading}</h1>
     <p class="description">Manage your team, customize the workspace, and configure the starter's signup form.</p>
   </header>
 
