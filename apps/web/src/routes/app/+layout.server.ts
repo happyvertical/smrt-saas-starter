@@ -16,6 +16,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   return {
     tenantId: membership.tenantId,
     tenantLabel: membership.tenantLabel,
+    userId: membership.userId,
     userLabel: membership.userEmail,
     roleLabel: membership.roleLabel,
     currentRole: membership.roleSlug,

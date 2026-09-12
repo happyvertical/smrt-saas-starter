@@ -1,4 +1,4 @@
-import { error, type RequestHandler, redirect } from "@sveltejs/kit";
+import { error, json, type RequestHandler, redirect } from "@sveltejs/kit";
 import { requirePermission, starterPermissions } from "$lib/server/authz";
 import { createCustomerPortalSession, isStripeBillingConfigured } from "$lib/server/billing";
 import { getStripeCustomerId } from "$lib/server/subscriptions";
@@ -22,6 +22,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   if (!session.url) {
     throw error(502, "Stripe portal did not return a URL");
+  }
+
+  if (url.searchParams.get("format") === "json") {
+    return json({ portalUrl: session.url, continuationRequired: true });
   }
 
   throw redirect(303, session.url);

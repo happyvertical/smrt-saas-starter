@@ -104,6 +104,26 @@ describe("/api/tenant/switch", () => {
       role: "owner",
     });
   });
+
+  it("does not set a tenant cookie when the membership check denies the switch", async () => {
+    routeMocks.requireTenantMembership.mockRejectedValue({
+      status: 403,
+      body: { message: "Denied" },
+    });
+    const cookies = cookieJar();
+    const request = new Request("http://localhost/api/tenant/switch", {
+      method: "POST",
+      body: JSON.stringify({ tenantId, returnTo: "/app" }),
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+    });
+
+    await expect(POST(event({ request, cookies }))).rejects.toMatchObject({ status: 403 });
+    expect(cookies.set).not.toHaveBeenCalled();
+    expect(routeMocks.switchSessionTenant).not.toHaveBeenCalled();
+  });
 });
 
 function event({
