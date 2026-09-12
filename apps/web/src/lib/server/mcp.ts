@@ -167,6 +167,14 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
   if (name === "tenant.activity-report.query") {
     const query = readActivityReportQuery(input);
     const report = await getTenantActivityReport(context.tenantId, query);
+    const visibleQuery: Required<Omit<TenantActivityReportQuery, "metricKey">> &
+      Pick<TenantActivityReportQuery, "metricKey"> = {
+      page: report.page,
+      pageSize: report.pageSize,
+      sort: query.sort ?? "window_start",
+      direction: query.direction ?? "desc",
+      ...(query.metricKey ? { metricKey: query.metricKey } : {}),
+    };
     return {
       content: [
         {
@@ -183,6 +191,7 @@ export async function callRuntimeTool(name: string, input: unknown, context: Run
           page: report.page,
           pageSize: report.pageSize,
           queryFingerprint: report.queryFingerprint,
+          query: visibleQuery,
         },
       },
     };

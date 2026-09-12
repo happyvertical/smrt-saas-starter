@@ -29,16 +29,15 @@
         body: JSON.stringify({ name: "tenant.activity-report.query", input }),
       });
       if (!response.ok) return JSON.stringify({ ok: false, reason: response.status === 403 ? "forbidden" : "query_failed" });
-      const result = await response.json() as { structuredContent?: { report?: { page?: unknown; pageSize?: unknown; total?: unknown } } };
+      const result = await response.json() as { structuredContent?: { report?: { page?: unknown; pageSize?: unknown; total?: unknown; query?: Record<string, unknown> } } };
       if (tenantId !== requestTenantId) return JSON.stringify({ ok: false, reason: "stale_tenant" });
       const report = result.structuredContent?.report;
-      if (!report || typeof report.page !== "number" || typeof report.pageSize !== "number") {
+      if (!report || typeof report.page !== "number" || typeof report.pageSize !== "number" || !report.query || Array.isArray(report.query)) {
         return JSON.stringify({ ok: false, reason: "invalid_response" });
       }
       const url = new URL("/app/reports", window.location.origin);
-      const query = input as Record<string, unknown>;
       for (const key of ["page", "pageSize", "sort", "direction", "metricKey"] as const) {
-        const value = query[key];
+        const value = report.query[key];
         if (typeof value === "string" || typeof value === "number") url.searchParams.set(key, String(value));
       }
       await goto(`${url.pathname}?${url.searchParams.toString()}`);

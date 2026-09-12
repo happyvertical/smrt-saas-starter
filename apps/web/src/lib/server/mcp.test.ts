@@ -79,7 +79,19 @@ describe("tenant MCP runtime tools", () => {
         content: [{ text: "Tenant activity report page 2 of 3 loaded (3 rows total)." }],
         structuredContent: {
           tenantId,
-          report: { total: 3, page: 2, pageSize: 1, queryFingerprint: "fixture-query" },
+          report: {
+            total: 3,
+            page: 2,
+            pageSize: 1,
+            queryFingerprint: "fixture-query",
+            query: {
+              page: 2,
+              pageSize: 1,
+              sort: "quantity",
+              direction: "asc",
+              metricKey: "mcp.calls",
+            },
+          },
         },
       },
     });
@@ -103,7 +115,7 @@ describe("tenant MCP runtime tools", () => {
       queryFingerprint: "empty",
     });
 
-    await executeRuntimeToolForTenant(
+    const execution = await executeRuntimeToolForTenant(
       "tenant.activity-report.query",
       {
         page: -1,
@@ -116,6 +128,16 @@ describe("tenant MCP runtime tools", () => {
       tenantId,
     );
     expect(mocks.getTenantActivityReport).toHaveBeenCalledWith(tenantId, {});
+    expect(execution.response.structuredContent).toMatchObject({
+      report: {
+        query: {
+          page: 1,
+          pageSize: 25,
+          sort: "window_start",
+          direction: "desc",
+        },
+      },
+    });
   });
 
   it("executes available tools and records tenant-scoped MCP usage", async () => {

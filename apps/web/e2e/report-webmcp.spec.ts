@@ -48,7 +48,7 @@ test("report query updates the visible paged, sorted, and filtered table through
   const result = JSON.parse(raw) as {
     ok: boolean;
     acknowledgement: string;
-    report: { rows: Array<Record<string, unknown>> };
+    report: { rows: Array<Record<string, unknown>>; total: number };
   };
 
   expect(result).toMatchObject({ ok: true, acknowledgement: "visible_table" });
@@ -66,7 +66,14 @@ test("report query updates the visible paged, sorted, and filtered table through
   await expect(page.locator("[data-report-webmcp-ack]")).toContainText(
     "Visible activity table updated:",
   );
+  await expect(page.locator("[data-report-total]")).toHaveAttribute(
+    "data-report-total",
+    String(result.report.total),
+  );
   await expect(page.getByRole("cell", { name: "mcp.calls" })).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: String(result.report.rows[0].quantity), exact: true }),
+  ).toBeVisible();
 });
 
 test("report query sanitizes unsupported controls and rejects a nonmember tenant", async ({
@@ -90,6 +97,11 @@ test("report query sanitizes unsupported controls and rejects a nonmember tenant
     report: { page: number; pageSize: number; total: number; rows: unknown[] };
   };
   expect(result.report).toMatchObject({ page: 1, pageSize: 100, total: 0, rows: [] });
+  await expect(page).toHaveURL(
+    /\/app\/reports\?page=1&pageSize=100&sort=window_start&direction=desc&metricKey=proof\.cross-tenant\.private$/,
+  );
+  expect(page.url()).not.toContain("tenantId");
+  expect(page.url()).not.toContain("source");
 
   await page.context().addCookies([
     {
