@@ -124,8 +124,8 @@ class TenantActivityReportCollection {
         id: createHash("sha256")
           .update(`${this.tenantId}:${summary.metricKey}:${windowStart}`)
           .digest("hex"),
-        metric_key: summary.metricKey,
-        window_start: windowStart,
+        metricKey: summary.metricKey,
+        windowStart,
         quantity: summary.quantity,
       };
     });
@@ -177,9 +177,22 @@ function applyWhere(
   rows: Array<Record<string, unknown>>,
   where: unknown,
 ): Array<Record<string, unknown>> {
-  if (!where || typeof where !== "object" || Array.isArray(where)) return rows;
-  const clauses = Object.entries(where as Record<string, unknown>);
-  return rows.filter((row) => clauses.every(([key, value]) => row[key] === value));
+  if (!where || typeof where !== "object") return rows;
+  const groups = Array.isArray(where) ? where : [where];
+  return rows.filter((row) =>
+    groups.some(
+      (group) =>
+        Array.isArray(group) &&
+        group.every(
+          (condition) =>
+            condition &&
+            typeof condition === "object" &&
+            Object.entries(condition as Record<string, unknown>).every(
+              ([key, value]) => row[key] === value,
+            ),
+        ),
+    ),
+  );
 }
 
 function applySort(
@@ -189,7 +202,7 @@ function applySort(
   const first = Array.isArray(orderBy) ? orderBy[0] : orderBy;
   if (typeof first !== "string") return rows;
   const [field, direction] = first.split(/\s+/, 2);
-  if (field !== "metric_key" && field !== "window_start" && field !== "quantity" && field !== "id")
+  if (field !== "metricKey" && field !== "windowStart" && field !== "quantity" && field !== "id")
     return rows;
   const multiplier = direction?.toUpperCase() === "DESC" ? -1 : 1;
   return [...rows].sort((left, right) => {
