@@ -50,7 +50,9 @@ export default defineConfig({
           webServer: {
             command: "pnpm dev -- --port 5173",
             url: "http://127.0.0.1:5173",
-            reuseExistingServer: !process.env.CI,
+            // Local protected specs require the explicit demo tenant below;
+            // never silently attach to an ambient server without that config.
+            reuseExistingServer: false,
             env: {
               ...process.env,
               SMRT_STARTER_DEMO_AUTH: "true",

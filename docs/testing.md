@@ -59,7 +59,9 @@ environment:
 
 - **Local (default)** — boots the dev server with the seeded demo tenant and
   runs every spec, including flows that ride the non-production dev-auth
-  fallback. This is the fast local feedback path.
+  fallback. It always starts that configured server instead of attaching to an
+  ambient dev server, so protected specs cannot lose their tenant context.
+  This is the fast local feedback path.
 - **Deployed (`PLAYWRIGHT_BASE_URL` set)** — runs only specs tagged `@public`
   against the given environment. Deployed environments have real auth, so
   `@public` specs must stay unauthenticated, read-only, and free of seed-data
