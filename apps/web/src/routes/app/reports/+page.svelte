@@ -20,8 +20,23 @@
     })),
   );
   const sort = $derived<SortState>({ columnId: page.url.searchParams.get("sort") ?? "window_start", direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc" });
+  let pendingUpdate: Record<string, string | number | undefined> | undefined;
+  let navigationScheduled = false;
 
   function update(values: Record<string, string | number | undefined>) {
+    pendingUpdate = { ...pendingUpdate, ...values };
+    if (navigationScheduled) return;
+    navigationScheduled = true;
+    queueMicrotask(() => {
+      const next = pendingUpdate;
+      pendingUpdate = undefined;
+      navigationScheduled = false;
+      if (!next) return;
+      navigate(next);
+    });
+  }
+
+  function navigate(values: Record<string, string | number | undefined>) {
     const url = new URL(page.url);
     for (const [key, value] of Object.entries(values)) {
       if (value === undefined || value === "") url.searchParams.delete(key);
@@ -31,7 +46,14 @@
   }
 
   function onSortChange(next: SortState) {
+    // DataTable emits its page reset immediately after a sort change. Queue
+    // both callbacks into one URL update so the page event cannot overwrite
+    // the new sort using the stale route state.
     update({ page: 1, sort: next.columnId ?? undefined, direction: next.direction ?? undefined });
+  }
+
+  function onPageChange(next: number) {
+    update({ page: next });
   }
 </script>
 
@@ -62,7 +84,7 @@
     pageSize={data.pageSize}
     manualPagination
     totalRows={data.total}
-    onPageChange={(next) => update({ page: next })}
+    {onPageChange}
   />
 </section>
 

@@ -26,8 +26,13 @@ function positiveInteger(value: string | null): number | undefined {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function readSort(value: string | null): "metric_key" | "window_start" | "quantity" | undefined {
-  return value === "metric_key" || value === "window_start" || value === "quantity"
+function readSort(
+  value: string | null,
+): "id" | "metric_key" | "window_start" | "quantity" | undefined {
+  return value === "id" ||
+    value === "metric_key" ||
+    value === "window_start" ||
+    value === "quantity"
     ? value
     : undefined;
 }

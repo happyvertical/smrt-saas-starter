@@ -45,7 +45,7 @@ registerTenantActivityReport();
 export interface TenantActivityReportQuery {
   page?: number;
   pageSize?: number;
-  sort?: "metric_key" | "window_start" | "quantity";
+  sort?: "id" | "metric_key" | "window_start" | "quantity";
   direction?: "asc" | "desc";
   metricKey?: string;
 }
