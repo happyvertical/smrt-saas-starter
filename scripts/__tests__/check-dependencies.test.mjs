@@ -70,9 +70,9 @@ test("findSmrtCatalogIssues accepts one exact framework version", () => {
   assert.deepEqual(
     findSmrtCatalogIssues(
       new Map([
-        ["@happyvertical/smrt-core", "0.42.4"],
-        ["@happyvertical/smrt-svelte", "0.42.4"],
-        ["@happyvertical/sdk-mcp", "0.88.0"],
+        ["@happyvertical/smrt-core", "0.49.2"],
+        ["@happyvertical/smrt-svelte", "0.49.2"],
+        ["@happyvertical/sdk-mcp", "0.89.8"],
       ]),
     ),
     [],
@@ -82,9 +82,9 @@ test("findSmrtCatalogIssues accepts one exact framework version", () => {
 test("findSmrtCatalogIssues rejects ranges and mixed versions", () => {
   const issues = findSmrtCatalogIssues(
     new Map([
-      ["@happyvertical/smrt-core", "^0.42.4"],
+      ["@happyvertical/smrt-core", "^0.49.2"],
       ["@happyvertical/smrt-svelte", "0.40.62"],
-      ["@happyvertical/smrt-users", "0.42.4"],
+      ["@happyvertical/smrt-users", "0.49.2"],
     ]),
   );
   assert.equal(issues.length, 2);
@@ -94,8 +94,8 @@ test("findSmrtCatalogIssues rejects ranges and mixed versions", () => {
 
 test("findSmrtOverrideIssues requires the catalog mirror", () => {
   const catalog = new Map([
-    ["@happyvertical/smrt-core", "0.42.4"],
-    ["@happyvertical/smrt-svelte", "0.42.4"],
+    ["@happyvertical/smrt-core", "0.49.2"],
+    ["@happyvertical/smrt-svelte", "0.49.2"],
   ]);
   const issues = findSmrtOverrideIssues(
     catalog,

@@ -4,29 +4,15 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT packages (`@happyvertical/smrt-*`): **0.42.4**
-- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.88.0**
+- SMRT packages (`@happyvertical/smrt-*`): **0.49.2**
+- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.89.8**
 - OCR (`@happyvertical/ocr`): **0.61.6**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
 
-The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.42.4`
-depends on the SDK line at `^0.88.0`, so the catalog/`overrides` pin the SDK family
-to `0.88.0` to match. (A prior state pinned SMRT `0.40.61` while `overrides` still
-forced the SDK to `0.78.1`; pnpm silently resolved SMRT's own SDK deps down to the
-older line — this bump realigns them.)
-
-### SDK DuckDB bundling (consumer-side mitigation, still required at 0.88.0)
-
-`@happyvertical/sql` reaches its optional DuckDB adapter through a
-statically-analyzable `import("@duckdb/node-api")` in the package entry, which the
-SvelteKit SSR rollup pass tries to bundle — it hits the native `@duckdb/*` `.node`
-binding and fails the production `vite build`. This app runs on Postgres, so the
-adapter is never executed; `apps/web/vite.config.ts` externalizes `@duckdb/*`
-(SSR + rollup `external` + `optimizeDeps.exclude`) so the bundler leaves it as a
-runtime import that is never taken. Standard native-addon build config, not a
-framework workaround. **Follow-up:** file an SDK issue so `@happyvertical/sql`
-keeps the DuckDB import un-analyzable (or ships a browser/edge-safe entry) and
-consumers need no such config.
+The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.49.2`
+uses the SDK line at `^0.89.6`, so the catalog/`overrides` pin the SDK family to
+`0.89.8`. The Starter Vite SSR build passes against the published SQL artifact
+without DuckDB externals, so the prior consumer-side bundler mitigation is removed.
 
 These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
 `@happyvertical` scope to npmjs and **no GitHub token is required** to install. This
