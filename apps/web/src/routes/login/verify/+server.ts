@@ -1,6 +1,5 @@
 import { type RequestHandler, redirect } from "@sveltejs/kit";
 import { AccountFlowError, verifyEmailLink } from "$lib/server/accounts";
-import { getSignupAccessMode } from "$lib/server/invitations";
 import { startAccountSession } from "$lib/server/session";
 
 export const GET: RequestHandler = async (event) => {
@@ -11,7 +10,6 @@ export const GET: RequestHandler = async (event) => {
   try {
     const target = await verifyEmailLink(token, {
       signupIntent,
-      allowSignup: signupIntent ? (await getSignupAccessMode()) === "public" : false,
     });
     await startAccountSession(event, target);
   } catch (error) {

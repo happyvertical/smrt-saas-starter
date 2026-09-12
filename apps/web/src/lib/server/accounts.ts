@@ -3,6 +3,7 @@ import { MagicLinkError, MagicLinkService } from "@happyvertical/smrt-users";
 import { getAppDatabase } from "$lib/server/db";
 import {
   type DbOverride,
+  isPublicSignupAllowed,
   redeemTenantOwnerInvitationToken,
   toAccountFlowMessage,
   validateTenantOwnerInvitationToken,
@@ -117,7 +118,6 @@ export async function requestEmailLink(input: {
   tenantName?: string | null;
   origin: string;
   returnTo?: string | null;
-  allowSignup: boolean;
 }): Promise<EmailLinkRequestResult> {
   const email = normalizeEmail(input.email);
   if (!isMagicLinkDeliveryConfigured()) {
@@ -129,7 +129,7 @@ export async function requestEmailLink(input: {
 
   const db = (await getAppDatabase()) as DbLike;
   const existingUser = await findUserByEmail(db, email);
-  if (!existingUser && !input.allowSignup) {
+  if (!existingUser && !(await isPublicSignupAllowed())) {
     throw new AccountFlowError(403, "Open signup is not available for this starter.");
   }
 
@@ -192,7 +192,7 @@ export async function verifySignInLink(token: string): Promise<AccountSessionTar
 
 export async function verifyEmailLink(
   token: string,
-  options: { signupIntent?: string | null; allowSignup?: boolean } = {},
+  options: { signupIntent?: string | null } = {},
 ): Promise<AccountSessionTarget> {
   const trimmedToken = token.trim();
   if (!trimmedToken) {
@@ -204,9 +204,6 @@ export async function verifyEmailLink(
     const result = await magicLinks.verify(trimmedToken);
     if (options.signupIntent) {
       const intent = verifySignupIntent(options.signupIntent, result.email, trimmedToken);
-      if (!options.allowSignup) {
-        throw new AccountFlowError(403, "Open signup is not available for this starter.");
-      }
 
       try {
         return await onboardTenant({ email: result.email, tenantName: intent.tenantName });
@@ -277,6 +274,10 @@ export async function onboardTenant(input: {
   const tenantName = normalizeTenantName(input.tenantName);
   const invitationToken = input.invitationToken?.trim() || null;
   const db = (await getAppDatabase()) as DbLike;
+
+  if (!invitationToken && !(await isPublicSignupAllowed())) {
+    throw new AccountFlowError(403, "Open signup is not available for this starter.");
+  }
 
   const now = new Date().toISOString();
   const tenantId = randomUUID();

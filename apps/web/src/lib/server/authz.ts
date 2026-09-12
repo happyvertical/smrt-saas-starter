@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import { getAppDatabase } from "$lib/server/db";
-import { DEMO_OWNER_EMAIL, getActiveTenantId, isUuid, starterData } from "$lib/server/starter-data";
+import { DEMO_OWNER_EMAIL, isUuid, starterData } from "$lib/server/starter-data";
 
 export const starterPermissions = {
   appAccess: "app.access",
@@ -106,12 +106,9 @@ export async function resolveMembershipContext(
   locals: RequestLocals,
   tenantIdInput?: string | null,
 ): Promise<StarterMembershipContext | null> {
-  const activeTenantId = getActiveTenantId(tenantIdInput ?? locals.tenantId);
-  if (
-    isStarterMembershipContext(locals.membership) &&
-    locals.membership.tenantId === activeTenantId
-  ) {
-    return locals.membership;
+  const activeTenantId = tenantIdInput ?? locals.tenantId;
+  if (!activeTenantId || !isUuid(activeTenantId)) {
+    return null;
   }
 
   const identity = resolveRequestIdentity(locals);
@@ -119,6 +116,10 @@ export async function resolveMembershipContext(
     return null;
   }
 
+  // Re-read the authoritative membership row for every protected command.
+  // `locals.membership` is request-scoped convenience data, not authority:
+  // role changes or revocations must never be accepted solely because a hook
+  // resolved an earlier snapshot.
   const rows = await findMembershipRows(identity.userId);
   const availableTenants = rows.map(toTenantMembershipOption);
   const activeRow = rows.find(
@@ -129,10 +130,7 @@ export async function resolveMembershipContext(
   }
 
   const roleSlug = readRequiredString(activeRow, "role_slug", "roleSlug");
-  const requestPermissions = Array.isArray(locals.permissions) ? locals.permissions : [];
-  const permissions = Array.from(
-    new Set([...requestPermissions, ...(permissionsByRole[roleSlug] ?? [])]),
-  ).sort();
+  const permissions = [...(permissionsByRole[roleSlug] ?? [])].sort();
 
   return {
     ...toTenantMembershipOption(activeRow),
@@ -145,28 +143,6 @@ export async function resolveMembershipContext(
     availableTenants,
     devFallback: identity.devFallback,
   };
-}
-
-function isStarterMembershipContext(value: unknown): value is StarterMembershipContext {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-  const membership = value as Partial<StarterMembershipContext>;
-  return (
-    typeof membership.membershipId === "string" &&
-    typeof membership.userId === "string" &&
-    typeof membership.userEmail === "string" &&
-    typeof membership.profileId === "string" &&
-    typeof membership.tenantId === "string" &&
-    typeof membership.tenantSlug === "string" &&
-    typeof membership.tenantLabel === "string" &&
-    typeof membership.roleId === "string" &&
-    typeof membership.roleSlug === "string" &&
-    typeof membership.roleLabel === "string" &&
-    Array.isArray(membership.permissions) &&
-    Array.isArray(membership.availableTenants) &&
-    typeof membership.devFallback === "boolean"
-  );
 }
 
 export async function requirePermission(

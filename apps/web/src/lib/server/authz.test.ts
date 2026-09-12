@@ -12,6 +12,7 @@ vi.mock("$lib/server/db", () => ({
 import {
   isDevAuthFallbackEnabled,
   requirePermission,
+  requireTenantMembership,
   resolveMembershipContext,
   starterPermissions,
 } from "$lib/server/authz";
@@ -20,6 +21,7 @@ import { DEMO_TENANT_ID, starterData } from "$lib/server/starter-data";
 const memberUserId = "11111111-1111-4111-8111-111111111111";
 const profileId = "22222222-2222-4222-8222-222222222222";
 const tenantId = DEMO_TENANT_ID;
+const otherTenantId = "33333333-3333-4333-8333-333333333333";
 
 describe("starter authorization", () => {
   afterEach(() => {
@@ -63,7 +65,7 @@ describe("starter authorization", () => {
     expect(isDevAuthFallbackEnabled()).toBe(true);
   });
 
-  it("resolves real user memberships and starter role permissions", async () => {
+  it("resolves real user memberships from their live starter role", async () => {
     authzMocks.query.mockResolvedValueOnce({
       rows: [membershipRow({ userId: memberUserId, roleSlug: "member", roleName: "Member" })],
     });
@@ -71,7 +73,7 @@ describe("starter authorization", () => {
     const membership = await resolveMembershipContext({
       tenantId,
       user: { id: memberUserId, email: "member@example.com" },
-      permissions: ["smrt.session.permission"],
+      permissions: [starterPermissions.billingManage],
     });
 
     expect(membership).toMatchObject({
@@ -83,7 +85,6 @@ describe("starter authorization", () => {
     });
     expect(membership?.permissions).toEqual(
       expect.arrayContaining([
-        "smrt.session.permission",
         starterPermissions.mcpCall,
         starterPermissions.settingsRead,
         starterPermissions.fieldPolicyPersonalize,
@@ -165,6 +166,63 @@ describe("starter authorization", () => {
       body: { message: "No active membership for this tenant" },
     });
     expect(authzMocks.query).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when a protected request has no explicit active tenant", async () => {
+    await expect(
+      requirePermission(
+        { user: { id: memberUserId, email: "member@example.com" } },
+        starterPermissions.appAccess,
+      ),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(authzMocks.query).not.toHaveBeenCalled();
+  });
+
+  it("rejects a principal outside the explicitly selected tenant", async () => {
+    authzMocks.query.mockResolvedValueOnce({
+      rows: [membershipRow({ userId: memberUserId, roleSlug: "member", roleName: "Member" })],
+    });
+
+    await expect(
+      requireTenantMembership(
+        { user: { id: memberUserId, email: "member@example.com" } },
+        otherTenantId,
+      ),
+    ).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("revalidates membership rows instead of trusting a stale request snapshot", async () => {
+    authzMocks.query.mockResolvedValueOnce({ rows: [] });
+
+    await expect(
+      requirePermission(
+        {
+          tenantId,
+          user: { id: memberUserId, email: "member@example.com" },
+          membership: {
+            ...membershipRow({ userId: memberUserId, roleSlug: "owner", roleName: "Owner" }),
+            membershipId: "stale-membership",
+            userId: memberUserId,
+            userEmail: "member@example.com",
+            tenantId,
+            tenantSlug: "demo",
+            tenantLabel: "Demo",
+            roleId: "owner",
+            roleSlug: "owner",
+            roleLabel: "Owner",
+            profileId,
+            permissions: [starterPermissions.billingManage],
+            availableTenants: [],
+            devFallback: false,
+          },
+        },
+        starterPermissions.billingManage,
+      ),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(authzMocks.query).toHaveBeenCalledWith(
+      expect.stringContaining("FROM memberships"),
+      memberUserId,
+    );
   });
 });
 
