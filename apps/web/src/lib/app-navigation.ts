@@ -33,6 +33,13 @@ export const APP_NAVIGATION: readonly AppNavigationItem[] = [
     heading: "Tenant metrics",
   },
   {
+    href: "/app/reports",
+    label: "Reports",
+    icon: "table-2",
+    permission: "tenant.usage.read",
+    heading: "Tenant activity reports",
+  },
+  {
     href: "/app/settings",
     label: "Settings",
     icon: "settings",
