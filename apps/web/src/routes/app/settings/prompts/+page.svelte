@@ -44,7 +44,7 @@
           <p>{prompt.previewText}</p>
         </div>
 
-        <form method="POST" action="?/prompt" data-webmcp-action="settings.save-prompt">
+        <form method="POST" action="?/prompt" data-webmcp-action={`settings.save-prompt:${prompt.key}`}>
           <input type="hidden" name="key" value={prompt.key} />
           <label>
             <span>Tenant template</span>

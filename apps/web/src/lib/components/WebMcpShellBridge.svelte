@@ -37,9 +37,10 @@
 
   function formFor(action: unknown): HTMLFormElement | undefined {
     if (typeof action !== "string") return undefined;
-    return Array.from(document.querySelectorAll<HTMLFormElement>("form[data-webmcp-action]")).find(
+    const matches = Array.from(document.querySelectorAll<HTMLFormElement>("form[data-webmcp-action]")).filter(
       (form) => form.dataset.webmcpAction === action,
     );
+    return matches.length === 1 ? matches[0] : undefined;
   }
 
   useWebMcpTool(() => ({
