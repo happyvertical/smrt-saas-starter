@@ -18,7 +18,7 @@
   {@html `<scr${"ipt"}>${themeBootstrap}</scr${"ipt"}>`}
 </svelte:head>
 
-<Provider webmcp={{ ui: {}, effects: ["read", "write"] }}>
+<Provider webmcp={{ ui: {}, effects: ["read", "write", "destructive"] }}>
   <ThemeProvider preset="happyvertical" storageKey={themeStorageKey}>
     {@render children()}
   </ThemeProvider>
