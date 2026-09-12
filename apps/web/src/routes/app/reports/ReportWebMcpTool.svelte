@@ -1,10 +1,14 @@
 <script lang="ts">
   import { useWebMcpTool } from "@happyvertical/smrt-svelte";
+  import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
+  import { createShellRequestLifetime } from "../../../lib/components/shell-request-lifetime";
   import { executeReportTool } from "./report-tool";
 
   let { tenantId }: { tenantId: string } = $props();
   let acknowledgement = $state("");
+  const lifetime = createShellRequestLifetime();
+  onDestroy(() => lifetime.dispose());
 
   useWebMcpTool(() => ({
     name: "tenant_activity_report_query",
@@ -21,14 +25,14 @@
       },
     },
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-    execute: (input, options) => executeReportTool(input, {
+    execute: (input, options) => lifetime.run((signal) => executeReportTool(input, {
       tenantId,
       currentTenantId: () => tenantId,
       fetch,
       goto,
       acknowledge: (message) => { acknowledgement = message; },
-      signal: options?.signal,
-    }),
+      signal,
+    }), options?.signal),
   }));
 </script>
 

@@ -146,16 +146,19 @@ test("an in-flight report query cannot update the page after its tool unmounts",
   });
 
   const pendingReport = executeReport(page, { metricKey: "mcp.calls" }).then(
-    () => ({ completed: true, error: "" }),
+    (value) => ({ completed: true, value }),
     (error: unknown) => ({ completed: false, error: String(error) }),
   );
   await requestSeen;
-  await page.goto("/");
+  const usageLink = page.locator('a[href="/app/usage"]').first();
+  await expect(usageLink).toBeVisible();
+  await usageLink.click();
+  await expect(page).toHaveURL(/\/app\/usage$/);
   releaseRequest();
 
   await expect(pendingReport).resolves.toMatchObject({
-    completed: false,
-    error: expect.stringContaining("Execution context was destroyed"),
+    completed: true,
+    value: JSON.stringify({ ok: false, reason: "cancelled" }),
   });
   await expect.poll(() => toolNames(page)).not.toContain(reportTool);
   await expect(page.locator("[data-report-webmcp-ack]")).toHaveCount(0);
