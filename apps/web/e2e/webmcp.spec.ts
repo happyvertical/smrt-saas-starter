@@ -79,8 +79,10 @@ test("mounted shell tools execute through the native Chromium WebMCP API", async
     "Subscription checkout is ready for provider continuation.",
   );
 
-  const navigation = executeShellTool(page, "starter_shell_navigate", { href: "/app/settings" });
-  await expect(navigation).resolves.toContain('"completion":"navigation_started"');
+  const navigation = await executeShellTool(page, "starter_shell_navigate", { href: "/app/settings" });
+  expect(navigation).toContain('"completion":"navigation_started"');
+  expect(navigation).not.toContain('"acknowledgement"');
+  expect(navigation).not.toContain('"heading"');
   await expect(page).toHaveURL(/\/app\/settings$/);
   await expect(page.getByRole("heading", { name: "Tenant configuration" })).toBeVisible();
   await expect(page.locator("[data-webmcp-ack]")).toHaveText("Opening Settings.");
