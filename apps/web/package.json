@@ -71,6 +71,7 @@
     "@happyvertical/smrt-profiles": "catalog:",
     "@happyvertical/smrt-projects": "catalog:",
     "@happyvertical/smrt-prompts": "catalog:",
+    "@happyvertical/smrt-reports": "catalog:",
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-saas-ui": "workspace:*",
     "@happyvertical/smrt-scanner": "catalog:",
