@@ -1,6 +1,8 @@
 <script lang="ts">
   import { useWebMcpTool } from "@happyvertical/smrt-svelte";
   import { getThemeContext } from "@happyvertical/smrt-ui/themes";
+  import { onDestroy } from "svelte";
+  import { createShellRequestLifetime } from "./shell-request-lifetime";
   import { deserialize } from "$app/forms";
   import { goto, invalidateAll } from "$app/navigation";
 
@@ -20,6 +22,8 @@
     tenants: readonly ShellTenant[];
   } = $props();
 
+  const lifetime = createShellRequestLifetime();
+  onDestroy(() => lifetime.dispose());
   const theme = getThemeContext();
   let acknowledgement = $state("");
 
@@ -110,7 +114,7 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    execute: async (args) => {
+    execute: (args) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const tenantId = typeof args.tenantId === "string" ? args.tenantId : "";
       const tenant = tenants.find((candidate) => candidate.tenantId === tenantId);
@@ -119,18 +123,20 @@
       const response = await fetch("/api/tenant/switch", {
         method: "POST",
         credentials: "same-origin",
+        signal,
         headers: { accept: "application/json", "content-type": "application/json" },
         body: JSON.stringify({ tenantId, returnTo: activePath }),
       });
       if (!response.ok) return reject(response.status === 403 ? "forbidden" : "switch_failed");
 
+      signal.throwIfAborted();
       acknowledge(`Switched to ${tenant.tenantLabel}.`);
       // The endpoint has completed the membership-authorized switch. Like
       // navigation, invalidating the document must not abort the native tool
       // before its completion response is delivered.
       void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "switched", tenantId });
-    },
+    }),
   }));
 
   useWebMcpTool(() => ({
@@ -145,10 +151,11 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
-    execute: async (args) => {
+    execute: (args) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const response = await fetch("/api/billing/portal?format=json", {
         credentials: "same-origin",
+        signal,
         headers: { accept: "application/json" },
       });
       if (!response.ok) {
@@ -157,13 +164,14 @@
       const payload = (await response.json()) as { portalUrl?: unknown; continuationRequired?: unknown };
       const portalUrl = typeof payload.portalUrl === "string" ? payload.portalUrl : null;
       if (!portalUrl) return reject("provider_unavailable");
+      signal.throwIfAborted();
       acknowledge("Billing portal is ready for provider continuation.");
       return respond({
         acknowledgement: "visible",
         completion: "provider_continuation_required",
         portalUrl,
       });
-    },
+    }),
   }));
 
   useWebMcpTool(() => ({
@@ -179,13 +187,14 @@
       },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: true },
-    execute: async (args) => {
+    execute: (args) => lifetime.run(async (signal) => {
       if (args.confirm !== true) return reject("confirmation_required");
       const planId = typeof args.planId === "string" ? args.planId : "";
       if (!planId) return reject("invalid_request");
 
       const response = await fetch(`/api/billing/checkout?format=json&planId=${encodeURIComponent(planId)}`, {
         credentials: "same-origin",
+        signal,
         headers: { accept: "application/json" },
       });
       if (!response.ok) {
@@ -195,13 +204,14 @@
       const checkoutUrl = typeof payload.checkoutUrl === "string" ? payload.checkoutUrl : null;
       if (!checkoutUrl) return reject("provider_unavailable");
 
+      signal.throwIfAborted();
       acknowledge("Subscription checkout is ready for provider continuation.");
       return respond({
         acknowledgement: "visible",
         completion: "provider_continuation_required",
         checkoutUrl,
       });
-    },
+    }),
   }));
 
   useWebMcpTool(() => ({
@@ -239,12 +249,13 @@
       properties: { action: { type: "string" } },
     },
     annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: false },
-    execute: async (args) => {
+    execute: (args) => lifetime.run(async (signal) => {
       const form = formFor(args.action);
       if (!form) return reject("not_available");
       const response = await fetch(form.action, {
         method: "POST",
         credentials: "same-origin",
+        signal,
         headers: { accept: "application/json", "x-sveltekit-action": "true" },
         body: new FormData(form),
       });
@@ -254,10 +265,11 @@
       if (result.type === "failure") return reject(result.status === 403 ? "forbidden" : "submission_failed");
       if (result.type !== "success") return reject("submission_failed");
 
+      signal.throwIfAborted();
       acknowledge("Existing authorized form submitted.");
       void invalidateAll();
       return respond({ acknowledgement: "visible", completion: "submitted" });
-    },
+    }),
   }));
 </script>
 
