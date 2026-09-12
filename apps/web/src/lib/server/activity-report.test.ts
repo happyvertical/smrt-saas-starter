@@ -9,6 +9,7 @@ describe("tenant activity report descriptor", () => {
 
     expect(descriptor.dataTable.manualPagination).toBe(true);
     expect(descriptor.dataTable.manualSorting).toBe(true);
+    expect(descriptor.resourceId).toContain("#current");
     expect(descriptor.columns.map((column) => column.id)).toEqual([
       "id",
       "metric_key",
@@ -37,6 +38,13 @@ describe("tenant activity report descriptor", () => {
         windowEnd: new Date("2026-10-02T00:00:00.000Z"),
       },
       {
+        tenantId: "tenant-a",
+        metricKey: "mcp.calls",
+        quantity: 7,
+        windowStart: new Date("2026-09-01T00:00:00.000Z"),
+        windowEnd: new Date("2026-10-02T00:00:00.000Z"),
+      },
+      {
         tenantId: "tenant-b",
         metricKey: "mcp.calls",
         quantity: 99,
@@ -56,7 +64,7 @@ describe("tenant activity report descriptor", () => {
 
     expect(report.total).toBe(1);
     expect(report.rows).toEqual([
-      expect.objectContaining({ metric_key: "mcp.calls", quantity: 3 }),
+      expect.objectContaining({ metric_key: "mcp.calls", quantity: 10 }),
     ]);
     expect(report.queryFingerprint).toEqual(expect.any(String));
     expect(usage.getUsageSummaries).toHaveBeenCalledWith("tenant-a");

@@ -12,6 +12,20 @@ const REPORT_CLASS = "TenantActivityReport";
 const REPORT_NAMESPACE = "@happyvertical/smrt-saas";
 const PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
+const activityReportAdapterOptions = {
+  tenantScope: "current" as const,
+  dataTable: {
+    columns: {
+      metric_key: { label: "Activity", responsive: { keepVisible: true, priority: 3 } },
+      window_start: {
+        label: "Window",
+        valueFormat: "datetime" as const,
+        responsive: { priority: 2 },
+      },
+      quantity: { label: "Count", valueFormat: "number" as const, responsive: { priority: 3 } },
+    },
+  },
+};
 
 /**
  * A neutral, aggregate-only tenant activity report. Source/provider/dimension
@@ -69,7 +83,7 @@ export async function getTenantActivityReport(
       sort: [{ field: sort, direction }],
       page: { kind: "offset", offset: (page - 1) * pageSize, limit: pageSize },
     },
-    { collection, execution: "visible" },
+    { collection, adapter: activityReportAdapterOptions, execution: "visible" },
   );
 
   return {
@@ -88,16 +102,7 @@ export async function getTenantActivityReport(
 }
 
 export async function getTenantActivityReportDescriptor(): Promise<ReportAdapterDescriptor> {
-  return await buildReportAdapterDescriptor(TenantActivityReport, {
-    tenantScope: "current",
-    dataTable: {
-      columns: {
-        metric_key: { label: "Activity", responsive: { keepVisible: true, priority: 3 } },
-        window_start: { label: "Window", valueFormat: "datetime", responsive: { priority: 2 } },
-        quantity: { label: "Count", valueFormat: "number", responsive: { priority: 3 } },
-      },
-    },
-  });
+  return await buildReportAdapterDescriptor(TenantActivityReport, activityReportAdapterOptions);
 }
 
 class TenantActivityReportCollection {
@@ -118,19 +123,25 @@ class TenantActivityReportCollection {
 
   private async rows(): Promise<Array<Record<string, unknown>>> {
     const summaries = await getUsageSummaries(this.tenantId);
-    return summaries
-      .filter((summary) => summary.tenantId === this.tenantId)
-      .map((summary) => {
-        const windowStart = summary.windowStart.toISOString();
-        return {
-          id: createHash("sha256")
-            .update(`${this.tenantId}:${summary.metricKey}:${windowStart}`)
-            .digest("hex"),
-          metricKey: summary.metricKey,
-          windowStart,
-          quantity: summary.quantity,
-        };
+    const grouped = new Map<string, { metricKey: string; windowStart: string; quantity: number }>();
+    for (const summary of summaries.filter((candidate) => candidate.tenantId === this.tenantId)) {
+      const windowStart = summary.windowStart.toISOString();
+      const key = `${summary.metricKey}:${windowStart}`;
+      const existing = grouped.get(key);
+      grouped.set(key, {
+        metricKey: summary.metricKey,
+        windowStart,
+        quantity: (existing?.quantity ?? 0) + summary.quantity,
       });
+    }
+    return [...grouped.values()].map((summary) => ({
+      id: createHash("sha256")
+        .update(`${this.tenantId}:${summary.metricKey}:${summary.windowStart}`)
+        .digest("hex"),
+      metricKey: summary.metricKey,
+      windowStart: summary.windowStart,
+      quantity: summary.quantity,
+    }));
   }
 }
 
