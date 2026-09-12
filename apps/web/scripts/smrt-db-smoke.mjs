@@ -574,6 +574,14 @@ async function cleanupProfileIdentitySmoke(db, users) {
     "starter.profile-backfill-smoke",
     users[1].id,
   );
+  // SMRT reserves the normalized address while reconciling a canonical Person.
+  // Remove this smoke-only reservation before its referenced Profile so the
+  // fixture remains repeatable under the published foreign-key contract.
+  await db.query(
+    `DELETE FROM oidc_profile_email_reservations WHERE email_key IN (?, ?)`,
+    users[0].email,
+    users[1].email,
+  );
   await db.query(`DELETE FROM users WHERE id IN (?, ?)`, users[0].id, users[1].id);
   await db.query(
     `DELETE FROM profiles WHERE slug IN (?, ?) AND context = ''`,

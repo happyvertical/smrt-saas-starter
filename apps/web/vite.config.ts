@@ -5,24 +5,6 @@ import { defineConfig } from "vite";
 import { smrtRuntimePackages } from "./smrt-packages.mjs";
 
 export default defineConfig({
-  // `@happyvertical/sql` (pulled in transitively via `resolveDatabase`) ships an
-  // optional DuckDB adapter that reaches its native `@duckdb/node-api` binding
-  // through a statically-analyzable `import()` in the package entry. This app
-  // runs on Postgres, so that adapter is never executed, but the SSR rollup pass
-  // still tries to bundle the `.node` binary and fails. Externalizing the scope
-  // leaves it as a runtime import that is never taken. Tracked in
-  // docs/upstream-work.md.
-  ssr: {
-    external: ["@duckdb/node-api"],
-  },
-  optimizeDeps: {
-    exclude: ["@duckdb/node-api"],
-  },
-  build: {
-    rollupOptions: {
-      external: [/^@duckdb\//],
-    },
-  },
   plugins: [
     sveltekit(),
     smrtConsumer({
