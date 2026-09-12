@@ -36,20 +36,19 @@ export async function resolveTenant(event: RequestEvent): Promise<TenantResoluti
     return { tenantId: await resolveTenantKey(cookieTenant) };
   }
 
-  // The public demo may opt into a concrete tenant for root-host browser
-  // requests. This is routing configuration, not an authorization fallback:
-  // malformed or absent values leave the request without an active tenant.
-  const configuredDemoTenantId = process.env.SMRT_STARTER_DEMO_TENANT_ID?.trim();
-  if (
-    process.env.SMRT_STARTER_DEMO_AUTH === "true" &&
-    configuredDemoTenantId &&
-    isUuid(configuredDemoTenantId)
-  ) {
-    return { tenantId: configuredDemoTenantId.toLowerCase() };
-  }
-
   const host = event.url.hostname.toLowerCase();
   if (rootLikeHosts.has(host) || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    // The public demo may opt into a concrete tenant for root-host browser
+    // requests. This is routing configuration, not an authorization fallback:
+    // malformed or absent values leave the request without an active tenant.
+    const configuredDemoTenantId = process.env.SMRT_STARTER_DEMO_TENANT_ID?.trim();
+    if (
+      process.env.SMRT_STARTER_DEMO_AUTH === "true" &&
+      configuredDemoTenantId &&
+      isUuid(configuredDemoTenantId)
+    ) {
+      return { tenantId: configuredDemoTenantId.toLowerCase() };
+    }
     return { tenantId: null };
   }
 

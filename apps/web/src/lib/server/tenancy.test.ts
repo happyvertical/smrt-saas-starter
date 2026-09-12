@@ -58,4 +58,14 @@ describe("resolveTenant tenant header gating", () => {
       tenantId: null,
     });
   });
+
+  it("preserves subdomain tenant routing when root-host demo routing is enabled", async () => {
+    vi.stubEnv("SMRT_STARTER_DEMO_AUTH", "true");
+    vi.stubEnv("SMRT_STARTER_DEMO_TENANT_ID", "22222222-2222-4222-8222-222222222222");
+    vi.stubEnv("PUBLIC_BASE_DOMAIN", "example.test");
+
+    await expect(
+      resolveTenant(makeEvent({ hostname: `${tenantId}.example.test` })),
+    ).resolves.toEqual({ tenantId });
+  });
 });
