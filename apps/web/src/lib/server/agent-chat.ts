@@ -132,7 +132,9 @@ async function ensureTenantAgentSession(
   const tenantBilling = billing ?? (await getBillingOverview(tenantId));
   assertAgentChatAvailable(tenantBilling);
   const service = await ChatService.create(getSmrtConfig("ChatRoom"));
-  const tools = listRuntimeTools(tenantBilling.snapshot.featureKeys);
+  const tools = listRuntimeTools(tenantBilling.snapshot.featureKeys).filter(
+    (tool) => tool.name !== "tenant.activity-report.query",
+  );
   const prompt = await resolveStarterPromptPreview(tenantId);
   const { session, room } = await service.createAgentSession({
     tenantId,

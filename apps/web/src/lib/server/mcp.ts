@@ -111,7 +111,7 @@ export async function executeRuntimeToolForTenant(
   }
   const mcpUsageWindow = getContainedThresholdUsageWindow(mcpThresholds);
 
-  const response = await callRuntimeTool(name, input, { tenantId });
+  let response = await callRuntimeTool(name, input, { tenantId });
   await recordTenantUsageSignal({
     tenantId,
     metricKey: "mcp.calls",
@@ -129,6 +129,9 @@ export async function executeRuntimeToolForTenant(
     },
   });
 
+  if (name === "tenant.activity-report.query") {
+    response = await callRuntimeTool(name, input, { tenantId });
+  }
   return { tool, response };
 }
 
