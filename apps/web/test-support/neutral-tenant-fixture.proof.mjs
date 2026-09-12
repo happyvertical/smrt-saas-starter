@@ -81,8 +81,8 @@ try {
   assert.equal(
     (
       await db.query(
-        "SELECT id FROM tenants WHERE context = ?",
-        `starter-neutral-fixture-v1:${rollbackNamespace}`,
+        "SELECT id FROM tenants WHERE context LIKE ?",
+        `starter-neutral-fixture-v1:${rollbackNamespace}:%`,
       )
     ).rows.length,
     0,
@@ -122,6 +122,12 @@ try {
   await second.cleanup();
   const recreated = await createNeutralTenantFixture(db, namespace);
   assert.equal(recreated.actors.shared.userId, fixture.actors.shared.userId);
+  await assert.rejects(fixture.cleanup(), /ownership changed/);
+  assert.equal(
+    (await db.query("SELECT id FROM users WHERE id = ?", recreated.actors.shared.userId)).rows
+      .length,
+    1,
+  );
   await recreated.cleanup();
   console.log(
     "Neutral PostgreSQL fixture proof passed: actor/tenant permissions, ownership, rollback, concurrent duplicate rejection and deterministic recreation.",

@@ -23,7 +23,8 @@ in the later combined suite.
 
 All inserts run in one transaction. A namespace advisory lock serializes setup
 and cleanup; existing namespaces are rejected, never overwritten. UUIDs derive
-from the namespace. Cleanup validates and locks ownership before deleting only
+from the namespace. Each creation has a distinct ownership generation, so an old
+cleanup handle cannot remove a recreated fixture. Cleanup validates and locks ownership before deleting only
 recorded IDs in dependency order. Repeated cleanup is safe. Clean dependent
 records added by a consuming suite before fixture cleanup; this helper does not
 cascade through arbitrary jobs, sessions, subscriptions or report assets.

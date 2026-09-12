@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const ownershipKey = "starter-neutral-fixture-v1";
@@ -21,7 +21,9 @@ const grants = {
 export async function createNeutralTenantFixture(db, namespace) {
   if (!uuidPattern.test(namespace ?? "")) throw new Error("Fixture namespace must be a UUID");
   if (typeof db.transaction !== "function") throw new Error("Fixture requires transactions");
-  const key = `${ownershipKey}:${namespace.toLowerCase()}`;
+  namespace = namespace.toLowerCase();
+  const key = `${ownershipKey}:${namespace}`;
+  const generation = `${key}:${randomUUID()}`;
   const id = (name) => {
     const hex = createHash("sha256").update(`${key}:${name}`).digest("hex");
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
@@ -34,10 +36,9 @@ export async function createNeutralTenantFixture(db, namespace) {
     await tx.query("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", key);
     for (const table of tables) {
       const found = await tx.query(
-        `SELECT id FROM ${table} WHERE context IN (?, ?, ?) LIMIT 1`,
+        `SELECT id FROM ${table} WHERE context = ? OR context LIKE ? LIMIT 1`,
         key,
-        `${key}:a`,
-        `${key}:b`,
+        `${key}:%`,
       );
       if (found.rows.length)
         throw new Error("Fixture namespace already exists; clean it up before recreating");
@@ -50,7 +51,7 @@ export async function createNeutralTenantFixture(db, namespace) {
     const put = async (table, name, data) => {
       const rowId = id(`${table}:${name}`);
       // INSERT only: never overwrite a pre-existing non-fixture identity.
-      const row = { id: rowId, slug: `${namespace}-${name}`, context: key, ...data };
+      const row = { id: rowId, slug: `${namespace}-${name}`, context: generation, ...data };
       await tx.insert(table, row);
       records[table].push({ id: row.id, context: row.context });
       return row.id;
@@ -79,7 +80,7 @@ export async function createNeutralTenantFixture(db, namespace) {
       for (const [role, permissionsForRole] of Object.entries(grants)) {
         const roleId = await put("roles", `${tenant}-${role}`, {
           slug: role,
-          context: `${key}:${tenant}`,
+          context: `${generation}:${tenant}`,
           tenant_id: tenants[tenant],
           name: role,
           is_system: false,
