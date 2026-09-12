@@ -25,6 +25,7 @@
 
 - Keep reusable domain behavior in `packages/app-objects` until it is stable enough to upstream into SMRT.
 - Keep UI that is generic across SaaS projects in `packages/app-ui`; prefer `@happyvertical/smrt-svelte` primitives over custom widgets.
+- Before creating a UI component, check the published SMRT component catalog and existing starter usage. Reuse a public component when it covers the surface; record a concrete justification for any exception.
 - Do not duplicate SMRT framework behavior locally. If the public API is missing, document the upstream change in `docs/upstream-work.md` and implement it in an isolated SMRT or SDK worktree.
 - Use `smrt-users` memberships for tenant access and roles. Use subscription plans for billing, entitlements, features, and thresholds.
 - UUID columns stay UUID. Do not fix invalid IDs by changing schema columns to text.

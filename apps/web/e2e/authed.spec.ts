@@ -26,4 +26,13 @@ test("authenticated tenant dashboard loads @authed", async ({ page }) => {
 test("authenticated billing page lists plans @authed", async ({ page }) => {
   await page.goto("/app/billing");
   await expect(page.getByRole("heading", { name: "Plans and subscription" })).toBeVisible();
+  await expect(page.locator(".smrt-subscription-summary")).toBeVisible();
+  await expect(page.locator(".smrt-usage-thresholds")).toBeVisible();
+  await expect(page.locator(".smrt-plan-picker")).toBeVisible();
+});
+
+test("authenticated usage page renders shared thresholds @authed", async ({ page }) => {
+  await page.goto("/app/usage");
+  await expect(page.getByRole("heading", { name: "Tenant metrics" })).toBeVisible();
+  await expect(page.locator(".smrt-usage-thresholds")).toBeVisible();
 });
