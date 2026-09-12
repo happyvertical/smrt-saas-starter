@@ -81,6 +81,16 @@ describe("tenant MCP runtime tools", () => {
     ).resolves.toMatchObject({ tool: { name: "tenant.activity-report.query" } });
     await expect(
       executeRuntimeToolForMembership(
+        "tenant.subscription.update",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 403, message: "Missing permission: tenant.mcp.call" });
+    await expect(
+      executeRuntimeToolForMembership(
         "tenant.subscription.summary",
         {},
         {
@@ -107,6 +117,39 @@ describe("tenant MCP runtime tools", () => {
         (tool) => tool.name,
       ),
     ).toEqual(["tenant.activity-report.query"]);
+  });
+
+  it("retains report feature and MCP quota enforcement after principal authorization", async () => {
+    mocks.getBillingOverview.mockResolvedValue(overview([]));
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({
+      status: 403,
+      message: "Tool is not available for the current tenant",
+    });
+
+    mocks.getBillingOverview.mockResolvedValue(
+      overview(["mcp.read_tools"], { metricKey: "mcp.calls", allowed: false }),
+    );
+    await expect(
+      executeRuntimeToolForMembership(
+        "tenant.activity-report.query",
+        {},
+        {
+          tenantId,
+          permissions: ["tenant.usage.read"],
+        },
+      ),
+    ).rejects.toMatchObject({ status: 429, message: "Tenant exceeded the MCP calls threshold" });
+    expect(mocks.getTenantActivityReport).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalled();
   });
 
   it("uses the report's server query contract and acknowledges the visible table result", async () => {

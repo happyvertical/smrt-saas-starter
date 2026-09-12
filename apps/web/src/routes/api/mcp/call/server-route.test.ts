@@ -126,4 +126,18 @@ describe("/api/mcp/call", () => {
       { tenantId },
     );
   });
+
+  it("stops before execution when the mapped report permission is denied", async () => {
+    routeMocks.requirePermission.mockRejectedValueOnce({ status: 403 });
+    const request = new Request("http://localhost/api/mcp/call", {
+      method: "POST",
+      body: JSON.stringify({ name: "tenant.activity-report.query", input: {} }),
+      headers: { "content-type": "application/json" },
+    });
+
+    await expect(
+      POST({ locals: { tenantId }, request } as Parameters<typeof POST>[0]),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(routeMocks.executeRuntimeToolForMembership).not.toHaveBeenCalled();
+  });
 });
