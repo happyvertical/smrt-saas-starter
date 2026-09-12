@@ -74,8 +74,18 @@ test("report query updates the visible paged, sorted, and filtered table through
   // The successful MCP call records one mcp.calls usage event after producing
   // its report snapshot, so the freshly navigated table may show that event.
   await expect(page.getByRole("cell", { name: /^\d+$/u, exact: true })).toHaveCount(1);
-  const repeated = JSON.parse(await executeReport(page, { page: 1, pageSize: 1, sort: "quantity", direction: "asc", metricKey: "mcp.calls" })) as { report: { rows: Array<{ quantity: number }> } };
-  await expect(page.getByRole("cell", { name: String(repeated.report.rows[0].quantity), exact: true })).toBeVisible();
+  const repeated = JSON.parse(
+    await executeReport(page, {
+      page: 1,
+      pageSize: 1,
+      sort: "quantity",
+      direction: "asc",
+      metricKey: "mcp.calls",
+    }),
+  ) as { report: { rows: Array<{ quantity: number }> } };
+  await expect(
+    page.getByRole("cell", { name: String(repeated.report.rows[0].quantity), exact: true }),
+  ).toBeVisible();
 });
 
 test("report query sanitizes unsupported controls and rejects a nonmember tenant", async ({
