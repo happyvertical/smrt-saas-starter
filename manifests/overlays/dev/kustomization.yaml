@@ -10,10 +10,10 @@ resources:
 images:
   - name: ghcr.io/happyvertical/smrt-saas-starter-web
     newTag: dev-latest
-    digest: sha256:6f2ffdd5ece1a25c5f09975fdbfe74f2bd2a3010a127a98b8f7cc6823c91bc67
+    digest: sha256:50d6ec18007715cc5dd8b2c72b99c263b18363dfdd028733244098e81e108320
   - name: ghcr.io/happyvertical/smrt-saas-starter-worker
     newTag: dev-latest
-    digest: sha256:e970dfe628c8fcd93534cc9712d49332b527e2d7a16897ca54a5de0cf9c0b244
+    digest: sha256:12c589d3479dbed76f52b0d1e4f311556505bc463d93ba1f4aae09ba4bb3d55a
 patches:
   - target:
       kind: ConfigMap

@@ -4,17 +4,12 @@
 
 ### Changed
 
-- Advance the SMRT and SDK families together to the current coordinated release:
-  SMRT `@happyvertical/smrt-*` to **0.42.4**, the coordinated HappyVertical SDK
-  family to **0.88.0**, and the independently versioned `@happyvertical/ocr` to
-  **0.61.6**. Refresh the starter's tenant-aware ProfileType, Profile, and usage
-  metric seed conflict targets. `smrt-core@0.42.4` requires the SDK at
-  `^0.88.0`, so this realigns a prior skew where SMRT `0.40.61` ran against an
-  SDK `overrides`-pinned to `0.78.1`.
-- Externalize `@duckdb/*` in `apps/web/vite.config.ts` so the SSR build does not
-  bundle the optional, Postgres-unused DuckDB native adapter that
-  `@happyvertical/sql` reaches through a statically-analyzable dynamic import.
-  See `docs/upstream-work.md`.
+- Advance the SMRT and SDK families together to SMRT **0.49.2**, the coordinated
+  HappyVertical SDK family at **0.89.8**, and independently versioned
+  `@happyvertical/ocr` at **0.61.6**. The published SQL artifact no longer needs
+  the starter's DuckDB SSR externalization, so the consumer workaround is removed.
+- Pin pnpm to **11.13.1** because the previously pinned 11.13.0 release cannot
+  run its published executable.
 
 ## 0.1.1 - 2026-07-14
 

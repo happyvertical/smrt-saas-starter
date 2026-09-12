@@ -214,6 +214,14 @@ declare module '@happyvertical/smrt-virt-web' {
     relatedCollection: string;
   }
 
+  export interface WebToolRouteDescriptor {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    scope: 'item' | 'collection';
+    path: string[];
+    parameterAliases?: Record<string, string>;
+    optionsBag?: boolean;
+  }
+
   /** A WebMCP/MCP tool descriptor for one collection action (#1812). */
   export interface WebToolDescriptor {
     action: string;
@@ -221,6 +229,22 @@ declare module '@happyvertical/smrt-virt-web' {
     description: string;
     inputSchema: Record<string, unknown>;
     readOnly: boolean;
+    effect: 'read' | 'write' | 'destructive';
+    idempotent: boolean;
+    openWorld: boolean;
+    route?: WebToolRouteDescriptor;
+  }
+
+  /** Canonical data-only definition for one generated browser tool. */
+  export interface WebMcpToolDefinition extends WebToolDescriptor {
+    collection: string;
+    objectRef: string;
+    className: string;
+    endpoint: string;
+    idField: string;
+    idType: 'uuid' | 'text';
+    route: WebToolRouteDescriptor;
+    relationships: SmrtWebRelationship[];
   }
 
   export interface SmrtWebCollectionDefinition<TData = Record<string, unknown>> {
@@ -245,6 +269,8 @@ declare module '@happyvertical/smrt-virt-web' {
   }
 
   export const collectionDefinitions: SmrtWebCollectionDefinitions;
+  /** Every API-backed WebMCP tool, independent of list materialization. */
+  export const webMcpToolDefinitions: readonly WebMcpToolDefinition[];
   export function getCollectionDefinition<
     K extends keyof SmrtWebCollectionDefinitions,
   >(name: K): SmrtWebCollectionDefinitions[K];
@@ -259,42 +285,4 @@ declare module '@happyvertical/smrt-virt-web' {
    */
   export const manifestHash: string;
   export default collectionDefinitions;
-}
-
-// CLI module - Auto-generated command-line interface
-declare module '@happyvertical/smrt-virt-cli' {
-  export interface CLIConfig {
-    name?: string;
-    version?: string;
-    description?: string;
-    prompt?: boolean;
-    colors?: boolean;
-  }
-
-  export interface CLIContext {
-    db?: any;
-    ai?: any;
-    user?: {
-      id: string;
-      roles?: string[];
-    };
-  }
-
-  export interface CLICommandMap {
-    [objectName: string]: {
-      collection: string;
-      commands: string[];
-    };
-  }
-
-  export const cliCommands: CLICommandMap;
-
-  export function setupCLI(config?: CLIConfig, context?: CLIContext): {
-    run: (argv: string[]) => Promise<void>;
-    generator: any;
-  };
-
-  export function getCLIHandler(config?: CLIConfig, context?: CLIContext): (argv: string[]) => Promise<void>;
-
-  export default setupCLI;
 }
