@@ -120,6 +120,16 @@ jobs:
           test -x "$chrome"
           "$chrome" --version | grep -F "$CHROME_FOR_TESTING_VERSION"
           echo "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=$chrome" >> "$GITHUB_ENV"
+          # Ubuntu restricts unprivileged user namespaces for downloaded browser
+          # builds. Use only the runner image's existing, root-owned setuid
+          # Chrome helper, as Chromium documents for this profile; never alter
+          # host AppArmor/sysctl policy or the helper's ownership/mode here.
+          sandbox_helper=/opt/google/chrome/chrome-sandbox
+          test -u "$sandbox_helper"
+          test "$(stat -c '%U:%G' "$sandbox_helper")" = root:root
+          helper_mode="$(stat -c '%a' "$sandbox_helper")"
+          test $((8#$helper_mode & 8#022)) -eq 0
+          echo "CHROME_DEVEL_SANDBOX=$sandbox_helper" >> "$GITHUB_ENV"
       - name: Verify Chrome sandbox support
         run: |
           node - <<'NODE'
