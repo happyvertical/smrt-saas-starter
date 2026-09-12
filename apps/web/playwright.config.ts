@@ -14,7 +14,7 @@ import { defineConfig } from "@playwright/test";
 //   forwards an ambient host E2E_AUTH_SECRET into that container.
 const remoteBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim();
 const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?.trim();
-const webMcpTesting = process.env.PLAYWRIGHT_WEBMCP_TESTING === "true";
+const webMcpTesting = process.env.PLAYWRIGHT_WEBMCP_TESTING !== "false";
 const e2eAuthConfigured = Boolean(process.env.E2E_AUTH_SECRET?.trim());
 const productionImage = process.env.E2E_PRODUCTION_IMAGE === "true";
 const productionRunId = process.env.E2E_PRODUCTION_RUN_ID?.trim();
