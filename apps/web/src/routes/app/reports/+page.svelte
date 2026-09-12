@@ -40,7 +40,7 @@
 <section class="page">
   <header>
     <p>Reports</p>
-    <h1>Tenant activity</h1>
+    <h1>Tenant activity reports</h1>
     <span>Aggregate synthetic activity for the active tenant.</span>
   </header>
 
