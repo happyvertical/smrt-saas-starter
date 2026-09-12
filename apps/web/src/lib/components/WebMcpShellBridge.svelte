@@ -247,7 +247,9 @@
       type: "object", additionalProperties: false, required: ["action"],
       properties: { action: { type: "string" } },
     },
-    annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    // Mounted actions may change tenant access or clear persisted overrides.
+    // Hosts must require confirmation before forwarding the normal server action.
+    annotations: { destructiveHint: true, idempotentHint: false, openWorldHint: false },
     execute: (args, options) => lifetime.run(async (signal) => {
       const form = formFor(args.action);
       if (!form) return reject("not_available");
