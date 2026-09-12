@@ -16,6 +16,7 @@ test("public site opens the demo workspace", async ({ page }) => {
 test("activity report sorting resets pagination in one navigation", async ({ page }) => {
   await page.goto("/app/reports?page=2&pageSize=1&sort=quantity&direction=desc");
   await expect(page.getByRole("heading", { name: "Tenant activity reports" })).toBeVisible();
+  await expect(page.locator("[data-client-ready='true']")).toBeVisible();
 
   await page.getByRole("button", { name: /ID/u }).click();
   await expect(page).toHaveURL(/\/app\/reports\?page=1&pageSize=1&sort=id&direction=asc$/);
