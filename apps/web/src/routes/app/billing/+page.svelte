@@ -46,7 +46,7 @@
   <UsageThresholds evaluations={data.snapshot.thresholdEvaluations} />
 
   {#if data.billingPortalAvailable}
-    <form method="POST" action="?/portal">
+    <form method="POST" action="?/portal" data-webmcp-action="billing.portal">
       <button type="submit">Manage billing</button>
     </form>
   {/if}

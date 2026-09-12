@@ -34,6 +34,13 @@
     acknowledgement = message;
   }
 
+  function formFor(action: unknown): HTMLFormElement | undefined {
+    if (typeof action !== "string") return undefined;
+    return Array.from(document.querySelectorAll<HTMLFormElement>("form[data-webmcp-action]")).find(
+      (form) => form.dataset.webmcpAction === action,
+    );
+  }
+
   useWebMcpTool(() => ({
     name: "starter_shell_navigate",
     description: "Open an available SMRT Starter workspace destination and confirm its visible heading.",
@@ -117,6 +124,50 @@
       await invalidateAll();
       acknowledge(`Switched to ${tenant.tenantLabel}.`);
       return respond({ acknowledgement: "visible", completion: "switched", tenantId });
+    },
+  }));
+
+  useWebMcpTool(() => ({
+    name: "starter_shell_fill_form",
+    description: "Fill editable visible fields in a mounted, existing workspace form without submitting it.",
+    inputSchema: {
+      type: "object", additionalProperties: false, required: ["action", "fields"],
+      properties: { action: { type: "string" }, fields: { type: "object" } },
+    },
+    annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    execute: (args) => {
+      const form = formFor(args.action);
+      if (!form || !args.fields || typeof args.fields !== "object" || Array.isArray(args.fields)) return reject("not_available");
+      for (const [name, value] of Object.entries(args.fields)) {
+        const field = Array.from(form.elements).find((element) =>
+          element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement
+            ? element.name === name && element.type !== "hidden" && !element.disabled
+            : false,
+        ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined;
+        if (!field || typeof value !== "string") return reject("invalid_field");
+        field.value = value;
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        field.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      acknowledge("Form fields updated.");
+      return respond({ acknowledgement: "visible", completion: "filled" });
+    },
+  }));
+
+  useWebMcpTool(() => ({
+    name: "starter_shell_submit_form",
+    description: "Submit a mounted existing workspace form through its normal server action.",
+    inputSchema: {
+      type: "object", additionalProperties: false, required: ["action"],
+      properties: { action: { type: "string" } },
+    },
+    annotations: { destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    execute: (args) => {
+      const form = formFor(args.action);
+      if (!form) return reject("not_available");
+      acknowledge("Submitting existing authorized form.");
+      form.requestSubmit();
+      return respond({ acknowledgement: "visible", completion: "submitted" });
     },
   }));
 </script>

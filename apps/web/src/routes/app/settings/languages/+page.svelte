@@ -44,7 +44,7 @@
           <p>{language.previewText}</p>
         </div>
 
-        <form method="POST" action="?/language">
+        <form method="POST" action="?/language" data-webmcp-action="settings.save-language">
           <input type="hidden" name="key" value={language.key} />
           <input type="hidden" name="locale" value={language.locale} />
           <label>

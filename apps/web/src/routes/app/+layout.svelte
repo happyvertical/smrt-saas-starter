@@ -9,6 +9,7 @@
   import { APP_NAVIGATION } from "$lib/app-navigation";
   import FieldPolicyFocusTool from "$lib/components/FieldPolicyFocusTool.svelte";
   import NavIcon from "$lib/components/NavIcon.svelte";
+  import WebMcpShellBridge from "$lib/components/WebMcpShellBridge.svelte";
 
   let { data, children } = $props();
 
@@ -95,6 +96,7 @@
     {/snippet}
 
     <FieldPolicyFocusTool />
+    <WebMcpShellBridge activePath={data.activePath} destinations={navItems} tenants={data.tenants} />
     {@render children()}
   </AdminShell>
 

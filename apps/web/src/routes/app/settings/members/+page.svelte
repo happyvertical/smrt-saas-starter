@@ -19,7 +19,7 @@
 
   <section class="panel">
     <h2>Tenant access</h2>
-    <form method="POST" action="?/invite">
+    <form method="POST" action="?/invite" data-webmcp-action="settings.invite-member">
       <label>
         <span>Email</span>
         <input
