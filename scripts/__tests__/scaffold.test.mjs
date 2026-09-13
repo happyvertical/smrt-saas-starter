@@ -72,7 +72,8 @@ describe("starter scaffold", () => {
     for (const packageName of expected) {
       assert.ok(smrtRuntimePackages.includes(packageName), `${packageName} is missing`);
     }
-    assert.deepEqual(smrtConsumerPackages, ["@happyvertical/smrt-saas-objects"]);
+    assert.deepEqual(smrtConsumerPackages, smrtRuntimePackages);
+    assert.ok(smrtConsumerPackages.includes("@happyvertical/smrt-fields"));
 
     const viteConfig = await readFile(join(root, "apps/web/vite.config.ts"), "utf8");
     const migrateScript = await readFile(

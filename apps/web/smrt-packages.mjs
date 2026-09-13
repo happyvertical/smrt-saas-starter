@@ -24,10 +24,10 @@ export const smrtRuntimePackages = [
   "@happyvertical/smrt-users",
 ];
 
-// The web app has no decorated source objects of its own. Its generated
-// consumer manifest must come from the packaged starter domain provider rather
-// than scanning application server/UI source files.
-export const smrtConsumerPackages = ["@happyvertical/smrt-saas-objects"];
+// The consumer plugin treats a nonempty package list as an explicit manifest
+// registration allowlist. Keep it aligned with the provider inventory used by
+// migrations so SSR receives each package’s canonical object metadata.
+export const smrtConsumerPackages = smrtRuntimePackages;
 
 export async function registerSmrtRuntimePackages() {
   for (const packageName of smrtRuntimePackages) {
