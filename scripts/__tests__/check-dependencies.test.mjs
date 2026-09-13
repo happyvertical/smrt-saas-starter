@@ -72,7 +72,7 @@ test("findSmrtCatalogIssues accepts one exact framework version", () => {
       new Map([
         ["@happyvertical/smrt-core", "0.49.2"],
         ["@happyvertical/smrt-svelte", "0.49.2"],
-        ["@happyvertical/sdk-mcp", "0.89.8"],
+        ["@happyvertical/sdk-mcp", "0.89.9"],
       ]),
     ),
     [],
