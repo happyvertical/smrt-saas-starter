@@ -79,10 +79,11 @@ test("production report actions queue a refresh and serve tenant-bound CSV and J
   await page.goto("/app/reports");
   await expect(page.getByRole("heading", { name: "Tenant activity reports" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Preview refresh" }).click();
-  await expect(page.getByRole("status")).toHaveText("Refresh is ready to queue");
-  await page.getByRole("button", { name: "Queue refresh" }).click();
-  await expect(page.getByRole("status")).toContainText("Refresh queued (");
+  const reportActions = page.locator(".report-actions");
+  await reportActions.getByRole("button", { name: "Preview refresh" }).click();
+  await expect(reportActions.getByRole("status")).toHaveText("Refresh is ready to queue");
+  await reportActions.getByRole("button", { name: "Queue refresh" }).click();
+  await expect(reportActions.getByRole("status")).toContainText("Refresh queued (");
 
   await waitForMaterializedSeed(page);
   await page.goto("/app/reports?metricKey=mcp.calls");

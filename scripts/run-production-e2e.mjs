@@ -85,6 +85,7 @@ try {
   startOidcReadinessServer();
   await waitForOidcReadiness();
   startReportWorker();
+  await materializeReportFixture(primaryBaseUrl);
 
   const restartBaseUrl = await startWeb(names.restart);
   await probeCriticalRoutes(restartBaseUrl);
@@ -278,6 +279,31 @@ async function waitForOidcReadiness() {
       { allowFailure: true },
     );
     return containerRunning(names.oidc) && status.trim() === "ready";
+  });
+}
+
+async function materializeReportFixture(baseUrl) {
+  for (const phase of ["preview", "apply"]) {
+    const response = await fetch(`${baseUrl}/api/reports/activity/refresh`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ phase }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const body = await response.text();
+    if (!response.ok) {
+      throw new Error(
+        `Production report refresh ${phase} failed with HTTP ${response.status}: ${body}`,
+      );
+    }
+  }
+
+  await waitFor("materialized production report fixture", 45_000, async () => {
+    const response = await fetch(`${baseUrl}/app/reports?metricKey=mcp.calls`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    const document = await response.text();
+    return response.ok && document.includes("mcp.calls") && document.includes("128");
   });
 }
 
