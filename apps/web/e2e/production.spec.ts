@@ -87,13 +87,17 @@ test("production report actions queue a refresh and serve tenant-bound CSV and J
 
   await waitForMaterializedSeed(page);
   await page.goto("/app/reports?metricKey=mcp.calls");
-  const csvDownload = page.waitForResponse(
+  const csvExport = page.waitForResponse(
     (response) =>
-      new URL(response.url()).pathname.startsWith("/api/reports/activity/exports/") &&
-      response.request().method() === "GET",
+      new URL(response.url()).pathname === "/api/reports/activity/export" &&
+      response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Export CSV" }).click();
-  const csvResponse = await csvDownload;
+  const csvExportResponse = await csvExport;
+  const csvExportResult = (await csvExportResponse.json()) as { downloadUrl?: unknown };
+  expect(csvExportResponse.ok(), JSON.stringify(csvExportResult)).toBeTruthy();
+  expect(csvExportResult.downloadUrl).toEqual(expect.any(String));
+  const csvResponse = await page.request.get(csvExportResult.downloadUrl as string);
   const csvBytes = (await csvResponse.body()).toString();
   expect(csvResponse.ok(), csvBytes).toBeTruthy();
   expect(csvResponse.headers()["content-type"]).toContain("text/csv");
@@ -177,7 +181,7 @@ test("signup-form page loads server data and supports create/update/read", async
     page.getByText("Value applied by the starter application for this setting."),
   ).toBeVisible();
 
-  const objectRef = "@happyvertical/smrt-saas-web:StarterAppSetting";
+  const objectRef = "@happyvertical/smrt-saas-objects:StarterAppSetting";
   const fieldName = ["metadata", "updatedByUserId", "value", "key"][testInfo.retry] ?? "metadata";
   const runId = process.env.E2E_PRODUCTION_RUN_ID;
   if (!runId) throw new Error("E2E_PRODUCTION_RUN_ID is required for mutation isolation.");

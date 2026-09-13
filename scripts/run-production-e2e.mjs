@@ -218,6 +218,9 @@ async function startWeb(name) {
     `REPORT_REFRESH_SIGNING_KEY_ID=production-e2e-${runId}`,
     "-e",
     `SMRT_PRODUCTION_E2E_RUN_ID=${runId}`,
+    // The image runs as uid 1000, so its copied application tree is read-only.
+    // This disposable path is owned by the container and is only for this fixture.
+    "SMRT_STARTER_ASSET_STORAGE_PATH=/tmp/smrt-assets",
     "-e",
     "PUBLIC_APP_NAME=SMRT Production E2E",
     "-e",
