@@ -12,6 +12,7 @@ const targets = [
     output: join(runtimeDir, "web"),
     requiredFiles: [
       "package.json",
+      "scripts/fresh-postgres-bootstrap.mjs",
       "scripts/smrt-start.mjs",
       "scripts/smrt-db-seed.mjs",
       "src/lib/server/starter-data.json",

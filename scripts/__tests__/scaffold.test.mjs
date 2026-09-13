@@ -79,8 +79,12 @@ describe("starter scaffold", () => {
       join(root, "apps/web/scripts/smrt-db-migrate.mjs"),
       "utf8",
     );
+    const runtimePreparation = await readFile(join(root, "scripts/prepare-runtime.mjs"), "utf8");
+    const webPackage = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
 
     assert.match(viteConfig, /smrtConsumerPackages/);
     assert.match(migrateScript, /registerSmrtRuntimePackages/);
+    assert.ok(webPackage.files.includes("scripts/fresh-postgres-bootstrap.mjs"));
+    assert.match(runtimePreparation, /scripts\/fresh-postgres-bootstrap\.mjs/);
   });
 });
