@@ -56,11 +56,12 @@ describe("production E2E fail-closed contracts", () => {
     );
   });
 
-  it("redacts database credentials from uploaded diagnostics", () => {
+  it("redacts database and ephemeral report-worker credentials from uploaded diagnostics", () => {
     const input =
-      'DATABASE_URL=postgresql://smrt_saas:localdev@postgres:5432/smrt_saas POSTGRES_PASSWORD=localdev"';
+      'DATABASE_URL=postgresql://smrt_saas:localdev@postgres:5432/smrt_saas POSTGRES_PASSWORD=localdev REPORT_REFRESH_SIGNING_KEY=test-signing-key SESSION_SECRET=test-session-secret OIDC_CLIENT_SECRET=test-oidc-secret"';
     const output = redactProductionDiagnostics(input);
     assert.doesNotMatch(output, /localdev/u);
+    assert.doesNotMatch(output, /test-signing-key|test-session-secret|test-oidc-secret/u);
     assert.match(output, /postgresql:\/\/\[REDACTED\]@postgres/u);
     assert.match(output, /POSTGRES_PASSWORD=\[REDACTED\]/u);
   });

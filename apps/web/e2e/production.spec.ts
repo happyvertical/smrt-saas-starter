@@ -73,6 +73,88 @@ test("production image serves the public entry and unified email contract", asyn
   await assertLoginHealthy();
 });
 
+test("production report actions queue a refresh and serve tenant-bound CSV and JSON exports", async ({
+  page,
+}) => {
+  await page.goto("/app/reports");
+  await expect(page.getByRole("heading", { name: "Tenant activity reports" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Preview refresh" }).click();
+  await expect(page.getByRole("status")).toHaveText("Refresh is ready to queue");
+  await page.getByRole("button", { name: "Queue refresh" }).click();
+  await expect(page.getByRole("status")).toContainText("Refresh queued (");
+
+  await waitForMaterializedSeed(page);
+  await page.goto("/app/reports?metricKey=mcp.calls");
+  const csvDownload = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname.startsWith("/api/reports/activity/exports/") &&
+      response.request().method() === "GET",
+  );
+  await page.getByRole("button", { name: "Export CSV" }).click();
+  const csvResponse = await csvDownload;
+  const csvBytes = (await csvResponse.body()).toString();
+  expect(csvResponse.ok(), csvBytes).toBeTruthy();
+  expect(csvResponse.headers()["content-type"]).toContain("text/csv");
+  expect(csvResponse.headers()["content-disposition"]).toContain("attachment");
+  expect(csvBytes.trim().split("\n")).toEqual([
+    "id,metric_key,window_start,quantity",
+    expect.stringMatching(/^[^,]+,mcp\.calls,[^,]+,128$/u),
+  ]);
+
+  const json = await requestMaterializedExport(page, "json");
+  const jsonDownload = await page.request.get(json.downloadUrl);
+  const jsonBytes = await jsonDownload.text();
+  expect(jsonDownload.ok(), jsonBytes).toBeTruthy();
+  expect(jsonDownload.headers()["content-type"]).toContain("application/json");
+  expect(jsonDownload.headers()["content-disposition"]).toContain("attachment");
+  const payload = JSON.parse(jsonBytes) as { rows: unknown[]; total: number; asOf: string };
+  expect(payload.rows).toEqual([
+    expect.objectContaining({ metric_key: "mcp.calls", quantity: 128 }),
+  ]);
+  expect(payload.total).toBe(1);
+  expect(payload.asOf).toEqual(expect.any(String));
+
+  // The demo owner has no membership in this tenant. The download route must
+  // re-read active tenant authority instead of trusting the artifact URL.
+  await page.context().addCookies([
+    {
+      name: "smrt_starter_tenant_id",
+      value: "00000000-0000-4000-8000-000000000099",
+      url: new URL(page.url()).origin,
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
+  const denied = await page.request.get(json.downloadUrl);
+  expect(denied.status()).toBe(403);
+  expect(await denied.text()).not.toContain("metric_key");
+});
+
+async function waitForMaterializedSeed(page: Page) {
+  await expect
+    .poll(
+      async () => {
+        const response = await page.request.get("/app/reports?metricKey=mcp.calls");
+        const document = await response.text();
+        return response.ok() && document.includes("mcp.calls") && document.includes("128");
+      },
+      { timeout: 45_000 },
+    )
+    .toBe(true);
+}
+
+async function requestMaterializedExport(page: Page, format: "csv" | "json") {
+  const response = await page.request.post("/api/reports/activity/export", {
+    data: { phase: "apply", format, query: { metricKey: "mcp.calls" } },
+  });
+  const responseBody = await response.text();
+  expect(response.ok(), responseBody).toBeTruthy();
+  const result = JSON.parse(responseBody) as { downloadUrl?: unknown };
+  expect(result.downloadUrl).toEqual(expect.any(String));
+  return { downloadUrl: result.downloadUrl as string };
+}
+
 for (const route of APP_NAVIGATION) {
   test(`production navigation route ${route.href} loads without server failures`, async ({
     page,

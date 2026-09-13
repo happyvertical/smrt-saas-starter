@@ -77,7 +77,15 @@ environment:
   the same typed navigation source as `/app/+layout.svelte`, so a new
   destination automatically gains a route and heading contract. Critical signup and
   field-policy tests remain explicit, and the field-policy test performs real
-  create/update/read operations only in the ephemeral database.
+  create/update/read operations only in the ephemeral database. The runner
+  also starts its packaged worker with generated signing/runtime secrets and a
+  loopback-only synthetic OIDC discovery service, so report UI preview/enqueue
+  can materialize once before CSV/JSON artifact download and current-tenant
+  denial checks. The fixture worker uses a separate temporary asset path because
+  it only materializes; the web container stores and serves the export bytes.
+  This does not change the deployed storage contract. The focused worker
+  PostgreSQL proof remains responsible for restart, revocation, and
+  signature-tampering behavior.
 
 Production failures retain container logs/inspect output under
 `artifacts/production-e2e`, plus Playwright traces, screenshots, videos, and the
