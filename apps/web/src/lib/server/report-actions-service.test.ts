@@ -56,7 +56,10 @@ vi.mock("@happyvertical/smrt-reports", () => ({
 vi.mock("@happyvertical/smrt-saas-objects", () => ({
   TenantActivityReport: class TenantActivityReport {},
 }));
-vi.mock("@happyvertical/smrt-tenancy", () => ({ withSystemContext: mocks.withSystemContext }));
+vi.mock("@happyvertical/smrt-tenancy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@happyvertical/smrt-tenancy")>()),
+  withSystemContext: mocks.withSystemContext,
+}));
 vi.mock("$lib/server/activity-report", () => ({
   createTenantActivityReportRequest: mocks.createRequestInput,
   executeTenantActivityReportRequest: mocks.executeRows,

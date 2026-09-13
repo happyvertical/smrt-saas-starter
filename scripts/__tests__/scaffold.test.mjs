@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { smrtRuntimePackages } from "../../apps/web/smrt-packages.mjs";
+import { smrtConsumerPackages, smrtRuntimePackages } from "../../apps/web/smrt-packages.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -57,7 +57,7 @@ describe("starter scaffold", () => {
     );
   });
 
-  it("keeps the SMRT runtime package surface shared across config and migrations", async () => {
+  it("uses the packaged app-object manifest in Vite and keeps runtime registration for migrations", async () => {
     const expected = [
       "@happyvertical/smrt-agents",
       "@happyvertical/smrt-assets",
@@ -72,6 +72,7 @@ describe("starter scaffold", () => {
     for (const packageName of expected) {
       assert.ok(smrtRuntimePackages.includes(packageName), `${packageName} is missing`);
     }
+    assert.deepEqual(smrtConsumerPackages, ["@happyvertical/smrt-saas-objects"]);
 
     const viteConfig = await readFile(join(root, "apps/web/vite.config.ts"), "utf8");
     const migrateScript = await readFile(
@@ -79,7 +80,7 @@ describe("starter scaffold", () => {
       "utf8",
     );
 
-    assert.match(viteConfig, /smrtRuntimePackages/);
+    assert.match(viteConfig, /smrtConsumerPackages/);
     assert.match(migrateScript, /registerSmrtRuntimePackages/);
   });
 });

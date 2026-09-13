@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
   withActiveTenant: vi.fn(async (_tenantId: string, fn: () => Promise<unknown>) => await fn()),
 }));
 
-vi.mock("@happyvertical/smrt-reports", () => ({
+vi.mock("@happyvertical/smrt-reports", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@happyvertical/smrt-reports")>()),
   buildReportAdapterDescriptor: mocks.buildReportAdapterDescriptor,
   queryReportMaterializedRows: mocks.queryReportMaterializedRows,
 }));
