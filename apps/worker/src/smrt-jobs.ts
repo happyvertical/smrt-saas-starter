@@ -1,14 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { ObjectRegistry } from "@happyvertical/smrt-core";
 import {
-  createScheduleRunner,
-  createTaskRunner,
   type JobStatus,
   type ScheduleRunner,
   SmrtJobCollection,
   type SmrtJobData,
   type TaskRunner,
 } from "@happyvertical/smrt-jobs";
+import { initializeWorkerDeployedRuntime } from "./deployed-runtime.js";
 import {
   parseWorkerJob,
   type WorkerCycleJob,
@@ -317,8 +316,12 @@ export async function startSmrtWorkerRuntime(
   ensureWorkerTenancy();
   ensureStarterMaintenanceJobRegistered();
 
-  const ownsDatabase = !options.database;
-  const database = options.database ?? (await getWorkerDatabase());
+  if (options.database) {
+    throw new Error("Native worker startup does not accept a caller-owned database");
+  }
+
+  const runtime = await initializeWorkerDeployedRuntime();
+  const database = runtime.db as unknown as WorkerDatabase;
   let taskRunner: TaskRunner | null = null;
   let scheduleRunner: ScheduleRunner | null = null;
   let stopped = false;
@@ -339,7 +342,7 @@ export async function startSmrtWorkerRuntime(
       includeAgentQueue: options.includeAgentQueue,
       startScheduleRunner: shouldStartScheduleRunner,
     });
-    taskRunner = createTaskRunner({
+    taskRunner = await runtime.createTaskWorker({
       queues,
       concurrency: options.concurrency ?? readPositiveInteger(process.env.WORKER_CONCURRENCY) ?? 2,
       pollInterval: options.taskPollIntervalMs ?? DEFAULT_TASK_POLL_INTERVAL_MS,
@@ -347,17 +350,12 @@ export async function startSmrtWorkerRuntime(
       staleJobThresholdMs: options.staleJobThresholdMs ?? DEFAULT_STALE_JOB_THRESHOLD_MS,
     });
     scheduleRunner = shouldStartScheduleRunner
-      ? createScheduleRunner({
+      ? await runtime.createScheduleWorker({
           pollInterval: options.schedulePollIntervalMs ?? DEFAULT_SCHEDULE_POLL_INTERVAL_MS,
           taskHeartbeatInterval: options.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
           staleJobThresholdMs: options.staleJobThresholdMs ?? DEFAULT_STALE_JOB_THRESHOLD_MS,
         })
       : null;
-
-    await taskRunner.initialize(database as Parameters<TaskRunner["initialize"]>[0]);
-    if (scheduleRunner) {
-      await scheduleRunner.initialize(database as Parameters<ScheduleRunner["initialize"]>[0]);
-    }
 
     wireTaskRunner(taskRunner, scheduleRunner, options);
     wireScheduleRunner(scheduleRunner, options.logger);
@@ -386,8 +384,7 @@ export async function startSmrtWorkerRuntime(
         await stopSmrtWorkerRuntimeComponents({
           taskRunner,
           scheduleRunner,
-          database,
-          closeDatabase: ownsDatabase,
+          runtime,
           logger: options.logger,
         });
       },
@@ -397,8 +394,7 @@ export async function startSmrtWorkerRuntime(
       await stopSmrtWorkerRuntimeComponents({
         taskRunner,
         scheduleRunner,
-        database,
-        closeDatabase: ownsDatabase,
+        runtime,
         logger: options.logger,
       });
     } catch (cleanupError) {
@@ -413,11 +409,15 @@ export async function startSmrtWorkerRuntime(
 export async function runQueuedMaintenanceJobsOnce(
   options: RunQueuedMaintenanceJobsOnceOptions = {},
 ): Promise<WorkerJobResult[]> {
-  const database = options.database ?? (await getWorkerDatabase());
+  if (options.database) {
+    throw new Error("Native worker startup does not accept a caller-owned database");
+  }
+  const deployedRuntime = await initializeWorkerDeployedRuntime();
+  const database = deployedRuntime.db as unknown as WorkerDatabase;
   const queue = options.queue ?? process.env.WORKER_QUEUE ?? STARTER_MAINTENANCE_QUEUE;
   const completed: WorkerJobResult[] = [];
   const failed: Error[] = [];
-  let runtime: SmrtWorkerRuntime | null = null;
+  let workerRuntime: SmrtWorkerRuntime | null = null;
   let queuedCount = 0;
 
   try {
@@ -429,8 +429,7 @@ export async function runQueuedMaintenanceJobsOnce(
       return [enqueueResult];
     }
 
-    runtime = await startSmrtWorkerRuntime({
-      database,
+    workerRuntime = await startSmrtWorkerRuntime({
       queue,
       includeAgentQueue: false,
       startScheduleRunner: false,
@@ -461,10 +460,8 @@ export async function runQueuedMaintenanceJobsOnce(
       );
     }
   } finally {
-    await runtime?.stop();
-    if (!options.database) {
-      await closeWorkerDatabase(database, options.logger);
-    }
+    await workerRuntime?.stop();
+    await deployedRuntime.close();
   }
 
   return completed.length > 0
@@ -508,8 +505,7 @@ async function closeWorkerDatabase(database: WorkerDatabase, logger?: WorkerLogg
 async function stopSmrtWorkerRuntimeComponents(options: {
   taskRunner: TaskRunner | null;
   scheduleRunner: ScheduleRunner | null;
-  database: WorkerDatabase;
-  closeDatabase: boolean;
+  runtime: { close(): Promise<void> };
   logger?: WorkerLogger;
 }): Promise<void> {
   const errors: unknown[] = [];
@@ -532,8 +528,13 @@ async function stopSmrtWorkerRuntimeComponents(options: {
     });
   }
 
-  if (options.closeDatabase) {
-    await closeWorkerDatabase(options.database, options.logger);
+  try {
+    await options.runtime.close();
+  } catch (error) {
+    errors.push(error);
+    options.logger?.error("Failed to close SMRT deployed runtime", {
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 
   if (errors.length > 0) {

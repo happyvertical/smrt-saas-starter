@@ -19,11 +19,14 @@
   "dependencies": {
     "@happyvertical/jobs": "catalog:",
     "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-app-runtime": "catalog:",
+    "@happyvertical/smrt-assets": "catalog:",
     "@happyvertical/smrt-jobs": "catalog:",
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-core": "catalog:",
     "@happyvertical/smrt-subscriptions": "catalog:",
-    "@happyvertical/smrt-tenancy": "catalog:"
+    "@happyvertical/smrt-tenancy": "catalog:",
+    "@happyvertical/smrt-users": "catalog:"
   },
   "devDependencies": {
     "tsx": "^4.20.6",

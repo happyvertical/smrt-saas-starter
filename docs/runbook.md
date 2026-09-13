@@ -60,6 +60,19 @@ starts `ScheduleRunner`, and idempotently ensures global
 listen on SMRT's `agents` queue because `ScheduleRunner` emits scheduled jobs
 there.
 
+Deployed worker startup uses the published SMRT deployed runtime. Run the
+separate `pnpm run db:migrate` release step before starting workers; a worker
+never migrates application schema. The web and worker must receive the same
+explicit `SMRT_STARTER_ASSET_STORAGE_PATH`, mounted as shared durable storage.
+The base manifests provide `/var/lib/smrt-assets` through the
+`smrt-saas-assets` `ReadWriteMany` claim and keep both pods in the claim's
+mount group. Select an RWX-capable storage class; the local-files provider is
+not safe to run with separate unshared web and worker filesystems. Set `PUBLIC_SITE_URL` to the HTTPS origin whose
+`/auth/happyvertical/callback` URI is registered with the configured OIDC
+provider. Startup probes that provider's public metadata and asset read/write
+access, and fails closed when either setting or the existing `SESSION_SECRET` /
+OIDC client secret is absent.
+
 `subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
 Postgres and asks `@happyvertical/accounting` for current subscription status.
 When `STRIPE_SECRET_KEY` is unset, the job skips reconciliation and reports the

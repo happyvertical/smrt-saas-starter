@@ -10,6 +10,7 @@ const required = [
   "manifests/base/worker.deployment.yaml",
   "manifests/base/postgres.cluster.yaml",
   "manifests/base/app.secret.yaml",
+  "manifests/base/assets.pvc.yaml",
   "manifests/overlays/dev/kustomization.yaml",
   "manifests/overlays/demo/kustomization.yaml",
   "manifests/overlays/demo/ingress.yaml",
@@ -20,6 +21,27 @@ const required = [
 
 for (const file of required) {
   await access(join(root, file));
+}
+
+const assetClaim = await readFile(join(root, "manifests/base/assets.pvc.yaml"), "utf8");
+const webDeployment = await readFile(join(root, "manifests/base/web.deployment.yaml"), "utf8");
+const workerDeployment = await readFile(
+  join(root, "manifests/base/worker.deployment.yaml"),
+  "utf8",
+);
+if (!assetClaim.includes("ReadWriteMany")) {
+  throw new Error("shared report assets must use a ReadWriteMany claim");
+}
+for (const [name, manifest] of [
+  ["web", webDeployment],
+  ["worker", workerDeployment],
+]) {
+  if (
+    !manifest.includes("claimName: smrt-saas-assets") ||
+    !manifest.includes("mountPath: /var/lib/smrt-assets")
+  ) {
+    throw new Error(`${name} deployment must mount the shared report asset claim`);
+  }
 }
 
 for (const dockerfile of ["apps/web/Dockerfile", "apps/worker/Dockerfile"]) {

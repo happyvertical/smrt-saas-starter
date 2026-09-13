@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { initializeWorkerDeployedRuntime } from "./deployed-runtime.js";
 import {
   enqueueMaintenanceJobs,
   ensureStarterMaintenanceSchedules,
@@ -8,7 +9,12 @@ import {
   resolveMaintenanceJobRequests,
   resolveStarterMaintenanceScheduleDefinitions,
   resolveTaskRunnerQueues,
+  startSmrtWorkerRuntime,
 } from "./smrt-jobs.js";
+
+vi.mock("./deployed-runtime.js", () => ({
+  initializeWorkerDeployedRuntime: vi.fn(),
+}));
 
 describe("getNextCronDate field bounds", () => {
   afterEach(() => {
@@ -49,6 +55,30 @@ describe("getNextCronDate field bounds", () => {
 });
 
 describe("SMRT worker job adapter", () => {
+  it("starts native runtime workers and closes their owning runtime on shutdown", async () => {
+    const taskRunner = runner("task-1");
+    const scheduleRunner = runner("schedule-1");
+    const close = vi.fn(async () => undefined);
+    const createTaskWorker = vi.fn(async () => taskRunner);
+    const createScheduleWorker = vi.fn(async () => scheduleRunner);
+    vi.mocked(initializeWorkerDeployedRuntime).mockResolvedValue({
+      db: { query: vi.fn(async () => ({ rows: [] })) },
+      createTaskWorker,
+      createScheduleWorker,
+      close,
+    } as never);
+
+    const runtime = await startSmrtWorkerRuntime({ ensureMaintenanceSchedules: false });
+
+    expect(createTaskWorker).toHaveBeenCalledOnce();
+    expect(createScheduleWorker).toHaveBeenCalledOnce();
+    await runtime.stop();
+
+    expect(scheduleRunner.stop).toHaveBeenCalledOnce();
+    expect(taskRunner.stop).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it("parses worker modes with a queued one-shot default", () => {
     expect(parseWorkerMode(undefined)).toBe("smrt-once");
     expect(parseWorkerMode("runner")).toBe("runner");
@@ -215,6 +245,15 @@ describe("SMRT worker job adapter", () => {
     });
   });
 });
+
+function runner(id: string) {
+  return {
+    id,
+    on: vi.fn(),
+    start: vi.fn(async () => undefined),
+    stop: vi.fn(async () => undefined),
+  };
+}
 
 function memorySchedule(
   overrides: Partial<MutableStarterMaintenanceSchedule>,
