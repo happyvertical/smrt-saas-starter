@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,9 @@ const runId = createRunId();
 const label = "dev.smrt.production-e2e";
 const artifactDir = join(root, process.env.E2E_ARTIFACT_DIR || `artifacts/production-e2e/${runId}`);
 const image = process.env.E2E_WEB_IMAGE || `smrt-saas-starter-web:production-e2e-${runId}`;
+const workerImage = `smrt-saas-starter-worker:production-e2e-${runId}`;
+const reportRefreshSigningKey = randomBytes(48).toString("base64url");
+const workerRuntimeSecret = randomBytes(32).toString("base64url");
 const expectedVersion =
   process.env.E2E_APP_VERSION || commandOutput("git", ["rev-parse", "HEAD"]).trim();
 const names = {
@@ -22,6 +26,8 @@ const names = {
   postgres: `smrt-production-e2e-postgres-${runId}`,
   web: `smrt-production-e2e-web-${runId}`,
   restart: `smrt-production-e2e-restart-${runId}`,
+  worker: `smrt-production-e2e-worker-${runId}`,
+  oidc: `smrt-production-e2e-oidc-${runId}`,
 };
 let primaryBaseUrl;
 let failure;
@@ -39,6 +45,7 @@ try {
     image,
     ".",
   ]);
+  run("docker", ["build", "-f", "apps/worker/Dockerfile", "-t", workerImage, "."]);
   run("docker", ["network", "create", "--label", `${label}=${runId}`, names.network]);
   run("docker", [
     "run",
@@ -71,6 +78,15 @@ try {
   assertRequiredProductionTables(readDatabaseTables());
   const seedBeforeRestart = readSeedSnapshot();
 
+  // Report actions are exercised through the compiled web UI below. This
+  // worker materializes that queued refresh so the same isolated browser can
+  // verify foreground CSV/JSON artifacts. Native worker restart, revocation,
+  // and signature behavior remains owned by its focused PG integration proof.
+  startOidcReadinessServer();
+  await waitForOidcReadiness();
+  startReportWorker();
+  await materializeReportFixture(primaryBaseUrl);
+
   const restartBaseUrl = await startWeb(names.restart);
   await probeCriticalRoutes(restartBaseUrl);
   assertRequiredProductionTables(readDatabaseTables());
@@ -99,7 +115,7 @@ try {
     process.exitCode = 1;
     console.error("Could not capture complete production E2E diagnostics:", error);
   } finally {
-    for (const name of [names.restart, names.web, names.postgres]) {
+    for (const name of [names.worker, names.oidc, names.restart, names.web, names.postgres]) {
       try {
         removeOwnedContainer(name);
       } catch (error) {
@@ -197,7 +213,15 @@ async function startWeb(name) {
     "-e",
     "SMRT_STARTER_DEMO_TENANT_ID=00000000-0000-4000-8000-000000000001",
     "-e",
+    `REPORT_REFRESH_SIGNING_KEY=${reportRefreshSigningKey}`,
+    "-e",
+    `REPORT_REFRESH_SIGNING_KEY_ID=production-e2e-${runId}`,
+    "-e",
     `SMRT_PRODUCTION_E2E_RUN_ID=${runId}`,
+    // The image runs as uid 1000, so its copied application tree is read-only.
+    // This disposable path is owned by the container and is only for this fixture.
+    "-e",
+    "SMRT_STARTER_ASSET_STORAGE_PATH=/tmp/smrt-assets",
     "-e",
     "PUBLIC_APP_NAME=SMRT Production E2E",
     "-e",
@@ -225,6 +249,108 @@ async function startWeb(name) {
     }
   });
   return baseUrl;
+}
+
+function startOidcReadinessServer() {
+  const script = `const http=require("node:http");const host="http://${names.oidc}:8080";http.createServer((request,response)=>{if(request.url==="/.well-known/openid-configuration"){response.setHeader("content-type","application/json");response.end(JSON.stringify({issuer:host,authorization_endpoint:host+"/authorize",token_endpoint:host+"/token",jwks_uri:host+"/jwks"}));return;}response.statusCode=404;response.end();}).listen(8080,"0.0.0.0");`;
+  run("docker", [
+    "run",
+    "-d",
+    "--name",
+    names.oidc,
+    "--label",
+    `${label}=${runId}`,
+    "--network",
+    names.network,
+    "node:24-alpine",
+    "node",
+    "-e",
+    script,
+  ]);
+}
+
+async function waitForOidcReadiness() {
+  await waitFor("synthetic OIDC discovery", 30_000, () => {
+    const status = commandOutput(
+      "docker",
+      [
+        "exec",
+        names.oidc,
+        "node",
+        "-e",
+        'fetch("http://127.0.0.1:8080/.well-known/openid-configuration").then((response)=>{if(!response.ok)process.exit(1);console.log("ready")}).catch(()=>process.exit(1))',
+      ],
+      { allowFailure: true },
+    );
+    return containerRunning(names.oidc) && status.trim() === "ready";
+  });
+}
+
+async function materializeReportFixture(baseUrl) {
+  for (const phase of ["preview", "apply"]) {
+    const response = await fetch(`${baseUrl}/api/reports/activity/refresh`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ phase }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const body = await response.text();
+    if (!response.ok) {
+      throw new Error(
+        `Production report refresh ${phase} failed with HTTP ${response.status}: ${body}`,
+      );
+    }
+  }
+
+  await waitFor("materialized production report fixture", 45_000, async () => {
+    const response = await fetch(`${baseUrl}/app/reports?metricKey=mcp.calls`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    const document = await response.text();
+    return response.ok && document.includes("mcp.calls") && document.includes("128");
+  });
+}
+
+function startReportWorker() {
+  run("docker", [
+    "run",
+    "-d",
+    "--name",
+    names.worker,
+    "--label",
+    `${label}=${runId}`,
+    "--network",
+    names.network,
+    "-e",
+    `DATABASE_URL=postgresql://smrt_saas:localdev@${names.postgres}:5432/smrt_saas`,
+    "-e",
+    "WORKER_MODE=runner",
+    "-e",
+    "WORKER_CONCURRENCY=1",
+    "-e",
+    "WORKER_RUN_AGENT_QUEUE=false",
+    "-e",
+    "WORKER_RUN_SCHEDULER=false",
+    "-e",
+    "WORKER_ENSURE_MAINTENANCE_SCHEDULES=false",
+    "-e",
+    `HAPPYVERTICAL_IDP_ISSUER=http://${names.oidc}:8080`,
+    "-e",
+    "OIDC_CLIENT_ID=production-e2e",
+    "-e",
+    `OIDC_CLIENT_SECRET=${workerRuntimeSecret}`,
+    "-e",
+    `SESSION_SECRET=${workerRuntimeSecret}`,
+    "-e",
+    `PUBLIC_SITE_URL=http://${names.web}:3000`,
+    "-e",
+    "SMRT_STARTER_ASSET_STORAGE_PATH=/tmp/smrt-assets",
+    "-e",
+    `REPORT_REFRESH_SIGNING_KEY=${reportRefreshSigningKey}`,
+    "-e",
+    `REPORT_REFRESH_SIGNING_KEY_ID=production-e2e-${runId}`,
+    workerImage,
+  ]);
 }
 
 function readDatabaseTables() {
@@ -309,7 +435,7 @@ function containerRunning(name) {
 }
 
 async function captureDiagnostics() {
-  for (const name of [names.postgres, names.web, names.restart]) {
+  for (const name of [names.postgres, names.web, names.restart, names.worker, names.oidc]) {
     const logs = redactProductionDiagnostics(commandCombinedOutput("docker", ["logs", name]));
     const inspect = redactProductionDiagnostics(commandCombinedOutput("docker", ["inspect", name]));
     await writeFile(join(artifactDir, `${name}.log`), logs);

@@ -73,6 +73,102 @@ test("production image serves the public entry and unified email contract", asyn
   await assertLoginHealthy();
 });
 
+test("production report actions queue a refresh and serve tenant-bound CSV and JSON exports", async ({
+  page,
+}) => {
+  await page.goto("/app/reports");
+  await expect(page.getByRole("heading", { name: "Tenant activity reports" })).toBeVisible();
+
+  const reportPage = page.locator(".page");
+  const materializedAsOf = await reportPage.getAttribute("data-report-as-of");
+  expect(materializedAsOf).toEqual(expect.any(String));
+  const reportActions = page.locator(".report-actions");
+  await reportActions.getByRole("button", { name: "Preview refresh" }).click();
+  await expect(reportActions.getByRole("status")).toHaveText("Refresh is ready to queue");
+  await reportActions.getByRole("button", { name: "Queue refresh" }).click();
+  await expect(reportActions.getByRole("status")).toContainText("Refresh queued (");
+
+  await waitForMaterializedRefresh(page, materializedAsOf);
+  await page.goto("/app/reports?metricKey=mcp.calls");
+  const csvExport = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/api/reports/activity/export" &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Export CSV" }).click();
+  const csvExportResponse = await csvExport;
+  const csvExportResult = (await csvExportResponse.json()) as { downloadUrl?: unknown };
+  expect(csvExportResponse.ok(), JSON.stringify(csvExportResult)).toBeTruthy();
+  expect(csvExportResult.downloadUrl).toEqual(expect.any(String));
+  const csvResponse = await page.request.get(csvExportResult.downloadUrl as string);
+  const csvBytes = (await csvResponse.body()).toString();
+  expect(csvResponse.ok(), csvBytes).toBeTruthy();
+  expect(csvResponse.headers()["content-type"]).toContain("text/csv");
+  expect(csvResponse.headers()["content-disposition"]).toContain("attachment");
+  expect(csvBytes.trim().split("\n")).toEqual([
+    "id,metric_key,window_start,quantity",
+    expect.stringMatching(/^[^,]+,mcp\.calls,[^,]+,128$/u),
+  ]);
+
+  const json = await requestMaterializedExport(page, "json");
+  const jsonDownload = await page.request.get(json.downloadUrl);
+  const jsonBytes = await jsonDownload.text();
+  expect(jsonDownload.ok(), jsonBytes).toBeTruthy();
+  expect(jsonDownload.headers()["content-type"]).toContain("application/json");
+  expect(jsonDownload.headers()["content-disposition"]).toContain("attachment");
+  const payload = JSON.parse(jsonBytes) as { rows: unknown[]; total: number; asOf: string };
+  expect(payload.rows).toEqual([
+    expect.objectContaining({ metric_key: "mcp.calls", quantity: 128 }),
+  ]);
+  expect(payload.total).toBe(1);
+  expect(payload.asOf).toEqual(expect.any(String));
+
+  // The demo owner has no membership in this tenant. The download route must
+  // re-read active tenant authority instead of trusting the artifact URL.
+  await page.context().addCookies([
+    {
+      name: "smrt_starter_tenant_id",
+      value: "00000000-0000-4000-8000-000000000099",
+      url: new URL(page.url()).origin,
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
+  const denied = await page.request.get(json.downloadUrl);
+  expect(denied.status()).toBe(403);
+  expect(await denied.text()).not.toContain("metric_key");
+});
+
+async function waitForMaterializedRefresh(page: Page, previousAsOf: string) {
+  await expect
+    .poll(
+      async () => {
+        const response = await page.request.get("/app/reports?metricKey=mcp.calls");
+        const document = await response.text();
+        const asOf = document.match(/data-report-as-of="([^"]+)"/u)?.[1];
+        return (
+          response.ok() &&
+          document.includes("mcp.calls") &&
+          document.includes("128") &&
+          Boolean(asOf && asOf !== previousAsOf)
+        );
+      },
+      { timeout: 45_000 },
+    )
+    .toBe(true);
+}
+
+async function requestMaterializedExport(page: Page, format: "csv" | "json") {
+  const response = await page.request.post("/api/reports/activity/export", {
+    data: { phase: "apply", format, query: { metricKey: "mcp.calls" } },
+  });
+  const responseBody = await response.text();
+  expect(response.ok(), responseBody).toBeTruthy();
+  const result = JSON.parse(responseBody) as { downloadUrl?: unknown };
+  expect(result.downloadUrl).toEqual(expect.any(String));
+  return { downloadUrl: result.downloadUrl as string };
+}
+
 for (const route of APP_NAVIGATION) {
   test(`production navigation route ${route.href} loads without server failures`, async ({
     page,
@@ -94,7 +190,7 @@ test("signup-form page loads server data and supports create/update/read", async
     page.getByText("Value applied by the starter application for this setting."),
   ).toBeVisible();
 
-  const objectRef = "@happyvertical/smrt-saas-web:StarterAppSetting";
+  const objectRef = "@happyvertical/smrt-saas-objects:StarterAppSetting";
   const fieldName = ["metadata", "updatedByUserId", "value", "key"][testInfo.retry] ?? "metadata";
   const runId = process.env.E2E_PRODUCTION_RUN_ID;
   if (!runId) throw new Error("E2E_PRODUCTION_RUN_ID is required for mutation isolation.");

@@ -12,6 +12,8 @@ spec:
       labels:
         app: smrt-saas-web
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: web
           image: ghcr.io/happyvertical/smrt-saas-starter-web:dev-latest
@@ -28,3 +30,10 @@ spec:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 10
+          volumeMounts:
+            - name: assets
+              mountPath: /var/lib/smrt-assets
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: smrt-saas-assets

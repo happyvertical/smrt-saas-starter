@@ -1,5 +1,5 @@
 import { getTenantActivityReport } from "$lib/server/activity-report";
-import { requirePermission, starterPermissions } from "$lib/server/authz";
+import { hasStarterPermission, requirePermission, starterPermissions } from "$lib/server/authz";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -17,7 +17,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     ...(metricKey ? { metricKey } : {}),
   });
 
-  return { ...report, tenantId: membership.tenantId };
+  return {
+    ...report,
+    tenantId: membership.tenantId,
+    canExport: hasStarterPermission(membership, starterPermissions.reportExport),
+    canRefresh: hasStarterPermission(membership, starterPermissions.reportRefresh),
+  };
 };
 
 function positiveInteger(value: string | null): number | undefined {

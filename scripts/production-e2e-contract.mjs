@@ -50,5 +50,8 @@ export function assertSeedSnapshot(beforeRestart, afterRestart) {
 export function redactProductionDiagnostics(value) {
   return value
     .replace(/postgres(?:ql)?:\/\/[^:\s"'@]+:[^@\s"']+@/gu, "postgresql://[REDACTED]@")
-    .replace(/(POSTGRES_PASSWORD=)[^\s"\\]+/gu, "$1[REDACTED]");
+    .replace(
+      /(POSTGRES_PASSWORD|REPORT_REFRESH_SIGNING_KEY|SESSION_SECRET|OIDC_CLIENT_SECRET)=[^\s"\\]+/gu,
+      "$1=[REDACTED]",
+    );
 }

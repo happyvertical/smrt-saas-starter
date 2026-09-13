@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { initializeWorkerDeployedRuntime } from "./deployed-runtime.js";
 import {
   enqueueMaintenanceJobs,
   ensureStarterMaintenanceSchedules,
@@ -8,7 +9,12 @@ import {
   resolveMaintenanceJobRequests,
   resolveStarterMaintenanceScheduleDefinitions,
   resolveTaskRunnerQueues,
+  startSmrtWorkerRuntime,
 } from "./smrt-jobs.js";
+
+vi.mock("./deployed-runtime.js", () => ({
+  initializeWorkerDeployedRuntime: vi.fn(),
+}));
 
 describe("getNextCronDate field bounds", () => {
   afterEach(() => {
@@ -49,6 +55,35 @@ describe("getNextCronDate field bounds", () => {
 });
 
 describe("SMRT worker job adapter", () => {
+  it("starts native runtime workers and closes their owning runtime on shutdown", async () => {
+    const taskRunner = runner("task-1");
+    const scheduleRunner = runner("schedule-1");
+    const close = vi.fn(async () => undefined);
+    const createTaskWorker = vi.fn(async () => taskRunner);
+    const createScheduleWorker = vi.fn(async () => scheduleRunner);
+    vi.mocked(initializeWorkerDeployedRuntime).mockResolvedValue({
+      db: { query: vi.fn(async () => ({ rows: [] })) },
+      createTaskWorker,
+      createScheduleWorker,
+      close,
+    } as never);
+
+    process.env.REPORT_REFRESH_SIGNING_KEY = "test-report-refresh-key-which-is-at-least-32-bytes";
+    process.env.REPORT_REFRESH_SIGNING_KEY_ID = "test-key-1";
+
+    const runtime = await startSmrtWorkerRuntime({ ensureMaintenanceSchedules: false });
+
+    expect(createTaskWorker).toHaveBeenCalledOnce();
+    expect(createScheduleWorker).toHaveBeenCalledOnce();
+    await runtime.stop();
+
+    expect(scheduleRunner.stop).toHaveBeenCalledOnce();
+    expect(taskRunner.stop).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledOnce();
+    delete process.env.REPORT_REFRESH_SIGNING_KEY;
+    delete process.env.REPORT_REFRESH_SIGNING_KEY_ID;
+  });
+
   it("parses worker modes with a queued one-shot default", () => {
     expect(parseWorkerMode(undefined)).toBe("smrt-once");
     expect(parseWorkerMode("runner")).toBe("runner");
@@ -79,21 +114,21 @@ describe("SMRT worker job adapter", () => {
         includeAgentQueue: false,
         startScheduleRunner: true,
       }),
-    ).toEqual(["starter-maintenance", "agents"]);
+    ).toEqual(["starter-maintenance", "agents", "reports"]);
     expect(
       resolveTaskRunnerQueues({
         queue: "starter-maintenance",
         includeAgentQueue: false,
         startScheduleRunner: false,
       }),
-    ).toEqual(["starter-maintenance"]);
+    ).toEqual(["starter-maintenance", "reports"]);
     expect(
       resolveTaskRunnerQueues({
         queue: "agents",
         includeAgentQueue: true,
         startScheduleRunner: true,
       }),
-    ).toEqual(["agents"]);
+    ).toEqual(["agents", "reports"]);
   });
 
   it("enqueues starter maintenance jobs into SMRT jobs", async () => {
@@ -215,6 +250,15 @@ describe("SMRT worker job adapter", () => {
     });
   });
 });
+
+function runner(id: string) {
+  return {
+    id,
+    on: vi.fn(),
+    start: vi.fn(async () => undefined),
+    stop: vi.fn(async () => undefined),
+  };
+}
 
 function memorySchedule(
   overrides: Partial<MutableStarterMaintenanceSchedule>,

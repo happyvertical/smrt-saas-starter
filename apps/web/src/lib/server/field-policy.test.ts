@@ -40,6 +40,7 @@ import {
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";
+const starterAppSettingObjectRef = "@happyvertical/smrt-saas-objects:StarterAppSetting";
 
 describe("starter field-policy transport", () => {
   beforeEach(() => {
@@ -60,7 +61,7 @@ describe("starter field-policy transport", () => {
   it("accepts only editable policy fields and discards forged ownership", () => {
     expect(
       parseFieldPolicyMutation({
-        objectRef: "@happyvertical/smrt-saas-web:StarterAppSetting",
+        objectRef: starterAppSettingObjectRef,
         fieldName: "value",
         scopeType: "user",
         defaultValue: "open",
@@ -71,7 +72,7 @@ describe("starter field-policy transport", () => {
         id: "forged-id",
       }),
     ).toEqual({
-      objectRef: "@happyvertical/smrt-saas-web:StarterAppSetting",
+      objectRef: starterAppSettingObjectRef,
       fieldName: "value",
       scopeType: "user",
       defaultValue: "open",
@@ -85,7 +86,7 @@ describe("starter field-policy transport", () => {
 
   it("creates through the verified membership context", async () => {
     const input = parseFieldPolicyMutation({
-      objectRef: "@happyvertical/smrt-saas-web:StarterAppSetting",
+      objectRef: starterAppSettingObjectRef,
       fieldName: "value",
       scopeType: "user",
     });
@@ -124,7 +125,7 @@ describe("starter field-policy transport", () => {
   it("rejects malformed editable values", () => {
     expect(() =>
       parseFieldPolicyMutation({
-        objectRef: "@happyvertical/smrt-saas-web:StarterAppSetting",
+        objectRef: starterAppSettingObjectRef,
         fieldName: "value",
         scopeType: "user",
         displayOrder: Number.NaN,
@@ -178,7 +179,7 @@ describe("starter field-policy transport", () => {
       delete: vi.fn(),
     });
     const allowedInput = parseFieldPolicyMutation({
-      objectRef: "@happyvertical/smrt-saas-web:StarterAppSetting",
+      objectRef: starterAppSettingObjectRef,
       fieldName: "value",
       scopeType: "tenant",
     });

@@ -1,96 +1,150 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("$lib/server/usage", () => ({ getUsageSummaries: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  buildReportAdapterDescriptor: vi.fn(),
+  queryReportMaterializedRows: vi.fn(),
+  getAppDatabase: vi.fn(async () => ({ driver: "test" })),
+  withActiveTenant: vi.fn(async (_tenantId: string, fn: () => Promise<unknown>) => await fn()),
+}));
 
-describe("tenant activity report descriptor", () => {
-  it("exposes only the aggregate-safe activity fields with manual paging and sorting", async () => {
-    const { getTenantActivityReportDescriptor } = await import("$lib/server/activity-report");
-    const descriptor = await getTenantActivityReportDescriptor();
+vi.mock("@happyvertical/smrt-reports", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@happyvertical/smrt-reports")>()),
+  buildReportAdapterDescriptor: mocks.buildReportAdapterDescriptor,
+  queryReportMaterializedRows: mocks.queryReportMaterializedRows,
+}));
+vi.mock("$lib/server/db", () => ({ getAppDatabase: mocks.getAppDatabase }));
+vi.mock("$lib/server/tenant-context", () => ({ withActiveTenant: mocks.withActiveTenant }));
 
-    expect(descriptor.dataTable.manualPagination).toBe(true);
-    expect(descriptor.dataTable.manualSorting).toBe(true);
-    expect(descriptor.resourceId).toContain("#current");
-    expect(descriptor.columns.map((column) => column.id)).toEqual([
-      "id",
-      "metric_key",
-      "quantity",
-      "window_start",
-    ]);
-    expect(descriptor.columns.map((column) => column.id)).not.toContain("source");
-    expect(descriptor.columns.map((column) => column.id)).not.toContain("dimensions");
+import {
+  createTenantActivityReportRequest,
+  getTenantActivityReport,
+  getTenantActivityReportDescriptor,
+} from "$lib/server/activity-report";
+
+const tenantId = "11111111-1111-4111-8111-111111111111";
+const descriptor = {
+  resourceId: "@happyvertical/smrt-saas-web:TenantActivityReport#current",
+  columns: ["id", "metric_key", "quantity", "window_start"].map((id) => ({ id })),
+  dataTable: { manualPagination: true, manualSorting: true },
+};
+
+describe("tenant activity materialized report adapter", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.buildReportAdapterDescriptor.mockResolvedValue(descriptor);
+    mocks.queryReportMaterializedRows.mockResolvedValue({
+      rows: [],
+      total: { kind: "exact", value: 0 },
+      queryFingerprint: "dq1_empty",
+    });
   });
 
-  it("uses the public report query envelope for a bounded tenant page", async () => {
-    const usage = await import("$lib/server/usage");
-    vi.mocked(usage.getUsageSummaries).mockResolvedValue([
-      {
-        tenantId: "tenant-a",
-        metricKey: "mcp.calls",
-        quantity: 3,
-        windowStart: new Date("2026-09-01T00:00:00.000Z"),
-        windowEnd: new Date("2026-10-01T00:00:00.000Z"),
-      },
-      {
-        tenantId: "tenant-a",
-        metricKey: "chat.messages",
-        quantity: 2,
-        windowStart: new Date("2026-09-02T00:00:00.000Z"),
-        windowEnd: new Date("2026-10-02T00:00:00.000Z"),
-      },
-      {
-        tenantId: "tenant-a",
-        metricKey: "mcp.calls",
-        quantity: 7,
-        windowStart: new Date("2026-09-01T00:00:00.000Z"),
-        windowEnd: new Date("2026-10-02T00:00:00.000Z"),
-      },
-      {
-        tenantId: "tenant-b",
-        metricKey: "mcp.calls",
-        quantity: 99,
-        windowStart: new Date("2026-09-03T00:00:00.000Z"),
-        windowEnd: new Date("2026-10-03T00:00:00.000Z"),
-      },
-    ]);
-    const { getTenantActivityReport } = await import("$lib/server/activity-report");
+  it("exposes the report descriptor with the fixed aggregate-safe fields", async () => {
+    await expect(getTenantActivityReportDescriptor()).resolves.toBe(descriptor);
+    expect(mocks.buildReportAdapterDescriptor).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        tenantScope: "current",
+        refreshPermission: "reports.refresh",
+      }),
+    );
+  });
 
-    const report = await getTenantActivityReport("tenant-a", {
-      metricKey: "mcp.calls",
+  it("builds one bounded public query with no caller-controlled projection", () => {
+    expect(
+      createTenantActivityReportRequest(tenantId, {
+        metricKey: " mcp.calls ",
+        page: 99_999,
+        pageSize: 99_999,
+        sort: "quantity",
+        direction: "asc",
+      }),
+    ).toEqual({
+      version: 1,
+      requestId: `tenant-activity:${tenantId}:10000:100:quantity:asc:mcp.calls`,
+      mode: "rows",
+      projection: ["id", "metric_key", "window_start", "quantity"],
+      filter: { kind: "condition", field: "metric_key", operator: "eq", value: "mcp.calls" },
+      sort: [{ field: "quantity", direction: "asc" }],
+      page: { kind: "offset", offset: 999_900, limit: 100 },
+    });
+  });
+
+  it("queries inside the selected tenant and preserves the existing page DTO", async () => {
+    mocks.queryReportMaterializedRows.mockResolvedValueOnce({
+      rows: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          metric_key: "mcp.calls",
+          window_start: new Date("2026-09-01T00:00:00.000Z"),
+          quantity: 10,
+          source: "must-not-leak",
+        },
+      ],
+      total: { kind: "exact", value: 1 },
+      queryFingerprint: "dq1_activity",
+      freshness: { state: "current", asOf: "2026-09-01T01:00:00.000Z" },
+      reportLifecycle: {
+        snapshot: {
+          version: 1,
+          state: "current",
+          asOf: "2026-09-01T01:00:00.000Z",
+          hasUsableRows: true,
+          mode: "rebuild",
+        },
+        read: "current",
+      },
+    });
+
+    await expect(
+      getTenantActivityReport(tenantId, {
+        page: 1,
+        pageSize: 1,
+        sort: "quantity",
+        direction: "desc",
+      }),
+    ).resolves.toEqual({
+      descriptor,
+      rows: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          metric_key: "mcp.calls",
+          window_start: "2026-09-01T00:00:00.000Z",
+          quantity: 10,
+        },
+      ],
+      total: 1,
       page: 1,
       pageSize: 1,
-      sort: "quantity",
-      direction: "desc",
+      queryFingerprint: "dq1_activity",
+      asOf: "2026-09-01T01:00:00.000Z",
     });
 
-    expect(report.total).toBe(1);
-    expect(report.rows).toEqual([
-      expect.objectContaining({ metric_key: "mcp.calls", quantity: 10 }),
-    ]);
-    expect(report.queryFingerprint).toEqual(expect.any(String));
-    expect(usage.getUsageSummaries).toHaveBeenCalledWith("tenant-a");
+    expect(mocks.withActiveTenant).toHaveBeenCalledWith(tenantId, expect.any(Function));
+    expect(mocks.queryReportMaterializedRows).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        projection: ["id", "metric_key", "window_start", "quantity"],
+        page: { kind: "offset", offset: 0, limit: 1 },
+      }),
+      expect.objectContaining({ lifecycle: {}, execution: "visible" }),
+    );
   });
 
-  it("rejects an out-of-scope source row and clamps a hostile page request", async () => {
-    const usage = await import("$lib/server/usage");
-    vi.mocked(usage.getUsageSummaries).mockResolvedValue([
-      {
-        tenantId: "tenant-b",
-        metricKey: "private.activity",
-        quantity: 99,
-        windowStart: new Date("2026-09-03T00:00:00.000Z"),
-        windowEnd: new Date("2026-10-03T00:00:00.000Z"),
-      },
-    ]);
-    const { getTenantActivityReport } = await import("$lib/server/activity-report");
-
-    const report = await getTenantActivityReport("tenant-a", {
-      page: 99_999,
-      pageSize: 99_999,
+  it("fails closed when a materialized field has an invalid type", async () => {
+    mocks.queryReportMaterializedRows.mockResolvedValueOnce({
+      rows: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          metric_key: "mcp.calls",
+          window_start: "not-a-date",
+          quantity: 10,
+        },
+      ],
+      total: { kind: "exact", value: 1 },
+      queryFingerprint: "dq1_bad",
     });
 
-    expect(report.rows).toEqual([]);
-    expect(report.total).toBe(0);
-    expect(report.page).toBe(10_000);
-    expect(report.pageSize).toBe(100);
+    await expect(getTenantActivityReport(tenantId)).rejects.toThrow(/invalid datetime field/);
   });
 });

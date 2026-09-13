@@ -12,6 +12,8 @@ spec:
       labels:
         app: smrt-saas-worker
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: worker
           image: ghcr.io/happyvertical/smrt-saas-starter-worker:dev-latest
@@ -20,3 +22,10 @@ spec:
                 name: smrt-saas-config
             - secretRef:
                 name: smrt-saas-secret
+          volumeMounts:
+            - name: assets
+              mountPath: /var/lib/smrt-assets
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: smrt-saas-assets

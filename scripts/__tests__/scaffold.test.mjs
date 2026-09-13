@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { smrtRuntimePackages } from "../../apps/web/smrt-packages.mjs";
+import { smrtConsumerPackages, smrtRuntimePackages } from "../../apps/web/smrt-packages.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -57,7 +57,7 @@ describe("starter scaffold", () => {
     );
   });
 
-  it("keeps the SMRT runtime package surface shared across config and migrations", async () => {
+  it("uses the packaged app-object manifest in Vite with an exact HTTP allowlist and keeps runtime registration for migrations", async () => {
     const expected = [
       "@happyvertical/smrt-agents",
       "@happyvertical/smrt-assets",
@@ -72,14 +72,25 @@ describe("starter scaffold", () => {
     for (const packageName of expected) {
       assert.ok(smrtRuntimePackages.includes(packageName), `${packageName} is missing`);
     }
+    assert.deepEqual(smrtConsumerPackages, smrtRuntimePackages);
+    assert.ok(smrtConsumerPackages.includes("@happyvertical/smrt-fields"));
 
     const viteConfig = await readFile(join(root, "apps/web/vite.config.ts"), "utf8");
     const migrateScript = await readFile(
       join(root, "apps/web/scripts/smrt-db-migrate.mjs"),
       "utf8",
     );
+    const runtimePreparation = await readFile(join(root, "scripts/prepare-runtime.mjs"), "utf8");
+    const webPackage = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
 
-    assert.match(viteConfig, /smrtRuntimePackages/);
+    assert.match(viteConfig, /packages:\s*smrtConsumerPackages/);
+    assert.match(
+      viteConfig,
+      /objects:\s*\["@happyvertical\/smrt-saas-objects:StarterAppSetting"\]/,
+    );
+    assert.doesNotMatch(viteConfig, /svelteKit:\s*true/);
     assert.match(migrateScript, /registerSmrtRuntimePackages/);
+    assert.ok(webPackage.files.includes("scripts/fresh-postgres-bootstrap.mjs"));
+    assert.match(runtimePreparation, /scripts\/fresh-postgres-bootstrap\.mjs/);
   });
 });

@@ -13,10 +13,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./manifest": "./dist/manifest.json",
+    "./manifest.json": "./dist/manifest.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "vite build --mode library && tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
@@ -26,6 +28,8 @@
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
     "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-reports": "catalog:",
+    "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:"
   },
   "peerDependencies": {
@@ -34,6 +38,7 @@
   "devDependencies": {
     "@happyvertical/smrt-core": "catalog:",
     "typescript": "5.9.3",
+    "vite": "8.1.4",
     "vitest": "4.1.10"
   }
 }

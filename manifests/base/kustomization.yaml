@@ -5,6 +5,7 @@ resources:
   - postgres.cluster.yaml
   - app.configmap.yaml
   - app.secret.yaml
+  - assets.pvc.yaml
   - web.deployment.yaml
   - web.service.yaml
   - worker.deployment.yaml

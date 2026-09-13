@@ -13,17 +13,24 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:report-refresh-pg": "tsx --tsconfig ../web/tsconfig.json test-support/report-refresh-pg.integration.mjs",
+    "test:report-export-pg": "tsx --tsconfig ../web/tsconfig.json test-support/report-refresh-pg.integration.mjs",
     "lint": "biome lint src",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@happyvertical/jobs": "catalog:",
     "@happyvertical/logger": "catalog:",
+    "@happyvertical/smrt-app-runtime": "catalog:",
+    "@happyvertical/smrt-assets": "catalog:",
     "@happyvertical/smrt-jobs": "catalog:",
+    "@happyvertical/smrt-profiles": "catalog:",
+    "@happyvertical/smrt-reports": "catalog:",
     "@happyvertical/smrt-saas-objects": "workspace:*",
     "@happyvertical/smrt-core": "catalog:",
     "@happyvertical/smrt-subscriptions": "catalog:",
-    "@happyvertical/smrt-tenancy": "catalog:"
+    "@happyvertical/smrt-tenancy": "catalog:",
+    "@happyvertical/smrt-users": "catalog:"
   },
   "devDependencies": {
     "tsx": "^4.20.6",

@@ -8,7 +8,7 @@ import type {
   FieldPolicyEditorMutation,
   ObjectFormPolicyClient,
 } from "@happyvertical/smrt-fields/svelte";
-import { createClient } from "@happyvertical/smrt-virt-client";
+import { createClient } from "@smrt/client";
 
 const policyBasePath = "/api/field-policies";
 
@@ -61,5 +61,5 @@ export const fieldPolicyAdapter: FieldPolicyControlPanelAdapter & ObjectFormPoli
   resolveBatch: (input) => policyRequest<FieldPolicyBatchResult>("/resolve", "POST", input),
 };
 
-const client = createClient("/api/generated");
+const client = createClient("/api");
 export const starterAppSettingsClient = client.starterappsettings;

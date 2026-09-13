@@ -125,8 +125,8 @@ const reconcileTenantLocals: Handle = async ({ event, resolve }) => {
 
 const starterAppSettingsApiHandle: Handle = async ({ event, resolve }) => {
   if (
-    event.url.pathname === "/api/generated/sync/apply" ||
-    event.url.pathname.startsWith("/api/generated/sync/apply/")
+    event.url.pathname === "/api/sync/apply" ||
+    event.url.pathname.startsWith("/api/sync/apply/")
   ) {
     return new Response("Not Found", { status: 404 });
   }
@@ -146,10 +146,7 @@ const starterAppSettingsApiHandle: Handle = async ({ event, resolve }) => {
 };
 
 function isStarterAppSettingsApiRequest(pathname: string): boolean {
-  return (
-    pathname === "/api/generated/starterappsettings" ||
-    pathname.startsWith("/api/generated/starterappsettings/")
-  );
+  return pathname === "/api/starterappsettings" || pathname.startsWith("/api/starterappsettings/");
 }
 
 function readAuthenticatedUser(

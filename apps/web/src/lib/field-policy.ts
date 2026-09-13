@@ -2,8 +2,8 @@ import {
   assertObjectFormCollectionDefinition,
   type ObjectFormCollectionDefinition,
 } from "@happyvertical/smrt-fields/svelte";
-import { manifest } from "@happyvertical/smrt-virt-manifest";
-import { getCollectionDefinition } from "@happyvertical/smrt-virt-web";
+import { manifest } from "@smrt/manifest";
+import { getCollectionDefinition } from "@smrt/web";
 
 export const starterAppSettingsCollectionName = "starterappsettings";
 

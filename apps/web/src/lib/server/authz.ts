@@ -14,6 +14,8 @@ export const starterPermissions = {
   mcpRead: "tenant.mcp.read",
   mcpCall: "tenant.mcp.call",
   chatUse: "tenant.chat.use",
+  reportRefresh: "reports.refresh",
+  reportExport: "reports.export",
   fieldPolicyManage: "fields.policy.manage",
   fieldPolicyPersonalize: "fields.policy.personalize",
 } as const;

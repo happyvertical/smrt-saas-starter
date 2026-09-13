@@ -4,8 +4,8 @@
 
 ### Changed
 
-- Advance the SMRT and SDK families together to SMRT **0.49.2**, the coordinated
-  HappyVertical SDK family at **0.89.8**, and independently versioned
+- Advance the SMRT and SDK families together to SMRT **0.49.8**, the coordinated
+  HappyVertical SDK family at **0.89.9**, and independently versioned
   `@happyvertical/ocr` at **0.61.6**. The published SQL artifact no longer needs
   the starter's DuckDB SSR externalization, so the consumer workaround is removed.
 - Pin pnpm to **11.13.1** because the previously pinned 11.13.0 release cannot

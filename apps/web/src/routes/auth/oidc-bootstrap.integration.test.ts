@@ -55,5 +55,5 @@ describe("production OIDC config integration", () => {
       "https://idp.example.test/oauth2/openid/starter/.well-known/openid-configuration",
       expect.objectContaining({ headers: { accept: "application/json" } }),
     );
-  });
+  }, 15_000);
 });

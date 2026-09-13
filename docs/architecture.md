@@ -100,7 +100,14 @@ remain in the web onboarding flow.
 
 The starter consumes SMRT packages for tenancy, users, features, prompts, languages, secrets, jobs, chat, runtime MCP, commerce, ledgers, analytics, assets, content, messages, projects, sites, tags, and Svelte UI.
 
-`apps/web/smrt-packages.mjs` is the canonical runtime SMRT package list. Vite uses it for consumer registration, and database migration/smoke scripts use it before resolving schemas so local and CI Postgres include the declared SMRT surface.
+`apps/web/smrt-packages.mjs` separates the canonical runtime SMRT package list
+from the explicit consumer manifest providers. Vite consumes the packaged
+`@happyvertical/smrt-saas-objects` manifest through `smrtConsumer`; the web app
+does not scan its server/UI source as a producer. Database migration and smoke
+scripts load the runtime list before resolving schemas so local and CI Postgres
+include the declared SMRT surface. Runtime build and image validation confirms
+the consumer aliases (`@smrt/manifest`, `@smrt/web`, and `@smrt/client`) against
+the released public SMRT 0.49.8 cohort.
 
 Subscriptions and tenant-aware metering come from `@happyvertical/smrt-subscriptions`. `packages/app-objects` stays thin: it re-exports the upstream subscription surface and holds starter-specific glue such as the SDK Stripe billing adapter, starter app settings, and tenant-owner invitation lifecycle.
 

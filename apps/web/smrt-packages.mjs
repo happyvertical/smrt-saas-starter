@@ -1,4 +1,5 @@
 export const smrtRuntimePackages = [
+  "@happyvertical/smrt-saas-objects",
   "@happyvertical/smrt-agents",
   "@happyvertical/smrt-analytics",
   "@happyvertical/smrt-app-mcp",
@@ -22,6 +23,11 @@ export const smrtRuntimePackages = [
   "@happyvertical/smrt-tenancy",
   "@happyvertical/smrt-users",
 ];
+
+// The consumer plugin treats a nonempty package list as an explicit manifest
+// registration allowlist. Keep it aligned with the provider inventory used by
+// migrations so SSR receives each package’s canonical object metadata.
+export const smrtConsumerPackages = smrtRuntimePackages;
 
 export async function registerSmrtRuntimePackages() {
   for (const packageName of smrtRuntimePackages) {

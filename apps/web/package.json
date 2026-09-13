@@ -7,6 +7,7 @@
   "files": [
     ".smrt/",
     "build/",
+    "scripts/fresh-postgres-bootstrap.mjs",
     "scripts/identity-email-key-backfills.mjs",
     "scripts/smrt-db-migrate.mjs",
     "scripts/smrt-db-profile-backfill.mjs",
@@ -36,7 +37,8 @@
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "biome lint src",
     "test": "vitest run --passWithNoTests --exclude \"e2e/**\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:ssr-field-policy-identity": "node scripts/check-ssr-field-policy-identity.mjs"
   },
   "dependencies": {
     "@happyvertical/accounting": "catalog:",
