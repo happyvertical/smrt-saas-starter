@@ -138,11 +138,7 @@ export async function executeActivityReportExport(
     const descriptor = await getTenantActivityReportDescriptor();
     const query = input.query ?? {};
     const requestInput = createTenantActivityReportRequest(membership.tenantId, query);
-    const result = await queryTenantActivityReportRows(membership.tenantId, query, {
-      db,
-      lifecycle: true,
-      execution: "silent",
-    });
+    const result = await captureExportQuerySnapshot(db, membership.tenantId, query);
     const asOf = result.reportLifecycle?.snapshot.asOf ?? result.freshness.asOf;
     if (!asOf) throw new ReportActionInputError("Refresh the report before exporting it");
     const bindingId = snapshotBindingId({
@@ -391,6 +387,22 @@ async function assertCurrentSnapshot(
   if (context.bindingId !== expected || request.snapshot.binding.id !== expected) {
     throw new ReportActionInputError("The report export snapshot binding is invalid");
   }
+}
+
+async function captureExportQuerySnapshot(
+  db: AppDatabase,
+  tenantId: string,
+  query: ActivityReportActionInput["query"],
+) {
+  if (!db.transaction) throw new Error("Report export requires transactional database reads");
+  return await db.transaction(async (tx) => {
+    await tx.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    return await queryTenantActivityReportRows(tenantId, query, {
+      db: tx,
+      lifecycle: true,
+      execution: "silent",
+    });
+  });
 }
 
 async function renderExportInSnapshot(

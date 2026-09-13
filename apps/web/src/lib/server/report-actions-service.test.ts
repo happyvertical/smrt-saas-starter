@@ -196,6 +196,52 @@ describe("activity report export service boundaries", () => {
     );
   });
 
+  it("rejects a growing refresh after capturing the initial count in one snapshot", async () => {
+    const refreshedAsOf = "2026-09-10T12:01:00.000Z";
+    const requestInput = (
+      await vi.importActual<typeof import("$lib/server/activity-report")>(
+        "$lib/server/activity-report",
+      )
+    ).createTenantActivityReportRequest(tenantA);
+    const queryFingerprint = createDataQueryFingerprint(requestInput, descriptor.schema);
+    let capturingSnapshot = false;
+    database.transaction.mockImplementationOnce(async (callback) => {
+      capturingSnapshot = true;
+      try {
+        return await callback(database);
+      } finally {
+        capturingSnapshot = false;
+      }
+    });
+    mocks.queryRows.mockImplementationOnce(async () => ({
+      queryFingerprint,
+      identityField: "id",
+      total: { kind: "exact", value: 1 },
+      freshness: { state: "fresh", asOf: capturingSnapshot ? asOf : refreshedAsOf },
+      truncated: false,
+      reportLifecycle: { snapshot: { asOf: capturingSnapshot ? asOf : refreshedAsOf } },
+    }));
+    mocks.getLifecycle.mockResolvedValue({ asOf: refreshedAsOf });
+
+    await expect(
+      executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
+    ).rejects.toThrow("materialization changed before export");
+
+    expect(database.transaction).toHaveBeenCalledTimes(1);
+    expect(database.query).toHaveBeenCalledWith(
+      "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY",
+    );
+    expect(mocks.queryRows).toHaveBeenCalledWith(
+      tenantA,
+      {},
+      expect.objectContaining({ db: database, lifecycle: true, execution: "silent" }),
+    );
+    expect(mocks.executeRows).not.toHaveBeenCalled();
+    expect(mocks.createAssetRuntime).not.toHaveBeenCalled();
+    expect(mocks.storeSourceAsset).not.toHaveBeenCalled();
+    expect(stored).toBeUndefined();
+  });
+
   it("rejects persistence when membership is revoked after the real render validation", async () => {
     let auditCountAtRevocation = -1;
     mocks.requirePermission.mockImplementation(async () => {
