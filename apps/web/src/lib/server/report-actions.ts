@@ -203,6 +203,11 @@ export async function executeActivityReportExport(
     };
     validateReportExportArtifact(descriptor, artifact);
     const runtime = await createReportAssetRuntime(db);
+    // Rendering occurs in a read-only snapshot transaction while asset storage
+    // is an independent write. Recheck the live caller and bound snapshot at
+    // the final persistence boundary so a revoked membership cannot store the
+    // already-rendered bytes.
+    await validateReportExportExecution(descriptor, applied.request, host);
     const asset = await runtime.storeSourceAsset(
       `tenant-activity-${artifact.id}.${input.format}`,
       bytes,

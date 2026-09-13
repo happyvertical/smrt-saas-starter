@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   getLifecycle: vi.fn(),
   reportDefinitionFingerprint: vi.fn(),
   createAssetRuntime: vi.fn(),
+  storeSourceAsset: vi.fn(),
   serveAsset: vi.fn(),
   profileCollectionCreate: vi.fn(),
   auditCollectionCreate: vi.fn(),
@@ -83,7 +84,10 @@ const database = {
   query: vi.fn(),
 };
 
-let membership = { tenantId: tenantA, profileId: profileA };
+let membership: { tenantId: string; profileId: string } | null = {
+  tenantId: tenantA,
+  profileId: profileA,
+};
 let stored: { metadata: Record<string, unknown>; bytes: Buffer } | undefined;
 
 function snapshotContext(request: any, bindingId = request.snapshot.binding.id) {
@@ -183,30 +187,23 @@ describe("activity report export service boundaries", () => {
       });
       return { execution: "stream", request };
     });
-    mocks.createAssetRuntime.mockResolvedValue({
-      storeSourceAsset: vi.fn(async (_name: string, bytes: Buffer, options: any) => {
+    mocks.storeSourceAsset.mockImplementation(
+      async (_name: string, bytes: Buffer, options: any) => {
         stored = { metadata: options.metadata, bytes };
         return { id: "asset-1" };
-      }),
-    });
+      },
+    );
+    mocks.createAssetRuntime.mockResolvedValue({ storeSourceAsset: mocks.storeSourceAsset });
     mocks.profileCollectionCreate.mockResolvedValue({ get: mocks.profileGet });
     mocks.auditCollectionCreate.mockResolvedValue({ record: mocks.auditRecord });
     mocks.profileGet.mockResolvedValue({ id: profileA });
     mocks.auditRecord.mockResolvedValue(undefined);
   });
 
-  it("rechecks export permission at apply and inside the render transaction", async () => {
+  it("checks export permission at apply and inside the render transaction", async () => {
     await executeActivityReportExport({} as never, { phase: "apply", format: "csv" });
 
-    expect(mocks.requirePermission).toHaveBeenCalledTimes(3);
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      2,
-      expect.anything(),
-      "reports.export",
-      tenantA,
-    );
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      3,
+    expect(mocks.requirePermission).toHaveBeenCalledWith(
       expect.anything(),
       "reports.export",
       tenantA,
@@ -219,6 +216,62 @@ describe("activity report export service boundaries", () => {
       {},
       expect.objectContaining({ db: database, lifecycle: true, execution: "silent" }),
     );
+  });
+
+  it("rejects persistence when membership is revoked after render validation", async () => {
+    let renderValidated = false;
+    let auditCountAtRevocation = -1;
+    mocks.requirePermission.mockImplementation(async () => {
+      if (!membership) throw new Error("No active membership for this tenant");
+      return membership;
+    });
+    mocks.validateExecution.mockImplementation(
+      async (_descriptor: unknown, request: any, host: any) => {
+        await host.authorize({ requiredPermission: "reports.export" });
+        await host.assertSnapshot(snapshotContext(request));
+        if (!renderValidated) {
+          renderValidated = true;
+          auditCountAtRevocation = mocks.auditRecord.mock.calls.length;
+          membership = null;
+        }
+        return request;
+      },
+    );
+
+    await expect(
+      executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
+    ).rejects.toThrow("No active membership");
+
+    expect(mocks.createAssetRuntime).toHaveBeenCalledTimes(1);
+    expect(mocks.storeSourceAsset).not.toHaveBeenCalled();
+    expect(stored).toBeUndefined();
+    expect(mocks.auditRecord).toHaveBeenCalledTimes(auditCountAtRevocation);
+  });
+
+  it("rejects persistence when the materialization changes after render validation", async () => {
+    let renderValidated = false;
+    let auditCountAtMutation = -1;
+    mocks.validateExecution.mockImplementation(
+      async (_descriptor: unknown, request: any, host: any) => {
+        await host.authorize({ requiredPermission: "reports.export" });
+        await host.assertSnapshot(snapshotContext(request));
+        if (!renderValidated) {
+          renderValidated = true;
+          auditCountAtMutation = mocks.auditRecord.mock.calls.length;
+          mocks.getLifecycle.mockResolvedValueOnce({ asOf: "2026-09-10T12:01:00.000Z" });
+        }
+        return request;
+      },
+    );
+
+    await expect(
+      executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
+    ).rejects.toThrow("materialization changed before export");
+
+    expect(mocks.createAssetRuntime).toHaveBeenCalledTimes(1);
+    expect(mocks.storeSourceAsset).not.toHaveBeenCalled();
+    expect(stored).toBeUndefined();
+    expect(mocks.auditRecord).toHaveBeenCalledTimes(auditCountAtMutation);
   });
 
   it("rejects before rows or storage when lifecycle changes after query", async () => {
