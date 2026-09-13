@@ -83,6 +83,17 @@ describe("tenant activity materialized report adapter", () => {
       ],
       total: { kind: "exact", value: 1 },
       queryFingerprint: "dq1_activity",
+      freshness: { state: "current", asOf: "2026-09-01T01:00:00.000Z" },
+      reportLifecycle: {
+        snapshot: {
+          version: 1,
+          state: "current",
+          asOf: "2026-09-01T01:00:00.000Z",
+          hasUsableRows: true,
+          mode: "rebuild",
+        },
+        read: "current",
+      },
     });
 
     await expect(
@@ -106,6 +117,7 @@ describe("tenant activity materialized report adapter", () => {
       page: 1,
       pageSize: 1,
       queryFingerprint: "dq1_activity",
+      asOf: "2026-09-01T01:00:00.000Z",
     });
 
     expect(mocks.withActiveTenant).toHaveBeenCalledWith(tenantId, expect.any(Function));
@@ -115,7 +127,7 @@ describe("tenant activity materialized report adapter", () => {
         projection: ["id", "metric_key", "window_start", "quantity"],
         page: { kind: "offset", offset: 0, limit: 1 },
       }),
-      expect.objectContaining({ execution: "visible" }),
+      expect.objectContaining({ lifecycle: {}, execution: "visible" }),
     );
   });
 
