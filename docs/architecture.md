@@ -105,9 +105,9 @@ from the explicit consumer manifest providers. Vite consumes the packaged
 `@happyvertical/smrt-saas-objects` manifest through `smrtConsumer`; the web app
 does not scan its server/UI source as a producer. Database migration and smoke
 scripts load the runtime list before resolving schemas so local and CI Postgres
-include the declared SMRT surface. Runtime build and image validation of the
-consumer aliases (`@smrt/manifest`, `@smrt/web`, and `@smrt/client`) remains
-pending the reviewed public cohort release.
+include the declared SMRT surface. Runtime build and image validation confirms
+the consumer aliases (`@smrt/manifest`, `@smrt/web`, and `@smrt/client`) against
+the released public SMRT 0.49.6 cohort.
 
 Subscriptions and tenant-aware metering come from `@happyvertical/smrt-subscriptions`. `packages/app-objects` stays thin: it re-exports the upstream subscription surface and holds starter-specific glue such as the SDK Stripe billing adapter, starter app settings, and tenant-owner invitation lifecycle.
 
