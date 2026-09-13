@@ -3,9 +3,13 @@
 
   let {
     tenantId,
+    canExport = false,
+    canRefresh = false,
     query = {},
   }: {
     tenantId: string;
+    canExport?: boolean;
+    canRefresh?: boolean;
     query?: {
       page?: number;
       pageSize?: number;
@@ -18,6 +22,30 @@
   let status = $state("");
   let busy = $state(false);
   let controller: AbortController | undefined;
+  let refreshPreviewed = $state(false);
+
+  async function previewRefresh() {
+    try {
+      await command("/api/reports/activity/refresh", { phase: "preview" });
+      refreshPreviewed = true;
+      status = "Refresh is ready to queue";
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === "AbortError") return;
+    }
+  }
+
+  async function applyRefresh() {
+    if (!refreshPreviewed) return;
+    try {
+      const result = await command("/api/reports/activity/refresh", { phase: "apply" });
+      const jobId = readString(result, "job", "jobId");
+      if (!jobId) throw new Error("The refresh response did not include a job handle");
+      refreshPreviewed = false;
+      status = `Refresh queued (${jobId})`;
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === "AbortError") return;
+    }
+  }
 
   async function exportReport(format: "csv" | "json") {
     try {
@@ -82,8 +110,14 @@
 </script>
 
 <div class="report-actions" aria-busy={busy}>
-  <button type="button" disabled={busy} onclick={() => void exportReport("csv")}>Export CSV</button>
-  <button type="button" disabled={busy} onclick={() => void exportReport("json")}>Export JSON</button>
+  {#if canRefresh}
+    <button type="button" disabled={busy} onclick={() => void previewRefresh()}>Preview refresh</button>
+    <button type="button" disabled={busy || !refreshPreviewed} onclick={() => void applyRefresh()}>Queue refresh</button>
+  {/if}
+  {#if canExport}
+    <button type="button" disabled={busy} onclick={() => void exportReport("csv")}>Export CSV</button>
+    <button type="button" disabled={busy} onclick={() => void exportReport("json")}>Export JSON</button>
+  {/if}
   <span role="status" aria-live="polite">{status}</span>
 </div>
 

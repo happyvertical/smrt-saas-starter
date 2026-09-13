@@ -1,4 +1,5 @@
 export const smrtRuntimePackages = [
+  "@happyvertical/smrt-saas-objects",
   "@happyvertical/smrt-agents",
   "@happyvertical/smrt-analytics",
   "@happyvertical/smrt-app-mcp",

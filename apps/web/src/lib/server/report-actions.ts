@@ -1,13 +1,16 @@
 import { createHash, randomUUID } from "node:crypto";
 import { type Asset, createAssetRuntime, serveAsset } from "@happyvertical/smrt-assets";
+import { createHmacDurableJobPayloadSigner } from "@happyvertical/smrt-jobs";
 import { AuditLogCollection, ProfileCollection } from "@happyvertical/smrt-profiles";
 import {
   applyReportExport,
+  applyReportRefresh,
   createReportExportPageRequest,
   createReportExportRequest,
   createReportExportSnapshot,
   getReportLifecycle,
   previewReportExport,
+  previewReportRefresh,
   type ReportExportActionContext,
   type ReportExportActionHost,
   type ReportExportArtifact,
@@ -42,6 +45,59 @@ const EXPORT_DEADLINE_MS = 10_000;
 const EXPORT_TTL_MS = 24 * 60 * 60 * 1_000;
 
 export class ReportActionInputError extends Error {}
+
+/**
+ * The report package owns the native job and its signed authority payload.
+ * This boundary only derives that payload from the authenticated server request.
+ */
+export async function executeActivityReportRefresh(
+  locals: ReportRequestLocals,
+  phase: "preview" | "apply",
+): Promise<unknown> {
+  const membership = await requirePermission(locals, starterPermissions.reportRefresh);
+  return await withActiveTenant(membership.tenantId, async () => {
+    const db = await getAppDatabase();
+    const host = {
+      authorize: async () => {
+        await requirePermission(locals, starterPermissions.reportRefresh, membership.tenantId);
+      },
+      audit: async (context: { phase: "preview" | "apply" }) => {
+        await auditReportAction(db, membership.tenantId, membership.profileId, {
+          action: `report.refresh.${context.phase}`,
+          resourceId: TenantActivityReport.name,
+          metadata: { reportClassName: TenantActivityReport.name },
+        });
+      },
+      executionAuthority: () => ({
+        version: 1 as const,
+        hostId: "smrt-saas-starter.report-refresh.v1",
+        principal: {
+          version: 1 as const,
+          actorUserId: membership.userId,
+          tenantId: membership.tenantId,
+          onBehalfOfUserId: membership.userId,
+          actsAsProfileId: membership.profileId,
+        },
+      }),
+      jobIntegritySigner: reportRefreshSigner,
+    };
+    const options = {
+      db,
+      host,
+      refreshAction: { requiredPermission: starterPermissions.reportRefresh },
+    };
+    return phase === "preview"
+      ? await previewReportRefresh(TenantActivityReport, options)
+      : await applyReportRefresh(TenantActivityReport, options);
+  });
+}
+
+function reportRefreshSigner() {
+  const key = process.env.REPORT_REFRESH_SIGNING_KEY?.trim();
+  const keyId = process.env.REPORT_REFRESH_SIGNING_KEY_ID?.trim();
+  if (!key || !keyId) throw new ReportActionInputError("Report refresh signing is not configured");
+  return createHmacDurableJobPayloadSigner({ key, keyId });
+}
 
 export interface ActivityReportActionInput {
   phase: "preview" | "apply";

@@ -101,7 +101,7 @@ declare module '@happyvertical/smrt-virt-client' {
   }
 
   export interface ApiClient {
-    "starterappsettings": Pick<CrudOperations<StarterAppSettingData>, "list" | "get" | "create" | "update">;
+
   }
 
   export function createClient(basePath?: string): ApiClient;
@@ -132,46 +132,7 @@ declare module '@happyvertical/smrt-virt-types' {
   export const types: string;
 
   // Auto-generated interfaces for discovered SMRT objects
-  export interface StarterAppSettingData {
-    id?: string;
-    key: string;
-    value: string;
-    updatedByUserId?: string;
-    metadata?: any;
-    created_at?: string;
-    updated_at?: string;
-  }
 
-  export interface StarterInvitationData {
-    id?: string;
-    tokenHash: string;
-    email?: string;
-    type: string;
-    purpose: string;
-    status: string;
-    invitedByUserId?: string;
-    targetTenantId?: string;
-    roleId?: string;
-    maxUses: number;
-    useCount: number;
-    expiresAt: string;
-    acceptedAt?: string;
-    acceptedByUserId?: string;
-    metadata?: any;
-    created_at?: string;
-    updated_at?: string;
-  }
-
-  export interface TenantActivityReportData {
-    id?: string;
-    refreshedAt?: string;
-    tenantId: string;
-    metricKey: string;
-    windowStart: string;
-    quantity: number;
-    created_at?: string;
-    updated_at?: string;
-  }
 
   export default types;
 }
@@ -276,7 +237,7 @@ declare module '@happyvertical/smrt-virt-web' {
   }
 
   export interface SmrtWebCollectionDefinitions {
-    "starterappsettings": SmrtWebCollectionDefinition<import('@happyvertical/smrt-virt-types').StarterAppSettingData>;
+
   }
 
   export const collectionDefinitions: SmrtWebCollectionDefinitions;

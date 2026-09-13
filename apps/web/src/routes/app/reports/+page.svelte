@@ -84,9 +84,11 @@
     <span>Aggregate synthetic activity for the active tenant.</span>
   </header>
 
-  {#if data.canExport}
+  {#if data.canExport || data.canRefresh}
     <ReportActions
       tenantId={data.tenantId}
+      canExport={data.canExport}
+      canRefresh={data.canRefresh}
       query={{
         page: data.page,
         pageSize: data.pageSize,

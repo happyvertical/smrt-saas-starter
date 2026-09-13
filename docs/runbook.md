@@ -48,7 +48,8 @@ WORKER_MODE=direct WORKER_JOB=usage.audit pnpm --filter @happyvertical/smrt-saas
 `smrt-once` is the local default: it enqueues the selected job into
 `_smrt_jobs`, starts a `TaskRunner`, waits for those jobs to finish, and exits.
 `enqueue` only creates pending `_smrt_jobs` rows. `runner` is the deployment
-mode: it runs `TaskRunner` for the `starter-maintenance` and `agents` queues,
+mode: it runs `TaskRunner` for the `starter-maintenance`, `agents`, and
+`reports` queues,
 starts `ScheduleRunner`, and idempotently ensures global
 `_smrt_agent_schedules` rows for subscription reconciliation and usage audits.
 `direct` keeps the old in-process path available for focused debugging.
@@ -72,6 +73,13 @@ not safe to run with separate unshared web and worker filesystems. Set `PUBLIC_S
 provider. Startup probes that provider's public metadata and asset read/write
 access, and fails closed when either setting or the existing `SESSION_SECRET` /
 OIDC client secret is absent.
+
+Manual activity-report refreshes are signed native report jobs. Set the same
+non-empty `REPORT_REFRESH_SIGNING_KEY` and `REPORT_REFRESH_SIGNING_KEY_ID` in
+the web and worker secret references before either process starts. The worker
+registers its application authority before polling and rechecks the queued
+actor's live tenant membership and refresh permission before materializing;
+missing signer configuration or a revoked principal fails before that effect.
 
 `subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
 Postgres and asks `@happyvertical/accounting` for current subscription status.
@@ -174,6 +182,16 @@ ready without an out-of-band command. Before enabling reconciliation, verify
 that both digest-pinned GHCR packages allow anonymous pulls; the demo deliberately
 does not distribute a registry credential. The worker stays scaled to zero
 because the public demo does not carry external service credentials.
+
+On a PostgreSQL database with no user/application relations in any non-system schema, the migration entrypoint uses the
+released migration API's atomic bootstrap settings so required null-equal
+indexes can be created with the initial tables. The entrypoint first requires
+catalog introspection to prove that condition. Any existing or partial schema,
+including a relation outside the connection's first `search_path` schema, keeps
+the released PostgreSQL-safe/concurrent-index defaults; an introspection failure
+stops migration rather than treating the database as empty. Serialize the first
+application bootstrap before allowing multiple web replicas to start; normal
+initialized runs retain the safe migration defaults.
 Network policies admit web traffic only from the ingress-controller namespace
 and PostgreSQL traffic only from the web pod.
 

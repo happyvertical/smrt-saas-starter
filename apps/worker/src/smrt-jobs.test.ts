@@ -68,6 +68,9 @@ describe("SMRT worker job adapter", () => {
       close,
     } as never);
 
+    process.env.REPORT_REFRESH_SIGNING_KEY = "test-report-refresh-key-which-is-at-least-32-bytes";
+    process.env.REPORT_REFRESH_SIGNING_KEY_ID = "test-key-1";
+
     const runtime = await startSmrtWorkerRuntime({ ensureMaintenanceSchedules: false });
 
     expect(createTaskWorker).toHaveBeenCalledOnce();
@@ -77,6 +80,8 @@ describe("SMRT worker job adapter", () => {
     expect(scheduleRunner.stop).toHaveBeenCalledOnce();
     expect(taskRunner.stop).toHaveBeenCalledOnce();
     expect(close).toHaveBeenCalledOnce();
+    delete process.env.REPORT_REFRESH_SIGNING_KEY;
+    delete process.env.REPORT_REFRESH_SIGNING_KEY_ID;
   });
 
   it("parses worker modes with a queued one-shot default", () => {
@@ -109,21 +114,21 @@ describe("SMRT worker job adapter", () => {
         includeAgentQueue: false,
         startScheduleRunner: true,
       }),
-    ).toEqual(["starter-maintenance", "agents"]);
+    ).toEqual(["starter-maintenance", "agents", "reports"]);
     expect(
       resolveTaskRunnerQueues({
         queue: "starter-maintenance",
         includeAgentQueue: false,
         startScheduleRunner: false,
       }),
-    ).toEqual(["starter-maintenance"]);
+    ).toEqual(["starter-maintenance", "reports"]);
     expect(
       resolveTaskRunnerQueues({
         queue: "agents",
         includeAgentQueue: true,
         startScheduleRunner: true,
       }),
-    ).toEqual(["agents"]);
+    ).toEqual(["agents", "reports"]);
   });
 
   it("enqueues starter maintenance jobs into SMRT jobs", async () => {

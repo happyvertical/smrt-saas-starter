@@ -13,18 +13,9 @@ export default defineConfig({
       svelteKit: true,
     }),
     smrtPlugin({
-      include: ["../../packages/app-objects/src/models/**/*.ts"],
-      exclude: ["**/*.test.ts", "**/*.spec.ts"],
+      include: ["src/**/*.ts"],
       generateTypes: true,
-      svelteKit: {
-        enabled: true,
-        routesDir: "src/routes/api/generated",
-        objectsDir: "../../packages/app-objects/src/models",
-        configPath: "src/lib/server",
-        configFileName: "smrt.ts",
-        changesRoute: { enabled: false },
-        eventsRoute: { enabled: false },
-      },
+      svelteKit: { enabled: false },
     }),
   ],
 });

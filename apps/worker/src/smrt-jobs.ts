@@ -19,10 +19,12 @@ import {
   StarterMaintenanceJob,
   type StarterMaintenanceJobArgs,
 } from "./maintenance-job.js";
+import { registerWorkerReportRefreshRuntime } from "./report-refresh-runtime.js";
 import { ensureWorkerTenancy, getWorkerDatabase } from "./runtime.js";
 
 export const STARTER_MAINTENANCE_QUEUE = "starter-maintenance";
 export const SMRT_AGENT_QUEUE = "agents";
+export const SMRT_REPORTS_QUEUE = "reports";
 
 const DEFAULT_TASK_POLL_INTERVAL_MS = 1_000;
 const DEFAULT_ONE_SHOT_POLL_INTERVAL_MS = 100;
@@ -198,6 +200,7 @@ export function resolveTaskRunnerQueues(options: ResolveTaskRunnerQueuesOptions 
   if (options.includeAgentQueue !== false || options.startScheduleRunner !== false) {
     queues.push(SMRT_AGENT_QUEUE);
   }
+  queues.push(SMRT_REPORTS_QUEUE);
 
   return [...new Set(queues)];
 }
@@ -322,6 +325,7 @@ export async function startSmrtWorkerRuntime(
 
   const runtime = await initializeWorkerDeployedRuntime();
   const database = runtime.db as unknown as WorkerDatabase;
+  const unregisterReportRefreshRuntime = registerWorkerReportRefreshRuntime(database);
   let taskRunner: TaskRunner | null = null;
   let scheduleRunner: ScheduleRunner | null = null;
   let stopped = false;
@@ -385,6 +389,7 @@ export async function startSmrtWorkerRuntime(
           taskRunner,
           scheduleRunner,
           runtime,
+          unregisterReportRefreshRuntime,
           logger: options.logger,
         });
       },
@@ -395,6 +400,7 @@ export async function startSmrtWorkerRuntime(
         taskRunner,
         scheduleRunner,
         runtime,
+        unregisterReportRefreshRuntime,
         logger: options.logger,
       });
     } catch (cleanupError) {
@@ -506,9 +512,12 @@ async function stopSmrtWorkerRuntimeComponents(options: {
   taskRunner: TaskRunner | null;
   scheduleRunner: ScheduleRunner | null;
   runtime: { close(): Promise<void> };
+  unregisterReportRefreshRuntime?: () => void;
   logger?: WorkerLogger;
 }): Promise<void> {
   const errors: unknown[] = [];
+
+  options.unregisterReportRefreshRuntime?.();
 
   try {
     await options.scheduleRunner?.stop();

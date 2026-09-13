@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     ...report,
     tenantId: membership.tenantId,
     canExport: hasStarterPermission(membership, starterPermissions.reportExport),
+    canRefresh: hasStarterPermission(membership, starterPermissions.reportRefresh),
   };
 };
 

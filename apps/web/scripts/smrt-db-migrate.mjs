@@ -1,6 +1,7 @@
 import { ObjectRegistry, resolveDatabase } from "@happyvertical/smrt-core";
 import { migrateSmrtSchemas } from "@happyvertical/smrt-core/migrations";
 import { registerSmrtRuntimePackages } from "../smrt-packages.mjs";
+import { isEmptyPostgresApplicationSchema } from "./fresh-postgres-bootstrap.mjs";
 import { backfillIdentityEmailKeys } from "./identity-email-key-backfills.mjs";
 
 import "@happyvertical/smrt-saas-objects";
@@ -12,6 +13,7 @@ await registerSmrtRuntimePackages();
 
 const schemas = ObjectRegistry.getAllSchemasAsDefinitions();
 const db = await resolveDatabase({ type: "postgres", url: databaseUrl }, { schemas });
+const freshBootstrap = await isEmptyPostgresApplicationSchema(db);
 
 const result = await migrateSmrtSchemas({
   db,
@@ -19,6 +21,7 @@ const result = await migrateSmrtSchemas({
   engineHint: "postgres",
   packageName: "smrt-saas-starter",
   version: process.env.APP_VERSION ?? "0.1.1",
+  ...(freshBootstrap ? { postgresSafe: false, useConcurrentIndexes: false } : {}),
 });
 
 if (result.hasManualDrift) {
