@@ -57,7 +57,7 @@ describe("starter scaffold", () => {
     );
   });
 
-  it("uses the packaged app-object manifest in Vite and keeps runtime registration for migrations", async () => {
+  it("uses the packaged app-object manifest in Vite with an exact HTTP allowlist and keeps runtime registration for migrations", async () => {
     const expected = [
       "@happyvertical/smrt-agents",
       "@happyvertical/smrt-assets",
@@ -83,7 +83,12 @@ describe("starter scaffold", () => {
     const runtimePreparation = await readFile(join(root, "scripts/prepare-runtime.mjs"), "utf8");
     const webPackage = JSON.parse(await readFile(join(root, "apps/web/package.json"), "utf8"));
 
-    assert.match(viteConfig, /smrtConsumerPackages/);
+    assert.match(viteConfig, /packages:\s*smrtConsumerPackages/);
+    assert.match(
+      viteConfig,
+      /objects:\s*\["@happyvertical\/smrt-saas-objects:StarterAppSetting"\]/,
+    );
+    assert.doesNotMatch(viteConfig, /svelteKit:\s*true/);
     assert.match(migrateScript, /registerSmrtRuntimePackages/);
     assert.ok(webPackage.files.includes("scripts/fresh-postgres-bootstrap.mjs"));
     assert.match(runtimePreparation, /scripts\/fresh-postgres-bootstrap\.mjs/);

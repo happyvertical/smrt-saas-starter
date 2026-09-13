@@ -9,7 +9,9 @@ export default defineConfig({
     smrtConsumer({
       packages: smrtConsumerPackages,
       generateTypes: true,
-      svelteKit: true,
+      svelteKit: {
+        objects: ["@happyvertical/smrt-saas-objects:StarterAppSetting"],
+      },
     }),
   ],
 });

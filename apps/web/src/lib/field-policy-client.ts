@@ -61,5 +61,5 @@ export const fieldPolicyAdapter: FieldPolicyControlPanelAdapter & ObjectFormPoli
   resolveBatch: (input) => policyRequest<FieldPolicyBatchResult>("/resolve", "POST", input),
 };
 
-const client = createClient("/api/generated");
+const client = createClient("/api");
 export const starterAppSettingsClient = client.starterappsettings;

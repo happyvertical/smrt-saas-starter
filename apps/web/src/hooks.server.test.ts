@@ -196,8 +196,8 @@ describe("starter request bootstrap", () => {
     await handle({
       event: {
         locals,
-        request: new Request("http://localhost/api/generated/starterappsettings"),
-        url: new URL("http://localhost/api/generated/starterappsettings"),
+        request: new Request("http://localhost/api/starterappsettings"),
+        url: new URL("http://localhost/api/starterappsettings"),
       },
       resolve: async () => new Response("ok"),
     } as unknown as Parameters<typeof handle>[0]);
@@ -225,8 +225,8 @@ describe("starter request bootstrap", () => {
     await handle({
       event: {
         locals,
-        request: new Request(`http://localhost/api/generated/starterappsettings/${userId}`),
-        url: new URL(`http://localhost/api/generated/starterappsettings/${userId}`),
+        request: new Request(`http://localhost/api/starterappsettings/${userId}`),
+        url: new URL(`http://localhost/api/starterappsettings/${userId}`),
       },
       resolve: async () => new Response("ok"),
     } as unknown as Parameters<typeof handle>[0]);
@@ -240,8 +240,26 @@ describe("starter request bootstrap", () => {
     const response = await handle({
       event: {
         locals: { user: { id: userId, email: "Person@Example.com" } },
-        request: new Request("http://localhost/api/generated/sync/apply", { method: "POST" }),
-        url: new URL("http://localhost/api/generated/sync/apply"),
+        request: new Request("http://localhost/api/sync/apply", { method: "POST" }),
+        url: new URL("http://localhost/api/sync/apply"),
+      },
+      resolve,
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(response.status).toBe(404);
+    expect(resolve).not.toHaveBeenCalled();
+    expect(mocks.requireSuperUser).not.toHaveBeenCalled();
+  });
+
+  it("disables generated sync write descendants before route resolution", async () => {
+    const resolve = vi.fn(async () => new Response("unexpected"));
+    const response = await handle({
+      event: {
+        locals: { user: { id: userId, email: "Person@Example.com" } },
+        request: new Request("http://localhost/api/sync/apply/starterappsettings", {
+          method: "POST",
+        }),
+        url: new URL("http://localhost/api/sync/apply/starterappsettings"),
       },
       resolve,
     } as unknown as Parameters<typeof handle>[0]);
