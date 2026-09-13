@@ -41,6 +41,10 @@ if (productionImage) {
 export default defineConfig({
   testDir: "e2e",
   ...(productionImage ? { globalSetup: "./e2e/production-global-setup.ts" } : {}),
+  // Production E2E shares one disposable database. Several browser contracts
+  // intentionally mutate its seeded tenant, so keep that isolated fixture
+  // serial instead of allowing one spec to perturb another's snapshot.
+  ...(productionImage ? { workers: 1 } : {}),
   ...(productionImage
     ? { grepInvert: /@authed/u }
     : remoteBaseUrl
