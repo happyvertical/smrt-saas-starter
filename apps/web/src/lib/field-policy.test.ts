@@ -1,5 +1,5 @@
 import { ObjectRegistry } from "@happyvertical/smrt-core";
-import { manifest } from "@happyvertical/smrt-virt-manifest";
+import { manifest } from "@smrt/manifest";
 import { describe, expect, it } from "vitest";
 import { getStarterAppSettingDefinition, getStarterAppSettingObjectRef } from "$lib/field-policy";
 import "$lib/server/smrt-register";
@@ -12,11 +12,13 @@ describe("starter field-policy identity", () => {
         object.collection === "starterappsettings" && object.className === "StarterAppSetting",
     );
 
-    expect(definition.objectRef).toBe("@happyvertical/smrt-saas-web:StarterAppSetting");
+    expect(definition.objectRef).toBe("@happyvertical/smrt-saas-objects:StarterAppSetting");
     expect(getStarterAppSettingObjectRef()).toBe(manifestEntry?.[0]);
-    expect(getStarterAppSettingObjectRef()).toBe("@happyvertical/smrt-saas-web:StarterAppSetting");
+    expect(getStarterAppSettingObjectRef()).toBe(
+      "@happyvertical/smrt-saas-objects:StarterAppSetting",
+    );
     expect(
-      ObjectRegistry.getClassByQualifiedName("@happyvertical/smrt-saas-web:StarterAppSetting"),
+      ObjectRegistry.getClassByQualifiedName("@happyvertical/smrt-saas-objects:StarterAppSetting"),
     ).toBeDefined();
   });
 });

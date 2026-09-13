@@ -8,7 +8,7 @@ import type {
   FieldPolicyEditorMutation,
   ObjectFormPolicyClient,
 } from "@happyvertical/smrt-fields/svelte";
-import { createClient } from "@happyvertical/smrt-virt-client";
+import { createClient } from "@smrt/client";
 
 const policyBasePath = "/api/field-policies";
 
