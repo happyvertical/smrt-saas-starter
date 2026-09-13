@@ -170,7 +170,14 @@ export async function executeActivityReportExport(
         `This report exceeds the ${EXPORT_MAX_ROWS}-row foreground export limit`,
       );
     }
-    const host = createExportHost(locals, membership.tenantId, membership.profileId, db, request);
+    const host = createExportHost(
+      locals,
+      membership.userId,
+      membership.tenantId,
+      membership.profileId,
+      db,
+      request,
+    );
 
     if (input.phase === "preview") {
       await previewReportExport(descriptor, request, host);
@@ -181,9 +188,14 @@ export async function executeActivityReportExport(
     if (applied.execution !== "stream") {
       throw new Error("Foreground activity export unexpectedly queued");
     }
-    const bytes = await renderExportInSnapshot(
+    const verifiedBeforeRender = await validateCurrentExportExecution(
       descriptor,
       applied.request,
+      host,
+    );
+    const bytes = await renderExportInSnapshot(
+      descriptor,
+      verifiedBeforeRender,
       host,
       membership.tenantId,
       membership.profileId,
@@ -207,7 +219,7 @@ export async function executeActivityReportExport(
     // is an independent write. Recheck the live caller and bound snapshot at
     // the final persistence boundary so a revoked membership cannot store the
     // already-rendered bytes.
-    await validateReportExportExecution(descriptor, applied.request, host);
+    await validateCurrentExportExecution(descriptor, applied.request, host);
     const asset = await runtime.storeSourceAsset(
       `tenant-activity-${artifact.id}.${input.format}`,
       bytes,
@@ -293,8 +305,34 @@ export function parseActivityReportActionInput(value: unknown): ActivityReportAc
   };
 }
 
+async function validateCurrentExportExecution(
+  descriptor: Awaited<ReturnType<typeof getTenantActivityReportDescriptor>>,
+  request: ReportExportRequest,
+  host: ReportExportActionHost,
+): Promise<ReportExportRequest> {
+  await host.authorize(exportActionContext(request));
+  return await validateReportExportExecution(descriptor, request, host);
+}
+
+function exportActionContext(request: ReportExportRequest): ReportExportActionContext {
+  return {
+    phase: "apply",
+    reportClassName: request.snapshot.reportClassName,
+    resourceId: request.snapshot.resourceId,
+    requiredPermission: request.action.requiredPermission,
+    confirmationRequired: request.action.confirmationRequired,
+    execution: request.execution,
+    queryFingerprint: request.snapshot.queryFingerprint,
+    definitionFingerprint: request.snapshot.definitionFingerprint,
+    snapshotId: request.read.snapshotId,
+    asOf: request.read.asOf,
+    pageSize: request.read.page.limit,
+  };
+}
+
 function createExportHost(
   locals: ReportRequestLocals,
+  userId: string,
   tenantId: string,
   profileId: string,
   db: AppDatabase,
@@ -303,7 +341,18 @@ function createExportHost(
   return {
     authorize: async (context) => {
       assertExportContext(context);
-      await requirePermission(locals, starterPermissions.reportExport, tenantId);
+      const currentMembership = await requirePermission(
+        locals,
+        starterPermissions.reportExport,
+        tenantId,
+      );
+      if (
+        currentMembership.userId !== userId ||
+        currentMembership.tenantId !== tenantId ||
+        currentMembership.profileId !== profileId
+      ) {
+        throw new ReportActionInputError("The report export principal is no longer current");
+      }
     },
     assertSnapshot: async (context) => {
       await assertCurrentSnapshot(db, tenantId, profileId, request, context);
@@ -362,25 +411,34 @@ async function renderExportInSnapshot(
       },
     };
     const verified = await validateReportExportExecution(descriptor, request, txHost);
-    const startedAt = Date.now();
+    const deadlineAt = Date.now() + verified.limits.deadlineMs;
     const rows: Array<Record<string, unknown>> = [];
     for (let offset = 0; offset < verified.rowCount; offset += verified.read.page.limit) {
-      if (Date.now() - startedAt > verified.limits.deadlineMs) {
-        throw new ReportActionInputError("Report export exceeded its foreground deadline");
-      }
+      const remainingMs = remainingExportDeadline(deadlineAt);
+      await tx.query("SELECT set_config('statement_timeout', $1, true)", `${remainingMs}ms`);
       const pageRequest = createReportExportPageRequest(descriptor, verified, offset);
       const page = await executeTenantActivityReportRequest(tenantId, pageRequest, {
         db: tx,
         execution: "silent",
       });
+      remainingExportDeadline(deadlineAt);
       rows.push(...page.rows.map(projectExportRow));
     }
     const bytes = serializeExport(verified.format, rows, verified);
+    remainingExportDeadline(deadlineAt);
     if (bytes.byteLength > verified.limits.maxBytes) {
       throw new ReportActionInputError("Report export exceeds its byte limit");
     }
     return bytes;
   });
+}
+
+function remainingExportDeadline(deadlineAt: number): number {
+  const remainingMs = deadlineAt - Date.now();
+  if (remainingMs <= 0) {
+    throw new ReportActionInputError("Report export exceeded its foreground deadline");
+  }
+  return remainingMs;
 }
 
 function projectExportRow(row: Record<string, unknown>) {

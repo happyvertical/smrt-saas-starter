@@ -1,9 +1,12 @@
+import { createDataQueryFingerprint } from "@happyvertical/smrt-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const tenantA = "11111111-1111-4111-8111-111111111111";
 const tenantB = "22222222-2222-4222-8222-222222222222";
 const profileA = "33333333-3333-4333-8333-333333333333";
 const profileB = "44444444-4444-4444-8444-444444444444";
+const userA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const userB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const asOf = "2026-09-10T12:00:00.000Z";
 
 const mocks = vi.hoisted(() => ({
@@ -40,31 +43,25 @@ vi.mock("@happyvertical/smrt-profiles", () => ({
   ProfileCollection: { create: mocks.profileCollectionCreate },
   AuditLogCollection: { create: mocks.auditCollectionCreate },
 }));
-vi.mock("@happyvertical/smrt-reports", () => ({
+vi.mock("@happyvertical/smrt-reports", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@happyvertical/smrt-reports")>()),
   applyReportExport: mocks.applyExport,
-  createReportExportPageRequest: vi.fn((_descriptor, request, offset) => ({
-    ...request,
-    page: { offset, limit: request.read.page.limit },
-  })),
-  createReportExportRequest: mocks.createRequest,
-  createReportExportSnapshot: mocks.createSnapshot,
   getReportLifecycle: mocks.getLifecycle,
   previewReportExport: mocks.previewExport,
-  reportDefinitionFingerprint: mocks.reportDefinitionFingerprint,
   validateReportExportArtifact: mocks.validateArtifact,
-  validateReportExportExecution: mocks.validateExecution,
 }));
-vi.mock("@happyvertical/smrt-saas-objects", () => ({
-  TenantActivityReport: class TenantActivityReport {},
-}));
+vi.mock(
+  "@happyvertical/smrt-saas-objects",
+  async (importOriginal) =>
+    await importOriginal<typeof import("@happyvertical/smrt-saas-objects")>(),
+);
 vi.mock("@happyvertical/smrt-tenancy", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@happyvertical/smrt-tenancy")>()),
   withSystemContext: mocks.withSystemContext,
 }));
-vi.mock("$lib/server/activity-report", () => ({
-  createTenantActivityReportRequest: mocks.createRequestInput,
+vi.mock("$lib/server/activity-report", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("$lib/server/activity-report")>()),
   executeTenantActivityReportRequest: mocks.executeRows,
-  getTenantActivityReportDescriptor: mocks.getDescriptor,
   queryTenantActivityReportRows: mocks.queryRows,
 }));
 vi.mock("$lib/server/authz", () => ({
@@ -76,7 +73,9 @@ vi.mock("$lib/server/tenant-context", () => ({ withActiveTenant: mocks.withActiv
 
 import { downloadActivityReportExport, executeActivityReportExport } from "./report-actions";
 
-const descriptor = { resourceId: "starter:TenantActivityReport#current" };
+let descriptor: Awaited<
+  ReturnType<typeof import("$lib/server/activity-report")["getTenantActivityReportDescriptor"]>
+>;
 const database = {
   transaction: vi.fn(
     async (callback: (tx: typeof database) => unknown) => await callback(database),
@@ -84,7 +83,8 @@ const database = {
   query: vi.fn(),
 };
 
-let membership: { tenantId: string; profileId: string } | null = {
+let membership: { userId: string; tenantId: string; profileId: string } | null = {
+  userId: userA,
   tenantId: tenantA,
   profileId: profileA,
 };
@@ -102,18 +102,6 @@ function snapshotContext(request: any, bindingId = request.snapshot.binding.id) 
   };
 }
 
-function exportRequest(snapshot: any) {
-  return {
-    execution: "stream",
-    format: "csv",
-    rowCount: 1,
-    truncated: false,
-    limits: { maxRows: 1000, maxBytes: 5 * 1024 * 1024, deadlineMs: 10_000 },
-    read: { page: { limit: 1 } },
-    snapshot,
-  };
-}
-
 function storedAsset(metadata: Record<string, unknown>) {
   return { getMetadata: () => metadata };
 }
@@ -125,9 +113,14 @@ async function createStoredExport() {
 }
 
 describe("activity report export service boundaries", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    membership = { tenantId: tenantA, profileId: profileA };
+    membership = { userId: userA, tenantId: tenantA, profileId: profileA };
+    descriptor = await (
+      await vi.importActual<typeof import("$lib/server/activity-report")>(
+        "$lib/server/activity-report",
+      )
+    ).getTenantActivityReportDescriptor();
     stored = undefined;
     database.query.mockResolvedValue(undefined);
     mocks.requirePermission.mockImplementation(async () => membership);
@@ -136,35 +129,20 @@ describe("activity report export service boundaries", () => {
       async (_tenantId: string, callback: () => unknown) => await callback(),
     );
     mocks.withSystemContext.mockImplementation(async (callback: () => unknown) => await callback());
-    mocks.getDescriptor.mockResolvedValue(descriptor);
-    mocks.createRequestInput.mockReturnValue({ query: "tenant activity" });
+    const requestInput = (
+      await vi.importActual<typeof import("$lib/server/activity-report")>(
+        "$lib/server/activity-report",
+      )
+    ).createTenantActivityReportRequest(tenantA);
     mocks.queryRows.mockResolvedValue({
-      queryFingerprint: "query-v1",
-      freshness: { asOf },
+      queryFingerprint: createDataQueryFingerprint(requestInput, descriptor.schema),
+      identityField: "id",
+      total: { kind: "exact", value: 1 },
+      freshness: { state: "fresh", asOf },
+      truncated: false,
       reportLifecycle: { snapshot: { asOf } },
     });
-    mocks.reportDefinitionFingerprint.mockReturnValue("definition-v1");
-    mocks.createSnapshot.mockImplementation(
-      (_descriptor: unknown, _input: unknown, result: any, options: { id: string }) => ({
-        resourceId: descriptor.resourceId,
-        definitionFingerprint: "definition-v1",
-        queryFingerprint: result.queryFingerprint,
-        snapshot: { asOf: result.reportLifecycle.snapshot.asOf },
-        total: { value: 1 },
-        binding: { id: options.id },
-      }),
-    );
-    mocks.createRequest.mockImplementation((_descriptor: unknown, snapshot: any) =>
-      exportRequest(snapshot),
-    );
     mocks.getLifecycle.mockResolvedValue({ asOf });
-    mocks.validateExecution.mockImplementation(
-      async (_descriptor: unknown, request: any, host: any) => {
-        await host.authorize({ requiredPermission: "reports.export" });
-        await host.assertSnapshot(snapshotContext(request));
-        return request;
-      },
-    );
     mocks.validateArtifact.mockImplementation((_descriptor: unknown, artifact: any) => artifact);
     mocks.executeRows.mockResolvedValue({
       rows: [
@@ -218,25 +196,26 @@ describe("activity report export service boundaries", () => {
     );
   });
 
-  it("rejects persistence when membership is revoked after render validation", async () => {
-    let renderValidated = false;
+  it("rejects persistence when membership is revoked after the real render validation", async () => {
     let auditCountAtRevocation = -1;
     mocks.requirePermission.mockImplementation(async () => {
       if (!membership) throw new Error("No active membership for this tenant");
       return membership;
     });
-    mocks.validateExecution.mockImplementation(
-      async (_descriptor: unknown, request: any, host: any) => {
-        await host.authorize({ requiredPermission: "reports.export" });
-        await host.assertSnapshot(snapshotContext(request));
-        if (!renderValidated) {
-          renderValidated = true;
-          auditCountAtRevocation = mocks.auditRecord.mock.calls.length;
-          membership = null;
-        }
-        return request;
-      },
-    );
+    mocks.executeRows.mockImplementationOnce(async () => {
+      auditCountAtRevocation = mocks.auditRecord.mock.calls.length;
+      membership = null;
+      return {
+        rows: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            metric_key: "api.calls",
+            window_start: asOf,
+            quantity: 1,
+          },
+        ],
+      };
+    });
 
     await expect(
       executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
@@ -248,21 +227,22 @@ describe("activity report export service boundaries", () => {
     expect(mocks.auditRecord).toHaveBeenCalledTimes(auditCountAtRevocation);
   });
 
-  it("rejects persistence when the materialization changes after render validation", async () => {
-    let renderValidated = false;
+  it("rejects persistence when the materialization changes after the real render validation", async () => {
     let auditCountAtMutation = -1;
-    mocks.validateExecution.mockImplementation(
-      async (_descriptor: unknown, request: any, host: any) => {
-        await host.authorize({ requiredPermission: "reports.export" });
-        await host.assertSnapshot(snapshotContext(request));
-        if (!renderValidated) {
-          renderValidated = true;
-          auditCountAtMutation = mocks.auditRecord.mock.calls.length;
-          mocks.getLifecycle.mockResolvedValueOnce({ asOf: "2026-09-10T12:01:00.000Z" });
-        }
-        return request;
-      },
-    );
+    mocks.executeRows.mockImplementationOnce(async () => {
+      auditCountAtMutation = mocks.auditRecord.mock.calls.length;
+      mocks.getLifecycle.mockResolvedValueOnce({ asOf: "2026-09-10T12:01:00.000Z" });
+      return {
+        rows: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            metric_key: "api.calls",
+            window_start: asOf,
+            quantity: 1,
+          },
+        ],
+      };
+    });
 
     await expect(
       executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
@@ -272,6 +252,41 @@ describe("activity report export service boundaries", () => {
     expect(mocks.storeSourceAsset).not.toHaveBeenCalled();
     expect(stored).toBeUndefined();
     expect(mocks.auditRecord).toHaveBeenCalledTimes(auditCountAtMutation);
+  });
+
+  it("bounds a page read by the remaining PostgreSQL deadline and rejects an overdue result", async () => {
+    let now = 0;
+    const nowSpy = vi.spyOn(Date, "now").mockImplementation(() => now);
+    mocks.executeRows.mockImplementationOnce(async () => {
+      now = 10_001;
+      return {
+        rows: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            metric_key: "api.calls",
+            window_start: asOf,
+            quantity: 1,
+          },
+        ],
+      };
+    });
+
+    try {
+      await expect(
+        executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
+      ).rejects.toThrow("foreground deadline");
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(database.query).toHaveBeenCalledWith(
+      "SELECT set_config('statement_timeout', $1, true)",
+      "10000ms",
+    );
+    expect(mocks.createAssetRuntime).not.toHaveBeenCalled();
+    expect(mocks.storeSourceAsset).not.toHaveBeenCalled();
+    expect(stored).toBeUndefined();
+    expect(mocks.auditRecord).toHaveBeenCalledTimes(1);
   });
 
   it("rejects before rows or storage when lifecycle changes after query", async () => {
@@ -285,35 +300,44 @@ describe("activity report export service boundaries", () => {
     expect(mocks.createAssetRuntime).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["another tenant", () => ({ tenantId: tenantB, profileId: profileA })],
-    ["another principal", () => ({ tenantId: tenantA, profileId: profileB })],
-  ])("rejects a snapshot binding fixed for %s", async (_label, nextMembership) => {
-    await executeActivityReportExport({} as never, { phase: "preview", format: "csv" }).catch(
-      () => undefined,
-    );
-    const bindingForFirstCaller = mocks.createSnapshot.mock.results.at(-1)?.value.binding.id;
-    membership = nextMembership();
+  it("rejects a changed principal before the real snapshot render", async () => {
     mocks.applyExport.mockImplementationOnce(
       async (_descriptor: unknown, request: any, host: any) => {
         await host.authorize({ requiredPermission: "reports.export" });
-        await host.assertSnapshot(snapshotContext(request, bindingForFirstCaller));
+        await host.assertSnapshot(snapshotContext(request));
+        membership = { userId: userB, tenantId: tenantA, profileId: profileB };
         return { execution: "stream", request };
       },
     );
 
     await expect(
       executeActivityReportExport({} as never, { phase: "apply", format: "csv" }),
-    ).rejects.toThrow("snapshot binding is invalid");
+    ).rejects.toThrow("principal is no longer current");
     expect(mocks.executeRows).not.toHaveBeenCalled();
     expect(mocks.createAssetRuntime).not.toHaveBeenCalled();
   });
 
   it.each([
-    ["a different tenant", () => ({ tenantId: tenantB, profileId: profileA }), "denied"],
-    ["a different principal", () => ({ tenantId: tenantA, profileId: profileB }), "denied"],
-    ["tampered metadata", () => ({ tenantId: tenantA, profileId: profileA }), "metadata"],
-    ["tampered content", () => ({ tenantId: tenantA, profileId: profileA }), "content"],
+    [
+      "a different tenant",
+      () => ({ userId: userA, tenantId: tenantB, profileId: profileA }),
+      "denied",
+    ],
+    [
+      "a different principal",
+      () => ({ userId: userB, tenantId: tenantA, profileId: profileB }),
+      "denied",
+    ],
+    [
+      "tampered metadata",
+      () => ({ userId: userA, tenantId: tenantA, profileId: profileA }),
+      "metadata",
+    ],
+    [
+      "tampered content",
+      () => ({ userId: userA, tenantId: tenantA, profileId: profileA }),
+      "content",
+    ],
   ])("denies stored download for %s without auditing", async (_label, nextMembership, tampering) => {
     const exportAsset = await createStoredExport();
     membership = nextMembership();

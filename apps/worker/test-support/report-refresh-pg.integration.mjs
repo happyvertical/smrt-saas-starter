@@ -10,6 +10,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createAssetRuntime } from "@happyvertical/smrt-assets";
 import { resolveDatabase } from "@happyvertical/smrt-core";
 import { TenantUsageMetricCollection } from "@happyvertical/smrt-subscriptions";
 import { withTenant } from "@happyvertical/smrt-tenancy";
@@ -40,10 +41,13 @@ const db = await resolveDatabase(
 );
 const oidc = await startOidcServer();
 let fixture;
+let assetRuntime;
+const fixtureExportAssetIds = new Set();
+let unrelatedExport;
 
 try {
   fixture = await createNeutralTenantFixture(db, namespace);
-  await recordUsage(fixture.tenants.a, "proof.alpha", 3);
+  await recordUsage(fixture.tenants.a, "proof.alpha", 3.5);
   await recordUsage(fixture.tenants.b, "proof.beta", 7);
 
   // Enqueue through the starter's authenticated refresh command boundary,
@@ -51,15 +55,17 @@ try {
   const first = await enqueueFor(fixture.actors.adminA, fixture.tenants.a);
   await runWorkerUntil(first.job.jobId, "completed");
   await assertRows(fixture.tenants.a, 1);
+  await assertQuantity(fixture.tenants.a, "proof.alpha", 3.5);
   await assertRows(fixture.tenants.b, 0);
   await assertServiceExports(fixture);
+  await createUnrelatedExport();
 
   // A second event plus a second refresh demonstrates re-materialization; the
   // aggregate is at-least-once safe because the report rebuild is idempotent.
   await recordUsage(fixture.tenants.a, "proof.alpha", 5);
   const second = await enqueueFor(fixture.actors.adminA, fixture.tenants.a);
   await runWorkerUntil(second.job.jobId, "completed");
-  await assertQuantity(fixture.tenants.a, "proof.alpha", 8);
+  await assertQuantity(fixture.tenants.a, "proof.alpha", 8.5);
 
   // Queue under valid authority, revoke before the worker starts, and require
   // the durable target to fail without altering the existing materialization.
@@ -71,7 +77,7 @@ try {
   );
   await runWorkerUntil(revoked.job.jobId, "failed");
   await assertRows(fixture.tenants.a, 1);
-  await assertQuantity(fixture.tenants.a, "proof.alpha", 8);
+  await assertQuantity(fixture.tenants.a, "proof.alpha", 8.5);
   await assertRows(fixture.tenants.b, 0);
 
   // Restore only the disposable fixture membership, then tamper the already
@@ -88,7 +94,7 @@ try {
   );
   await runWorkerUntil(tampered.job.jobId, "failed");
   await assertRows(fixture.tenants.a, 1);
-  await assertQuantity(fixture.tenants.a, "proof.alpha", 8);
+  await assertQuantity(fixture.tenants.a, "proof.alpha", 8.5);
   await assertRows(fixture.tenants.b, 0);
 
   console.log(
@@ -124,8 +130,12 @@ try {
       "DELETE FROM starter_tenant_activity_report WHERE tenant_id IN (?, ?)",
       ...tenantIds,
     );
-    await db.query("DELETE FROM assets WHERE name LIKE ?", "tenant-activity-%");
+    if (assetRuntime) {
+      await removeFixtureExports();
+      await assertUnrelatedExportPreserved();
+    }
   }
+  if (unrelatedExport && assetRuntime) await assetRuntime.store.remove(unrelatedExport);
   await fixture?.cleanup();
   await db.close?.();
   await oidc.close();
@@ -162,6 +172,10 @@ async function assertServiceExports(fixture) {
   const localsA = { tenantId: fixture.tenants.a, user: { id: actorA.userId, email: actorA.email } };
   const csv = await executeActivityReportExport(localsA, { phase: "apply", format: "csv" });
   const json = await executeActivityReportExport(localsA, { phase: "apply", format: "json" });
+  if (!csv.artifactId || !json.artifactId)
+    throw new Error("Fixture report exports did not return stored asset ids");
+  fixtureExportAssetIds.add(csv.artifactId);
+  fixtureExportAssetIds.add(json.artifactId);
   const csvBytes = Buffer.from(
     await (await downloadActivityReportExport(localsA, csv.artifactId)).arrayBuffer(),
   );
@@ -170,14 +184,15 @@ async function assertServiceExports(fixture) {
   );
   if (
     !csvBytes.toString().includes("id,metric_key,window_start,quantity") ||
-    !csvBytes.toString().includes("proof.alpha")
+    !csvBytes.toString().includes("proof.alpha") ||
+    !csvBytes.toString().includes(",3.5\n")
   )
     throw new Error("CSV export projection did not match the materialized report");
   const exported = JSON.parse(jsonBytes.toString());
   if (
     exported.rows.length !== 1 ||
     exported.rows[0]?.metric_key !== "proof.alpha" ||
-    exported.rows[0]?.quantity !== 3
+    exported.rows[0]?.quantity !== 3.5
   )
     throw new Error("JSON export projection did not match the materialized report");
   const actorB = fixture.actors.adminB;
@@ -202,6 +217,33 @@ async function assertServiceExports(fixture) {
         }),
       ),
     "Forbidden export request field was accepted",
+  );
+}
+
+async function removeFixtureExports() {
+  for (const assetId of fixtureExportAssetIds) {
+    const stored = await assetRuntime.store.readById(assetId);
+    if (!stored) throw new Error("Fixture report export disappeared before cleanup");
+    await assetRuntime.store.remove(stored.asset);
+  }
+}
+
+async function assertUnrelatedExportPreserved() {
+  if (!unrelatedExport?.id) throw new Error("Unrelated export fixture was not created");
+  const stored = await assetRuntime.store.readById(unrelatedExport.id);
+  if (!stored || stored.data.toString() !== "unrelated fixture export\n") {
+    throw new Error("Fixture cleanup removed an unrelated report export");
+  }
+}
+
+async function createUnrelatedExport() {
+  assetRuntime = await createAssetRuntime({ db, storage: assetPath });
+  // It shares the broad historical name prefix but belongs to another fixture.
+  // Cleanup must preserve both its record and its stored bytes.
+  unrelatedExport = await assetRuntime.storeSourceAsset(
+    `tenant-activity-unrelated-${randomUUID()}.csv`,
+    Buffer.from("unrelated fixture export\n"),
+    { mimeType: "text/csv", typeSlug: "report-export" },
   );
 }
 

@@ -26,7 +26,7 @@ export class TenantActivityReport extends SmrtReport {
   windowStart = new Date();
 
   @sum("quantity")
-  @field({ type: "integer", required: true })
+  @field({ type: "decimal", required: true })
   quantity = 0;
 
   @field({ type: "datetime", nullable: true })
