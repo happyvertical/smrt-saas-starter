@@ -79,13 +79,16 @@ test("production report actions queue a refresh and serve tenant-bound CSV and J
   await page.goto("/app/reports");
   await expect(page.getByRole("heading", { name: "Tenant activity reports" })).toBeVisible();
 
+  const reportPage = page.locator(".page");
+  const materializedAsOf = await reportPage.getAttribute("data-report-as-of");
+  expect(materializedAsOf).toEqual(expect.any(String));
   const reportActions = page.locator(".report-actions");
   await reportActions.getByRole("button", { name: "Preview refresh" }).click();
   await expect(reportActions.getByRole("status")).toHaveText("Refresh is ready to queue");
   await reportActions.getByRole("button", { name: "Queue refresh" }).click();
   await expect(reportActions.getByRole("status")).toContainText("Refresh queued (");
 
-  await waitForMaterializedSeed(page);
+  await waitForMaterializedRefresh(page, materializedAsOf);
   await page.goto("/app/reports?metricKey=mcp.calls");
   const csvExport = page.waitForResponse(
     (response) =>
@@ -136,13 +139,19 @@ test("production report actions queue a refresh and serve tenant-bound CSV and J
   expect(await denied.text()).not.toContain("metric_key");
 });
 
-async function waitForMaterializedSeed(page: Page) {
+async function waitForMaterializedRefresh(page: Page, previousAsOf: string) {
   await expect
     .poll(
       async () => {
         const response = await page.request.get("/app/reports?metricKey=mcp.calls");
         const document = await response.text();
-        return response.ok() && document.includes("mcp.calls") && document.includes("128");
+        const asOf = document.match(/data-report-as-of="([^"]+)"/u)?.[1];
+        return (
+          response.ok() &&
+          document.includes("mcp.calls") &&
+          document.includes("128") &&
+          Boolean(asOf && asOf !== previousAsOf)
+        );
       },
       { timeout: 45_000 },
     )

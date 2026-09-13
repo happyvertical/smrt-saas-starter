@@ -42,6 +42,7 @@ export interface TenantActivityReportPage {
   page: number;
   pageSize: number;
   queryFingerprint: string;
+  asOf?: string;
 }
 
 export function createTenantActivityReportRequest(
@@ -111,7 +112,7 @@ export async function getTenantActivityReport(
   const pageSize = boundedPageSize(query.pageSize);
   const [descriptor, result] = await Promise.all([
     getTenantActivityReportDescriptor(),
-    queryTenantActivityReportRows(tenantId, query),
+    queryTenantActivityReportRows(tenantId, query, { lifecycle: true }),
   ]);
 
   return {
@@ -126,6 +127,9 @@ export async function getTenantActivityReport(
     page,
     pageSize,
     queryFingerprint: result.queryFingerprint,
+    ...((result.reportLifecycle?.snapshot?.asOf ?? result.freshness?.asOf)
+      ? { asOf: result.reportLifecycle?.snapshot?.asOf ?? result.freshness?.asOf }
+      : {}),
   };
 }
 

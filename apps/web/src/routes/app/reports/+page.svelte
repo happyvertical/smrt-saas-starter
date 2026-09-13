@@ -76,7 +76,12 @@
 
 <svelte:head><title>Activity reports | SMRT SaaS Starter</title></svelte:head>
 
-<section class="page" data-client-ready={clientReady} data-report-total={data.total}>
+<section
+  class="page"
+  data-client-ready={clientReady}
+  data-report-as-of={data.asOf ?? ""}
+  data-report-total={data.total}
+>
   <ReportWebMcpTool tenantId={data.tenantId} />
   <header>
     <p>Reports</p>
