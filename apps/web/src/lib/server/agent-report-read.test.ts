@@ -34,6 +34,7 @@ vi.mock("@happyvertical/smrt-users", () => ({
   registerPermissionDefinitions: mocks.registerPermissionDefinitions,
 }));
 vi.mock("$lib/server/activity-report", () => ({
+  activityReportAdapterOptions: { tenantScope: "current" },
   createTenantActivityReportRequest: mocks.createTenantActivityReportRequest,
   getTenantActivityReportDescriptor: mocks.getTenantActivityReportDescriptor,
 }));

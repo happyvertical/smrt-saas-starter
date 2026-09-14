@@ -1,11 +1,8 @@
-import {
-  createReportDataSurfaceTools,
-  executeAsPrincipal,
-  type PrincipalTool,
-} from "@happyvertical/smrt-agents";
+import { createReportDataSurfaceTools, executeAsPrincipal, type PrincipalTool } from "@happyvertical/smrt-agents";
 import { TenantActivityReport } from "@happyvertical/smrt-saas-objects";
 import { registerPermissionDefinitions } from "@happyvertical/smrt-users";
 import {
+  activityReportAdapterOptions,
   createTenantActivityReportRequest,
   getTenantActivityReportDescriptor,
 } from "$lib/server/activity-report";
@@ -35,6 +32,7 @@ export const tenantActivityReportAgentTools = createReportDataSurfaceTools({
     {
       report: TenantActivityReport,
       collection: reportReadCollection,
+      adapter: activityReportAdapterOptions,
       label: "Tenant activity",
       description: "Neutral tenant activity aggregates.",
     },
