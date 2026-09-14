@@ -213,6 +213,9 @@ export function hasStarterPermission(
  * infer authority from tool metadata supplied by a browser or agent.
  */
 export function requiredRuntimeToolPermission(name: string): StarterPermission {
+  if (name === "reports.operations.status") return starterPermissions.usageRead;
+  if (name === "reports.operations.prepare" || name === "reports.operations.cancel")
+    return starterPermissions.reportRefresh;
   return name === "tenant.activity-report.query"
     ? starterPermissions.usageRead
     : starterPermissions.mcpCall;

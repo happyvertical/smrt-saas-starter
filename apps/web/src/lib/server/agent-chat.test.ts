@@ -68,6 +68,27 @@ const chatMocks = vi.hoisted(() => {
     executeRuntimeToolWithTenantPolicy: vi.fn(),
     listRuntimeTools: vi.fn(),
     recordTenantUsageSignal: vi.fn(),
+    executeReportOperationAgentTool: vi.fn(),
+    reportOperationAgentTools: [
+      {
+        name: "reports.operations.prepare",
+        description: "Prepare",
+        readOnly: false,
+        requiredFeature: "mcp.write_tools",
+      },
+      {
+        name: "reports.operations.status",
+        description: "Status",
+        readOnly: true,
+        requiredFeature: "mcp.read_tools",
+      },
+      {
+        name: "reports.operations.cancel",
+        description: "Cancel",
+        readOnly: false,
+        requiredFeature: "mcp.write_tools",
+      },
+    ],
   };
 });
 
@@ -101,6 +122,10 @@ vi.mock("$lib/server/agent-report-read", () => ({
   createTenantActivityReportQueryInput: vi.fn(),
   executeTenantActivityReportAgentTool: vi.fn(),
   getTenantActivityReportAgentTools: vi.fn(() => []),
+}));
+vi.mock("$lib/server/report-operation-agent", () => ({
+  executeReportOperationAgentTool: chatMocks.executeReportOperationAgentTool,
+  reportOperationAgentTools: chatMocks.reportOperationAgentTools,
 }));
 
 vi.mock("$lib/server/authz", () => ({
@@ -159,13 +184,16 @@ describe("tenant agent chat", () => {
         },
       },
     });
+    chatMocks.executeReportOperationAgentTool.mockResolvedValue({
+      operation: { id: "op-1", status: "queued" },
+    });
     const pushMessage = (
       role: "user" | "assistant" | "system" | "tool",
       messageType: "text" | "system" | "action" | "file" | "tool_call" | "tool_result",
       content: string,
       toolCallData: Record<string, unknown> | null,
     ) => {
-      chatMocks.messages.push({
+      const stored = {
         id: `msg-${chatMocks.messages.length + 1}`,
         slug: null,
         role,
@@ -173,11 +201,13 @@ describe("tenant agent chat", () => {
         content,
         created_at: new Date(`2026-06-07T00:00:0${chatMocks.messages.length}.000Z`),
         getToolCallData: () => toolCallData,
-      });
+      };
+      chatMocks.messages.push(stored);
+      return stored;
     };
     chatMocks.getRoomMessages.mockImplementation(async () => chatMocks.messages);
     chatMocks.sendAgentUserMessage.mockImplementation(async (message) => {
-      pushMessage("user", message.messageType ?? "text", message.content, null);
+      return pushMessage("user", message.messageType ?? "text", message.content, null);
     });
     // Module-level agent-runtime bridge: author assistant/tool messages as the
     // session agent (kind 'tool' -> role 'tool', otherwise 'assistant'). It gates
@@ -391,6 +421,52 @@ describe("tenant agent chat", () => {
     expect(chatMocks.createChatService).not.toHaveBeenCalled();
     expect(chatMocks.createAgentSession).not.toHaveBeenCalled();
     expect(chatMocks.recordTenantUsageSignal).not.toHaveBeenCalled();
+  });
+
+  it("runs a prepared report operation through the persisted chat id and shared MCP policy", async () => {
+    chatMocks.listRuntimeTools.mockReturnValue([
+      ...chatMocks.runtimeTools.slice(0, 2),
+      chatMocks.reportOperationAgentTools[0],
+    ]);
+    chatMocks.executeRuntimeToolWithTenantPolicy.mockImplementation(
+      async (_name: string, _input: unknown, _tenant: string, execute: () => Promise<unknown>) => ({
+        tool: chatMocks.reportOperationAgentTools[0],
+        response: await execute(),
+      }),
+    );
+    const result = await sendTenantChatMessage(membership, "prepare report");
+    expect(result.selectedTool).toBe("reports.operations.prepare");
+    expect(chatMocks.executeReportOperationAgentTool).toHaveBeenCalledWith(
+      membership,
+      "reports.operations.prepare",
+      expect.objectContaining({ requestId: expect.stringContaining("chat-msg-1-") }),
+    );
+    expect(result.messages.at(-1)).toMatchObject({ content: "Report operation op-1: queued." });
+  });
+
+  it("does not expose an approval tool", async () => {
+    const state = await getTenantChatState(membership);
+    expect(state.tools.map((tool) => tool.name)).not.toContain("reports.operations.approve");
+  });
+
+  it("uses distinct persisted chat message ids for identical operation requests", async () => {
+    chatMocks.listRuntimeTools.mockReturnValue([
+      ...chatMocks.runtimeTools.slice(0, 2),
+      chatMocks.reportOperationAgentTools[0],
+    ]);
+    chatMocks.executeRuntimeToolWithTenantPolicy.mockImplementation(
+      async (_n: string, _i: unknown, _t: string, execute: () => Promise<unknown>) => ({
+        tool: chatMocks.reportOperationAgentTools[0],
+        response: await execute(),
+      }),
+    );
+    await sendTenantChatMessage(membership, "prepare report");
+    await sendTenantChatMessage(membership, "prepare report");
+    const inputs = chatMocks.executeReportOperationAgentTool.mock.calls.map(
+      (call) => call[2].requestId,
+    );
+    expect(inputs).toHaveLength(2);
+    expect(inputs[0]).not.toBe(inputs[1]);
   });
 });
 

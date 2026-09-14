@@ -106,9 +106,12 @@ export async function executeRuntimeToolWithTenantPolicy<T>(
   _input: unknown,
   tenantId: string,
   execute: () => Promise<T>,
+  catalog: readonly RuntimeTool[] = runtimeTools,
 ): Promise<{ tool: RuntimeTool; response: T }> {
   const overview = await getBillingOverview(tenantId);
-  const allowed = listRuntimeTools(overview.snapshot.featureKeys);
+  const allowed = catalog.filter((candidate) =>
+    overview.snapshot.featureKeys.includes(candidate.requiredFeature),
+  );
   const tool = allowed.find((candidate) => candidate.name === name);
   if (!tool) {
     throw new RuntimeToolExecutionError(403, "Tool is not available for the current tenant");

@@ -30,7 +30,8 @@
     "@happyvertical/smrt-core": "catalog:",
     "@happyvertical/smrt-subscriptions": "catalog:",
     "@happyvertical/smrt-tenancy": "catalog:",
-    "@happyvertical/smrt-users": "catalog:"
+    "@happyvertical/smrt-users": "catalog:",
+    "@happyvertical/smrt-agents": "catalog:"
   },
   "devDependencies": {
     "tsx": "^4.20.6",

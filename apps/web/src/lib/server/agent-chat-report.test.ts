@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => {
     createTenantActivityReportQueryInput: vi.fn(),
     executeTenantActivityReportAgentTool: vi.fn(),
     getTenantActivityReportAgentTools: vi.fn(),
+    executeReportOperationAgentTool: vi.fn(),
   };
 });
 
@@ -49,10 +50,33 @@ vi.mock("$lib/server/agent-report-read", () => ({
   executeTenantActivityReportAgentTool: mocks.executeTenantActivityReportAgentTool,
   getTenantActivityReportAgentTools: mocks.getTenantActivityReportAgentTools,
 }));
+vi.mock("$lib/server/report-operation-agent", () => ({
+  reportOperationAgentTools: [
+    {
+      name: "reports.operations.prepare",
+      description: "Prepare",
+      readOnly: false,
+      requiredFeature: "mcp.write_tools",
+    },
+    {
+      name: "reports.operations.status",
+      description: "Status",
+      readOnly: true,
+      requiredFeature: "mcp.read_tools",
+    },
+    {
+      name: "reports.operations.cancel",
+      description: "Cancel",
+      readOnly: false,
+      requiredFeature: "mcp.write_tools",
+    },
+  ],
+  executeReportOperationAgentTool: mocks.executeReportOperationAgentTool,
+}));
 vi.mock("$lib/server/authz", () => ({
   hasStarterPermission: (membership: { permissions: string[] }, permission: string) =>
     membership.permissions.includes(permission),
-  starterPermissions: { usageRead: "tenant.usage.read" },
+  starterPermissions: { usageRead: "tenant.usage.read", reportRefresh: "reports.refresh" },
   requiredRuntimeToolPermission: () => "tenant.mcp.call",
 }));
 vi.mock("$lib/server/smrt", () => ({ getSmrtConfig: () => ({}) }));
@@ -71,7 +95,7 @@ const membership = {
   tenantId,
   profileId: "22222222-2222-4222-8222-222222222222",
   userId: "33333333-3333-4333-8333-333333333333",
-  permissions: ["tenant.usage.read", "tenant.mcp.call", "tenant.chat.use"],
+  permissions: ["tenant.usage.read", "tenant.mcp.call", "tenant.chat.use", "reports.refresh"],
 } as never;
 const windowStart = new Date("2026-06-01T00:00:00.000Z");
 const windowEnd = new Date("2026-07-01T00:00:00.000Z");
@@ -93,6 +117,9 @@ describe("tenant agent chat report queries", () => {
     mocks.executeTenantActivityReportAgentTool.mockResolvedValue({
       report: { rows: [{ id: "row-1" }, { id: "row-2" }] },
     });
+    mocks.executeReportOperationAgentTool.mockResolvedValue({
+      operation: { id: "op-1", status: "queued" },
+    });
 
     const pushMessage = (
       role: "user" | "assistant" | "system" | "tool",
@@ -100,7 +127,7 @@ describe("tenant agent chat report queries", () => {
       content: string,
       toolCallData: Record<string, unknown> | null,
     ) => {
-      mocks.messages.push({
+      const stored = {
         id: `msg-${mocks.messages.length + 1}`,
         slug: null,
         role,
@@ -108,11 +135,13 @@ describe("tenant agent chat report queries", () => {
         content,
         created_at: new Date(`2026-06-07T00:00:0${mocks.messages.length}.000Z`),
         getToolCallData: () => toolCallData,
-      });
+      };
+      mocks.messages.push(stored);
+      return stored;
     };
     mocks.getRoomMessages.mockImplementation(async () => mocks.messages);
     mocks.sendAgentUserMessage.mockImplementation(async (message) => {
-      pushMessage("user", message.messageType ?? "text", message.content, null);
+      return pushMessage("user", message.messageType ?? "text", message.content, null);
     });
     mocks.sendAgentReply.mockImplementation(async (_service, reply) => {
       const toolName = (reply.toolCallData as { name?: string } | undefined)?.name;
@@ -200,7 +229,7 @@ describe("tenant agent chat report queries", () => {
     expect(result.messages.at(-1)).toMatchObject({
       role: "assistant",
       content:
-        "That MCP tool is not available on the current plan. Available tools: tenant.usage.summary, tenant.subscription.summary, reports.query.",
+        "That MCP tool is not available on the current plan. Available tools: tenant.usage.summary, tenant.subscription.summary, reports.operations.status, reports.query.",
     });
     expect(mocks.executeTenantActivityReportAgentTool).not.toHaveBeenCalled();
     expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalledWith(
@@ -224,6 +253,37 @@ describe("tenant agent chat report queries", () => {
     expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalledWith(
       expect.objectContaining({ metricKey: "mcp.calls" }),
     );
+  });
+
+  it("runs operation status through the live MCP policy and denies feature loss before its executor", async () => {
+    mocks.getBillingOverview
+      .mockResolvedValueOnce(overview(["chat.agent", "mcp.read_tools"]))
+      .mockResolvedValueOnce(overview(["chat.agent"]));
+    const result = await sendTenantChatMessage(membership, "report operation status");
+    expect(mocks.executeReportOperationAgentTool).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalledWith(
+      expect.objectContaining({ metricKey: "mcp.calls" }),
+    );
+    expect(result.messages.at(-1)).toMatchObject({
+      role: "assistant",
+      content: expect.stringContaining("not available"),
+    });
+  });
+
+  it("denies report preparation at the live MCP quota before the operation executor", async () => {
+    mocks.getBillingOverview
+      .mockResolvedValueOnce(overview(["chat.agent", "mcp.read_tools", "mcp.write_tools"]))
+      .mockResolvedValueOnce(overview(["chat.agent", "mcp.read_tools", "mcp.write_tools"], false));
+    const result = await sendTenantChatMessage(membership, "prepare report");
+    expect(result.selectedTool).toBe("reports.operations.prepare");
+    expect(mocks.executeReportOperationAgentTool).not.toHaveBeenCalled();
+    expect(mocks.recordTenantUsageSignal).not.toHaveBeenCalledWith(
+      expect.objectContaining({ metricKey: "mcp.calls" }),
+    );
+    expect(result.messages.at(-1)).toMatchObject({
+      content:
+        "I cannot call that MCP tool because this tenant has reached the MCP call threshold.",
+    });
   });
 });
 

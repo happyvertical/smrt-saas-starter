@@ -4,28 +4,17 @@ import {
   type ReportAdapterDescriptor,
   type ReportDataQueryResult,
 } from "@happyvertical/smrt-reports";
-import { TenantActivityReport } from "@happyvertical/smrt-saas-objects";
+import {
+  activityReportOperationAdapterOptions,
+  TenantActivityReport,
+} from "@happyvertical/smrt-saas-objects";
 import type { DataQueryRequest } from "@happyvertical/smrt-types";
 import { getAppDatabase } from "$lib/server/db";
 import { withActiveTenant } from "$lib/server/tenant-context";
 
 const PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
-export const activityReportAdapterOptions = {
-  tenantScope: "current" as const,
-  refreshPermission: "reports.refresh",
-  dataTable: {
-    columns: {
-      metric_key: { label: "Activity", responsive: { keepVisible: true, priority: 3 } },
-      window_start: {
-        label: "Window",
-        valueFormat: "datetime" as const,
-        responsive: { priority: 2 },
-      },
-      quantity: { label: "Count", valueFormat: "number" as const, responsive: { priority: 3 } },
-    },
-  },
-};
+export const activityReportAdapterOptions = activityReportOperationAdapterOptions;
 
 export interface TenantActivityReportQuery {
   page?: number;
