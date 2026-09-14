@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import type { ReportQuery } from "./operation-tool";
   import ReportActions from "./ReportActions.svelte";
   import ReportOperations from "./ReportOperations.svelte";
   import ReportWebMcpTool from "./ReportWebMcpTool.svelte";
@@ -73,6 +74,16 @@
     const trimmed = value?.trim();
     return trimmed && trimmed.length <= 120 ? trimmed : undefined;
   }
+
+  const currentQuery = $derived<ReportQuery>({
+    page: data.page,
+    pageSize: data.pageSize,
+    sort: readSort(page.url.searchParams.get("sort")) ?? "window_start",
+    direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc",
+    ...(boundedMetricKey(page.url.searchParams.get("metricKey"))
+      ? { metricKey: boundedMetricKey(page.url.searchParams.get("metricKey")) }
+      : {}),
+  });
 </script>
 
 <svelte:head><title>Activity reports | SMRT SaaS Starter</title></svelte:head>
@@ -83,7 +94,7 @@
   data-report-as-of={data.asOf ?? ""}
   data-report-total={data.total}
 >
-  <ReportWebMcpTool tenantId={data.tenantId} />
+  <ReportWebMcpTool tenantId={data.tenantId} query={currentQuery} />
   <header>
     <p>Reports</p>
     <h1>Tenant activity reports</h1>
@@ -95,30 +106,14 @@
       tenantId={data.tenantId}
       canExport={data.canExport}
       canRefresh={data.canRefresh}
-      query={{
-        page: data.page,
-        pageSize: data.pageSize,
-        sort: readSort(page.url.searchParams.get("sort")) ?? "window_start",
-        direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc",
-        ...(boundedMetricKey(page.url.searchParams.get("metricKey"))
-          ? { metricKey: boundedMetricKey(page.url.searchParams.get("metricKey")) }
-          : {}),
-      }}
+      query={currentQuery}
     />
   {/if}
 
   <ReportOperations
     tenantId={data.tenantId}
     actualSession={data.actualSession}
-    query={{
-      page: data.page,
-      pageSize: data.pageSize,
-      sort: readSort(page.url.searchParams.get("sort")) ?? "window_start",
-      direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc",
-      ...(boundedMetricKey(page.url.searchParams.get("metricKey"))
-        ? { metricKey: boundedMetricKey(page.url.searchParams.get("metricKey")) }
-        : {}),
-    }}
+    query={currentQuery}
   />
 
   <form class="filters" onsubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); update({ page: 1, metricKey: String(form.get("metricKey") ?? "") }); }}>

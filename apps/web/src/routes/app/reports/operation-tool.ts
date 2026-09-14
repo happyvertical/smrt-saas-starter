@@ -38,6 +38,7 @@ export type ReportSnapshot = {
 export interface OperationToolOptions {
   tenantId: string;
   currentTenantId: () => string;
+  currentQuery: ReportQuery;
   fetch: typeof globalThis.fetch;
   showOperation?: (operation: ReportOperation) => void | Promise<void>;
   acknowledge: (message: string) => void | Promise<void>;
@@ -81,6 +82,9 @@ export async function executeOperationTool(
     ) {
       return response({ ok: false, reason: "invalid_request" });
     }
+    const query =
+      command.query === undefined ? options.currentQuery : parseReportQuery(command.query);
+    if (!query) return response({ ok: false, reason: "invalid_request" });
     path = "/api/reports/operations";
     init = {
       ...init,
@@ -89,7 +93,7 @@ export async function executeOperationTool(
       body: JSON.stringify({
         kind: command.kind,
         requestId: command.requestId,
-        ...(sanitizeQuery(command.query) ? { query: sanitizeQuery(command.query) } : {}),
+        query,
       }),
     };
   } else {
@@ -128,20 +132,50 @@ export async function executeOperationTool(
   return response({ ok: true, acknowledgement: "visible_operation", operation: result.operation });
 }
 
-function sanitizeQuery(value: unknown): ReportQuery | undefined {
+function parseReportQuery(value: unknown): ReportQuery | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const query = value as Record<string, unknown>;
+  if (
+    Object.keys(query).some(
+      (key) => !["page", "pageSize", "sort", "direction", "metricKey"].includes(key),
+    )
+  )
+    return undefined;
   const result: ReportQuery = {};
-  if (typeof query.page === "number") result.page = query.page;
-  if (typeof query.pageSize === "number") result.pageSize = query.pageSize;
+  if (query.page !== undefined) {
+    if (
+      typeof query.page !== "number" ||
+      !Number.isSafeInteger(query.page) ||
+      query.page < 1 ||
+      query.page > 10_000
+    )
+      return undefined;
+    result.page = query.page;
+  }
+  if (query.pageSize !== undefined) {
+    if (
+      typeof query.pageSize !== "number" ||
+      !Number.isSafeInteger(query.pageSize) ||
+      query.pageSize < 1 ||
+      query.pageSize > 100
+    )
+      return undefined;
+    result.pageSize = query.pageSize;
+  }
   if (
     query.sort === "id" ||
     query.sort === "metric_key" ||
     query.sort === "window_start" ||
     query.sort === "quantity"
-  )
+  ) {
     result.sort = query.sort;
-  if (query.direction === "asc" || query.direction === "desc") result.direction = query.direction;
-  if (typeof query.metricKey === "string") result.metricKey = query.metricKey;
-  return Object.keys(result).length ? result : undefined;
+  } else if (query.sort !== undefined) return undefined;
+  if (query.direction === "asc" || query.direction === "desc") {
+    result.direction = query.direction;
+  } else if (query.direction !== undefined) return undefined;
+  if (query.metricKey !== undefined) {
+    if (typeof query.metricKey !== "string" || query.metricKey.length > 120) return undefined;
+    result.metricKey = query.metricKey;
+  }
+  return result;
 }

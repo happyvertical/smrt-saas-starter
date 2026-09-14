@@ -11,7 +11,11 @@ type Operation = {
   id: string;
   status: string;
   payloadFingerprint: string;
-  snapshot?: { rows: Record<string, unknown>[]; total: number };
+  snapshot?: {
+    query: Record<string, unknown>;
+    rows: Record<string, unknown>[];
+    total: number;
+  };
 };
 type NativeTool = { name: string };
 type NativeContext = {
@@ -142,4 +146,65 @@ test("native browser tools request, inspect and cancel a demo without an approva
   await expect(
     page.locator(`[data-report-operation-id="${id}"] [data-report-operation-status]`),
   ).toHaveAttribute("data-report-operation-status", "cancelled");
+});
+
+test("native preparation without a query captures the filtered, paginated report visible in the UI", async ({
+  page,
+}) => {
+  await page.goto("/app/reports?metricKey=mcp.calls&page=1&pageSize=1&sort=quantity&direction=asc");
+  const names = () =>
+    page.evaluate(async () => {
+      const context = document.modelContext as unknown as NativeContext;
+      return (await context.getTools()).map((tool) => tool.name);
+    });
+  await expect.poll(names).toContain("tenant_activity_report_operation_submit");
+  const execute = (input: Record<string, unknown>) =>
+    page.evaluate(async (input) => {
+      const context = document.modelContext as unknown as NativeContext;
+      const tool = (await context.getTools()).find(
+        (value) => value.name === "tenant_activity_report_operation_submit",
+      );
+      if (!tool) throw new Error("Missing report operation submit tool");
+      return JSON.parse(await context.executeTool(tool, JSON.stringify(input)));
+    }, input);
+
+  let submits = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/reports/operations") && request.method() === "POST")
+      submits += 1;
+  });
+  const malformed = await execute({
+    kind: "prepare",
+    requestId: crypto.randomUUID(),
+    query: { page: "2" },
+  });
+  expect(malformed).toEqual({ ok: false, reason: "invalid_request" });
+  expect(submits).toBe(0);
+
+  const native = await execute({ kind: "prepare", requestId: crypto.randomUUID() });
+  expect(native).toMatchObject({ ok: true, operation: { status: "queued" } });
+  const ui = await createThroughUi(page, "Prepare current report");
+  const nativeCard = await waitForPrepared(page, native.operation.id);
+  await waitForPrepared(page, ui.id);
+  await expect(nativeCard).toBeVisible();
+
+  const [nativeResponse, uiResponse] = await Promise.all([
+    page.request.get(`/api/reports/operations/${native.operation.id}`),
+    page.request.get(`/api/reports/operations/${ui.id}`),
+  ]);
+  expect(nativeResponse.ok()).toBe(true);
+  expect(uiResponse.ok()).toBe(true);
+  const nativeOperation = (await nativeResponse.json()).operation as Operation;
+  const uiOperation = (await uiResponse.json()).operation as Operation;
+  expect(nativeOperation.snapshot).toBeDefined();
+  expect(nativeOperation.snapshot?.query).toEqual({
+    page: 1,
+    pageSize: 1,
+    sort: "quantity",
+    direction: "asc",
+    metricKey: "mcp.calls",
+  });
+  expect(nativeOperation.snapshot?.query).toEqual(uiOperation.snapshot?.query);
+  expect(nativeOperation.snapshot?.rows).toHaveLength(1);
+  expect(nativeOperation.snapshot?.rows).toEqual(uiOperation.snapshot?.rows);
 });

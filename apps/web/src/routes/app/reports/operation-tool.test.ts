@@ -12,16 +12,33 @@ const operation = {
 const options = (fetch: typeof globalThis.fetch, signal?: AbortSignal) => ({
   tenantId: "tenant-a",
   currentTenantId: () => "tenant-a",
+  currentQuery: {
+    page: 2,
+    pageSize: 1,
+    sort: "quantity" as const,
+    direction: "asc" as const,
+    metricKey: "mcp.calls",
+  },
   fetch,
   acknowledge: vi.fn(),
   signal,
 });
 
 describe("report operation WebMCP execution", () => {
-  it("submits through the report operation HTTP command without actor or tenant input", async () => {
+  it("submits the currently displayed report query without actor or tenant input", async () => {
     const fetch = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
       expect(_url).toBe("/api/reports/operations");
-      expect(JSON.parse(String(init?.body))).toEqual({ kind: "prepare", requestId: "stable-key" });
+      expect(JSON.parse(String(init?.body))).toEqual({
+        kind: "prepare",
+        requestId: "stable-key",
+        query: {
+          page: 2,
+          pageSize: 1,
+          sort: "quantity",
+          direction: "asc",
+          metricKey: "mcp.calls",
+        },
+      });
       return new Response(JSON.stringify({ operation }), { status: 200 });
     });
     const tool = options(fetch);
@@ -31,12 +48,26 @@ describe("report operation WebMCP execution", () => {
         kind: "prepare",
         requestId: "stable-key",
         tenantId: "forged",
-        query: { ownerId: "forged" },
       },
       tool,
     );
     expect(JSON.parse(raw)).toMatchObject({ ok: true, operation });
     expect(tool.acknowledge).toHaveBeenCalledWith("Operation operation-1 is queued.");
+  });
+
+  it("rejects malformed explicit queries before making a request", async () => {
+    const fetch = vi.fn();
+    const raw = await executeOperationTool(
+      {
+        action: "submit",
+        kind: "prepare",
+        requestId: "stable-key",
+        query: { ownerId: "forged" },
+      },
+      options(fetch),
+    );
+    expect(raw).toBe(JSON.stringify({ ok: false, reason: "invalid_request" }));
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("uses the same status and cancel commands and acknowledges only after a response", async () => {
