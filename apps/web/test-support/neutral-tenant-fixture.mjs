@@ -12,9 +12,9 @@ const tables = [
   "tenants",
 ];
 const grants = {
-  admin: ["fixture.report.read", "fixture.report.prepare"],
-  member: ["fixture.report.read", "fixture.report.prepare"],
-  viewer: ["fixture.report.read"],
+  admin: ["fixture.report.read", "fixture.report.prepare", "tenant.usage.read"],
+  member: ["fixture.report.read", "fixture.report.prepare", "tenant.usage.read"],
+  viewer: ["fixture.report.read", "tenant.usage.read"],
 };
 
 /** Test-only graph. Requires a normally migrated and seeded disposable database. */

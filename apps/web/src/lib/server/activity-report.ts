@@ -11,7 +11,7 @@ import { withActiveTenant } from "$lib/server/tenant-context";
 
 const PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
-const activityReportAdapterOptions = {
+export const activityReportAdapterOptions = {
   tenantScope: "current" as const,
   refreshPermission: "reports.refresh",
   dataTable: {

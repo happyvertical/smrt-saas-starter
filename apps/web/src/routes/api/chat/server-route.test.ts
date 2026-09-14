@@ -61,7 +61,9 @@ describe("/api/chat", () => {
       { tenantId },
       routeMocks.starterPermissions.chatUse,
     );
-    expect(routeMocks.getTenantChatState).toHaveBeenCalledWith(tenantId, profileId);
+    expect(routeMocks.getTenantChatState).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId, profileId }),
+    );
   });
 
   it("rejects invalid JSON bodies before sending chat messages", async () => {

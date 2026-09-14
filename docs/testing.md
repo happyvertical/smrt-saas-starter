@@ -139,6 +139,29 @@ through a gated test endpoint:
     pnpm --filter @happyvertical/smrt-saas-web test:e2e
   ```
 
+## Principal-bound activity report proof
+
+After building the app objects and migrating/seeding an owned disposable
+PostgreSQL database, run:
+
+```sh
+NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/agent-report-query.integration.proof.mjs
+```
+
+This proof loads the production adapter and real public SMRT report/principal
+APIs. It compares silent agent reads with the existing report's rows, totals,
+query fingerprint and field policy, then verifies cross-tenant and forbidden
+field denials, inactive membership, and revocation of a previously valid
+membership snapshot. It creates and removes its own synthetic fixture rows;
+use a separate disposable database for each concurrent lane. It does not prove
+visible browser acknowledgment or durable operation/approval behavior.
+
+The chat activity-report path uses the same report adapter options and MCP
+feature, call-limit and usage-recording policy as the existing report command.
+Report-tool execution rechecks live membership before using the public
+principal executor. Refresh/export and operation status/cancel/approval tools
+are not included in this read-only agent catalog.
+
 ## Conventions
 
 - Tests live next to the code (`*.test.ts`) except `packages/app-objects`,

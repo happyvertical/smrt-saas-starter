@@ -1,9 +1,20 @@
 import { createHash } from "node:crypto";
 import { type ChatMessage, ChatService } from "@happyvertical/smrt-chat";
 import { sendAgentReply } from "@happyvertical/smrt-chat/internal/agent-runtime";
+import {
+  createTenantActivityReportQueryInput,
+  executeTenantActivityReportAgentTool,
+  getTenantActivityReportAgentTools,
+} from "$lib/server/agent-report-read";
+import {
+  hasStarterPermission,
+  type StarterMembershipContext,
+  starterPermissions,
+} from "$lib/server/authz";
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import {
   executeRuntimeToolForTenant,
+  executeRuntimeToolWithTenantPolicy,
   listRuntimeTools,
   RuntimeToolExecutionError,
   runtimeTools,
@@ -53,22 +64,20 @@ export class TenantChatError extends Error {
 }
 
 export async function getTenantChatState(
-  tenantId: string | null | undefined,
-  actorProfileId: string,
+  membership: StarterMembershipContext,
 ): Promise<TenantChatState> {
-  return await withActiveTenant(tenantId, async (activeTenantId) => {
-    const session = await ensureTenantAgentSession(activeTenantId, actorProfileId);
-    return await readTenantChatState(activeTenantId, actorProfileId, session);
+  return await withActiveTenant(membership.tenantId, async (activeTenantId) => {
+    const session = await ensureTenantAgentSession(activeTenantId, membership);
+    return await readTenantChatState(activeTenantId, membership.profileId, session);
   });
 }
 
 export async function sendTenantChatMessage(
-  tenantId: string | null | undefined,
-  actorProfileId: string,
+  membership: StarterMembershipContext,
   content: string,
 ): Promise<TenantChatSendResult> {
   const message = normalizeUserMessage(content);
-  return await withActiveTenant(tenantId, async (activeTenantId) => {
+  return await withActiveTenant(membership.tenantId, async (activeTenantId) => {
     const billing = await getBillingOverview(activeTenantId);
     assertAgentChatAvailable(billing);
     let chatThresholds: ReturnType<typeof assertMetricAllowed> = [];
@@ -82,12 +91,12 @@ export async function sendTenantChatMessage(
     }
     const chatUsageWindow = getContainedThresholdUsageWindow(chatThresholds);
 
-    const session = await ensureTenantAgentSession(activeTenantId, actorProfileId, billing);
+    const session = await ensureTenantAgentSession(activeTenantId, membership, billing);
     const service = session.service;
     await service.sendAgentUserMessage({
       tenantId: activeTenantId,
       agentSessionId: session.sessionId,
-      actorProfileId,
+      actorProfileId: membership.profileId,
       content: message,
     });
     await recordTenantUsageSignal({
@@ -109,6 +118,7 @@ export async function sendTenantChatMessage(
     if (selectedTool) {
       await callToolForChat({
         tenantId: activeTenantId,
+        membership,
         service,
         sessionId: session.sessionId,
         toolName: selectedTool,
@@ -118,7 +128,7 @@ export async function sendTenantChatMessage(
     }
 
     return {
-      ...(await readTenantChatState(activeTenantId, actorProfileId, session)),
+      ...(await readTenantChatState(activeTenantId, membership.profileId, session)),
       selectedTool,
     };
   });
@@ -126,20 +136,33 @@ export async function sendTenantChatMessage(
 
 async function ensureTenantAgentSession(
   tenantId: string,
-  actorProfileId: string,
+  membership: StarterMembershipContext,
   billing?: BillingOverview,
 ) {
   const tenantBilling = billing ?? (await getBillingOverview(tenantId));
   assertAgentChatAvailable(tenantBilling);
   const service = await ChatService.create(getSmrtConfig("ChatRoom"));
-  const tools = listRuntimeTools(tenantBilling.snapshot.featureKeys).filter(
+  const tools = listRuntimeTools(tenantBilling.snapshot.featureKeys, membership).filter(
     (tool) => tool.name !== "tenant.activity-report.query",
   );
+  if (
+    tenantBilling.snapshot.featureKeys.includes("mcp.read_tools") &&
+    hasStarterPermission(membership, starterPermissions.usageRead)
+  ) {
+    tools.push(
+      ...getTenantActivityReportAgentTools().map((tool) => ({
+        name: tool.slug,
+        description: tool.aiTool.function.description ?? tool.slug,
+        readOnly: true,
+        requiredFeature: "mcp.read_tools",
+      })),
+    );
+  }
   const prompt = await resolveStarterPromptPreview(tenantId);
   const { session, room } = await service.createAgentSession({
     tenantId,
     agentId: getStarterAgentId(tenantId),
-    actorProfileId,
+    actorProfileId: membership.profileId,
     allowedTools: tools.map((tool) => tool.name),
     systemPrompt: prompt.text,
     maxMessages: 100,
@@ -200,13 +223,16 @@ async function readTenantChatState(
 
 async function callToolForChat(options: {
   tenantId: string;
+  membership: StarterMembershipContext;
   service: ChatService;
   sessionId: string;
   toolName: string;
   message: string;
   availableTools: StarterRuntimeTool[];
 }) {
-  const tool = runtimeTools.find((candidate) => candidate.name === options.toolName);
+  const tool = [...runtimeTools, ...options.availableTools].find(
+    (candidate) => candidate.name === options.toolName,
+  );
 
   // The agent-runtime bridge gates tool_call replies fail-closed against the
   // session allowlist (which mirrors the tenant's available tools), so a tool
@@ -222,6 +248,7 @@ async function callToolForChat(options: {
     return;
   }
 
+  const input = await buildToolInput(options.toolName, options.message, options.tenantId);
   await sendAgentReply(options.service, {
     tenantId: options.tenantId,
     agentSessionId: options.sessionId,
@@ -230,16 +257,27 @@ async function callToolForChat(options: {
     messageType: "tool_call",
     toolCallData: {
       name: options.toolName,
-      input: buildToolInput(options.toolName, options.message),
+      input,
     },
   });
 
   try {
-    const execution = await executeRuntimeToolForTenant(
-      options.toolName,
-      buildToolInput(options.toolName, options.message),
-      options.tenantId,
-    );
+    const execution =
+      options.toolName === "reports.query"
+        ? await executeRuntimeToolWithTenantPolicy(
+            "tenant.activity-report.query",
+            input,
+            options.tenantId,
+            async () => ({
+              content: [{ type: "text", text: "Tenant activity report loaded." }],
+              structuredContent: await executeTenantActivityReportAgentTool(
+                options.membership,
+                options.toolName,
+                input,
+              ),
+            }),
+          )
+        : await executeRuntimeToolForTenant(options.toolName, input, options.tenantId);
     await sendAgentReply(options.service, {
       tenantId: options.tenantId,
       agentSessionId: options.sessionId,
@@ -273,6 +311,7 @@ async function callToolForChat(options: {
 
 function selectToolForMessage(message: string): string | null {
   const normalized = message.toLowerCase();
+  if (/\b(activity|report|usage history)\b/.test(normalized)) return "reports.query";
   if (/\b(usage|meter|threshold|quota|limit|tokens?|calls?)\b/.test(normalized)) {
     return "tenant.usage.summary";
   }
@@ -288,7 +327,12 @@ function selectToolForMessage(message: string): string | null {
   return "tenant.subscription.summary";
 }
 
-function buildToolInput(toolName: string, message: string): Record<string, unknown> {
+async function buildToolInput(
+  toolName: string,
+  message: string,
+  tenantId: string,
+): Promise<Record<string, unknown>> {
+  if (toolName === "reports.query") return await createTenantActivityReportQueryInput(tenantId);
   if (toolName === "tenant.prompt.preview") {
     return { message, key: "starter.assistant.system" };
   }
@@ -320,6 +364,12 @@ function renderAssistantResponse(tool: StarterRuntimeTool, content: unknown): st
     return `Current plan: ${String(subscription.planName ?? "Unknown")} (${String(
       subscription.status ?? "unknown",
     )}). Enabled features: ${features}.`;
+  }
+
+  if (tool.name === "tenant.activity-report.query") {
+    const report = isRecord(structured.report) ? structured.report : structured;
+    const rows = Array.isArray(report.rows) ? report.rows.length : 0;
+    return `Tenant activity report loaded: ${rows} visible rows.`;
   }
 
   if (tool.name === "tenant.prompt.preview") {

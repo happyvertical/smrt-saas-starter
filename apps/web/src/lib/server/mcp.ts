@@ -93,6 +93,20 @@ export async function executeRuntimeToolForTenant(
   input: unknown,
   tenantId: string,
 ): Promise<RuntimeToolExecution> {
+  return await executeRuntimeToolWithTenantPolicy(
+    name,
+    input,
+    tenantId,
+    async () => await callRuntimeTool(name, input, { tenantId }),
+  );
+}
+
+export async function executeRuntimeToolWithTenantPolicy<T>(
+  name: string,
+  _input: unknown,
+  tenantId: string,
+  execute: () => Promise<T>,
+): Promise<{ tool: RuntimeTool; response: T }> {
   const overview = await getBillingOverview(tenantId);
   const allowed = listRuntimeTools(overview.snapshot.featureKeys);
   const tool = allowed.find((candidate) => candidate.name === name);
@@ -111,7 +125,7 @@ export async function executeRuntimeToolForTenant(
   }
   const mcpUsageWindow = getContainedThresholdUsageWindow(mcpThresholds);
 
-  let response = await callRuntimeTool(name, input, { tenantId });
+  const response = await execute();
   await recordTenantUsageSignal({
     tenantId,
     metricKey: "mcp.calls",
@@ -129,9 +143,6 @@ export async function executeRuntimeToolForTenant(
     },
   });
 
-  if (name === "tenant.activity-report.query") {
-    response = await callRuntimeTool(name, input, { tenantId });
-  }
   return { tool, response };
 }
 
