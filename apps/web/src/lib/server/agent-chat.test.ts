@@ -95,6 +95,17 @@ vi.mock("$lib/server/mcp", () => ({
   executeRuntimeToolForTenant: chatMocks.executeRuntimeToolForTenant,
 }));
 
+vi.mock("$lib/server/agent-report-read", () => ({
+  createTenantActivityReportQueryInput: vi.fn(),
+  executeTenantActivityReportAgentTool: vi.fn(),
+  getTenantActivityReportAgentTools: vi.fn(() => []),
+}));
+
+vi.mock("$lib/server/authz", () => ({
+  hasStarterPermission: () => false,
+  starterPermissions: { usageRead: "tenant.usage.read" },
+}));
+
 vi.mock("$lib/server/smrt", () => ({
   getSmrtConfig: () => ({}),
 }));
@@ -114,6 +125,12 @@ import { getTenantChatState, sendTenantChatMessage, TenantChatError } from "$lib
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const actorProfileId = "22222222-2222-4222-8222-222222222222";
+const membership = {
+  tenantId,
+  profileId: actorProfileId,
+  userId: "33333333-3333-4333-8333-333333333333",
+  permissions: ["tenant.mcp.call", "tenant.chat.use"],
+} as never;
 const windowStart = new Date("2026-06-01T00:00:00.000Z");
 const windowEnd = new Date("2026-07-01T00:00:00.000Z");
 const dailyWindowStart = new Date("2026-06-08T00:00:00.000Z");
@@ -206,7 +223,7 @@ describe("tenant agent chat", () => {
   });
 
   it("creates a tenant-scoped chat session with the available MCP tool allowlist", async () => {
-    await expect(getTenantChatState(tenantId, actorProfileId)).resolves.toMatchObject({
+    await expect(getTenantChatState(membership)).resolves.toMatchObject({
       tenantId,
       sessionId: "33333333-3333-4333-8333-333333333333",
       roomId: "44444444-4444-4444-8444-444444444444",
@@ -214,7 +231,10 @@ describe("tenant agent chat", () => {
       messages: [],
     });
 
-    expect(chatMocks.listRuntimeTools).toHaveBeenCalledWith(["chat.agent", "mcp.read_tools"]);
+    expect(chatMocks.listRuntimeTools).toHaveBeenCalledWith(
+      ["chat.agent", "mcp.read_tools"],
+      membership,
+    );
     expect(chatMocks.createAgentSession).toHaveBeenCalledWith({
       tenantId,
       agentId: expect.stringMatching(
@@ -228,17 +248,21 @@ describe("tenant agent chat", () => {
   });
 
   it("routes usage questions through the usage MCP tool and records the tool exchange", async () => {
-    await expect(
-      sendTenantChatMessage(tenantId, actorProfileId, "show usage this month"),
-    ).resolves.toMatchObject({
-      selectedTool: "tenant.usage.summary",
-      messages: [
-        { role: "user", messageType: "text", content: "show usage this month" },
-        { role: "assistant", messageType: "tool_call", content: "Calling tenant.usage.summary" },
-        { role: "tool", messageType: "tool_result", content: "Usage summary loaded." },
-        { role: "assistant", messageType: "text", content: "Current tenant usage:\nmcp.calls: 2" },
-      ],
-    });
+    await expect(sendTenantChatMessage(membership, "show usage this month")).resolves.toMatchObject(
+      {
+        selectedTool: "tenant.usage.summary",
+        messages: [
+          { role: "user", messageType: "text", content: "show usage this month" },
+          { role: "assistant", messageType: "tool_call", content: "Calling tenant.usage.summary" },
+          { role: "tool", messageType: "tool_result", content: "Usage summary loaded." },
+          {
+            role: "assistant",
+            messageType: "text",
+            content: "Current tenant usage:\nmcp.calls: 2",
+          },
+        ],
+      },
+    );
 
     expect(chatMocks.executeRuntimeToolForTenant).toHaveBeenCalledWith(
       "tenant.usage.summary",
@@ -272,7 +296,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await sendTenantChatMessage(tenantId, actorProfileId, "hello");
+    await sendTenantChatMessage(membership, "hello");
 
     expect(chatMocks.recordTenantUsageSignal).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -287,7 +311,7 @@ describe("tenant agent chat", () => {
     // session allowlist for this plan. The agent-runtime bridge gates tool_call
     // replies fail-closed, so the handler must short-circuit to the denial
     // message rather than attempting (and throwing on) the gated tool call.
-    const result = await sendTenantChatMessage(tenantId, actorProfileId, "preview the prompt");
+    const result = await sendTenantChatMessage(membership, "preview the prompt");
 
     expect(result.selectedTool).toBe("tenant.prompt.preview");
     expect(chatMocks.executeRuntimeToolForTenant).not.toHaveBeenCalled();
@@ -318,7 +342,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    const result = await sendTenantChatMessage(tenantId, actorProfileId, "upgrade my plan");
+    const result = await sendTenantChatMessage(membership, "upgrade my plan");
 
     expect(result.selectedTool).toBe("tenant.subscription.update");
     expect(result.messages.at(-1)).toMatchObject({
@@ -344,9 +368,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await expect(getTenantChatState(tenantId, actorProfileId)).rejects.toBeInstanceOf(
-      TenantChatError,
-    );
+    await expect(getTenantChatState(membership)).rejects.toBeInstanceOf(TenantChatError);
     expect(chatMocks.createChatService).not.toHaveBeenCalled();
   });
 
@@ -358,7 +380,7 @@ describe("tenant agent chat", () => {
       },
     });
 
-    await expect(sendTenantChatMessage(tenantId, actorProfileId, "hello")).rejects.toMatchObject({
+    await expect(sendTenantChatMessage(membership, "hello")).rejects.toMatchObject({
       status: 429,
       message: "Tenant exceeded the chat messages threshold",
     });
