@@ -15,11 +15,14 @@ and bind their actual principal through public APIs.
 
 Roles retain starter `admin`, `member`, `viewer` slugs in fixture-owned contexts.
 The public PermissionResolver resolves explicit neutral `fixture.report.read`
-and `fixture.report.prepare` grants; viewer cannot prepare and inactive or
-nonmember actors receive none. These neutral grants do not claim to implement
-report permissions or full production authorization. Production starter role
-mapping and framework permission resolution are distinct contracts to exercise
-in the later combined suite.
+and `fixture.report.prepare` grants. Admin, member and viewer roles also receive
+the production read permission `tenant.usage.read`, so the shared fixture can
+exercise the principal-bound activity-report proof. Consumers must account for
+that read grant; this is not a neutral-permissions-only fixture. Viewer cannot
+prepare, and inactive or nonmember actors receive no effective grants. The
+explicit permission rows contain no production report mutation or approval grants. Production
+starter role mapping and framework permission resolution remain distinct
+contracts, exercised together by the report-specific integration proofs.
 
 All inserts run in one transaction. A namespace advisory lock serializes setup
 and cleanup; existing namespaces are rejected, never overwritten. UUIDs derive
