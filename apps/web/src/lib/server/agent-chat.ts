@@ -14,6 +14,7 @@ import {
 import { resolveStarterPromptPreview } from "$lib/server/experience";
 import {
   executeRuntimeToolForTenant,
+  executeRuntimeToolWithTenantPolicy,
   listRuntimeTools,
   RuntimeToolExecutionError,
   runtimeTools,
@@ -263,17 +264,12 @@ async function callToolForChat(options: {
   try {
     const execution =
       options.toolName === "reports.query"
-        ? {
-            tool: tool!,
-            response: {
-              content: [{ type: "text", text: "Tenant activity report loaded." }],
-              structuredContent: await executeTenantActivityReportAgentTool(
-                options.membership,
-                options.toolName,
-                input,
-              ),
-            },
-          }
+        ? await executeRuntimeToolWithTenantPolicy(
+            "tenant.activity-report.query",
+            input,
+            options.tenantId,
+            async () => ({ content: [{ type: "text", text: "Tenant activity report loaded." }], structuredContent: await executeTenantActivityReportAgentTool(options.membership, options.toolName, input) }),
+          )
         : await executeRuntimeToolForTenant(options.toolName, input, options.tenantId);
     await sendAgentReply(options.service, {
       tenantId: options.tenantId,
@@ -308,6 +304,7 @@ async function callToolForChat(options: {
 
 function selectToolForMessage(message: string): string | null {
   const normalized = message.toLowerCase();
+  if (/\b(activity|report|usage history)\b/.test(normalized)) return "reports.query";
   if (/\b(usage|meter|threshold|quota|limit|tokens?|calls?)\b/.test(normalized)) {
     return "tenant.usage.summary";
   }
@@ -320,7 +317,6 @@ function selectToolForMessage(message: string): string | null {
   if (/\b(subscription|plan|billing|invoice|payment|portal)\b/.test(normalized)) {
     return "tenant.subscription.summary";
   }
-  if (/\b(activity|report|usage history)\b/.test(normalized)) return "reports.query";
   return "tenant.subscription.summary";
 }
 
@@ -361,6 +357,12 @@ function renderAssistantResponse(tool: StarterRuntimeTool, content: unknown): st
     return `Current plan: ${String(subscription.planName ?? "Unknown")} (${String(
       subscription.status ?? "unknown",
     )}). Enabled features: ${features}.`;
+  }
+
+  if (tool.name === "tenant.activity-report.query") {
+    const report = isRecord(structured.report) ? structured.report : structured;
+    const rows = Array.isArray(report.rows) ? report.rows.length : 0;
+    return `Tenant activity report loaded: ${rows} visible rows.`;
   }
 
   if (tool.name === "tenant.prompt.preview") {

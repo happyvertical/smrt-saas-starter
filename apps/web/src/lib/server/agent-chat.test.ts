@@ -65,6 +65,7 @@ const chatMocks = vi.hoisted(() => {
     getBillingOverview: vi.fn(),
     resolveStarterPromptPreview: vi.fn(),
     executeRuntimeToolForTenant: vi.fn(),
+    executeRuntimeToolWithTenantPolicy: vi.fn(),
     listRuntimeTools: vi.fn(),
     recordTenantUsageSignal: vi.fn(),
   };
@@ -93,6 +94,7 @@ vi.mock("$lib/server/mcp", () => ({
   runtimeTools: chatMocks.runtimeTools,
   listRuntimeTools: chatMocks.listRuntimeTools,
   executeRuntimeToolForTenant: chatMocks.executeRuntimeToolForTenant,
+  executeRuntimeToolWithTenantPolicy: chatMocks.executeRuntimeToolWithTenantPolicy,
 }));
 
 vi.mock("$lib/server/agent-report-read", () => ({
