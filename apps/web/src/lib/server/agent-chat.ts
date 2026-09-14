@@ -268,7 +268,14 @@ async function callToolForChat(options: {
             "tenant.activity-report.query",
             input,
             options.tenantId,
-            async () => ({ content: [{ type: "text", text: "Tenant activity report loaded." }], structuredContent: await executeTenantActivityReportAgentTool(options.membership, options.toolName, input) }),
+            async () => ({
+              content: [{ type: "text", text: "Tenant activity report loaded." }],
+              structuredContent: await executeTenantActivityReportAgentTool(
+                options.membership,
+                options.toolName,
+                input,
+              ),
+            }),
           )
         : await executeRuntimeToolForTenant(options.toolName, input, options.tenantId);
     await sendAgentReply(options.service, {

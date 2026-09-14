@@ -93,14 +93,17 @@ export async function executeRuntimeToolForTenant(
   input: unknown,
   tenantId: string,
 ): Promise<RuntimeToolExecution> {
-  return await executeRuntimeToolWithTenantPolicy(name, input, tenantId, async () =>
-    await callRuntimeTool(name, input, { tenantId }),
+  return await executeRuntimeToolWithTenantPolicy(
+    name,
+    input,
+    tenantId,
+    async () => await callRuntimeTool(name, input, { tenantId }),
   );
 }
 
 export async function executeRuntimeToolWithTenantPolicy<T>(
   name: string,
-  input: unknown,
+  _input: unknown,
   tenantId: string,
   execute: () => Promise<T>,
 ): Promise<{ tool: RuntimeTool; response: T }> {

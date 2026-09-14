@@ -173,6 +173,33 @@ export async function requireTenantMembership(
   return membership;
 }
 
+/** Re-resolve one already authenticated principal before a deferred server tool runs. */
+export async function requireCurrentMembershipPermission(
+  userId: string,
+  tenantId: string,
+  permission: StarterPermission,
+): Promise<StarterMembershipContext> {
+  const rows = await findMembershipRows(userId);
+  const activeRow = rows.find(
+    (row) => readRequiredString(row, "tenant_id", "tenantId") === tenantId,
+  );
+  if (!activeRow) throw error(403, "No active membership for this tenant");
+  const roleSlug = readRequiredString(activeRow, "role_slug", "roleSlug");
+  const membership = {
+    ...toTenantMembershipOption(activeRow),
+    membershipId: readRequiredString(activeRow, "membership_id", "membershipId"),
+    userId: readRequiredString(activeRow, "user_id", "userId"),
+    userEmail: readString(activeRow, "user_email", "userEmail") ?? DEMO_OWNER_EMAIL,
+    profileId: readRequiredString(activeRow, "user_profile_id", "profileId"),
+    permissions: [...(permissionsByRole[roleSlug] ?? [])].sort(),
+    availableTenants: rows.map(toTenantMembershipOption),
+    devFallback: false,
+  };
+  if (!hasStarterPermission(membership, permission))
+    throw error(403, `Missing permission: ${permission}`);
+  return membership;
+}
+
 export function hasStarterPermission(
   membership: Pick<StarterMembershipContext, "permissions"> | null | undefined,
   permission: StarterPermission,

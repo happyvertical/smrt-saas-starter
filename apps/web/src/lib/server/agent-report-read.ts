@@ -1,4 +1,8 @@
-import { createReportDataSurfaceTools, executeAsPrincipal, type PrincipalTool } from "@happyvertical/smrt-agents";
+import {
+  createReportDataSurfaceTools,
+  executeAsPrincipal,
+  type PrincipalTool,
+} from "@happyvertical/smrt-agents";
 import { TenantActivityReport } from "@happyvertical/smrt-saas-objects";
 import { registerPermissionDefinitions } from "@happyvertical/smrt-users";
 import {
@@ -6,15 +10,15 @@ import {
   createTenantActivityReportRequest,
   getTenantActivityReportDescriptor,
 } from "$lib/server/activity-report";
-import type { StarterMembershipContext } from "$lib/server/authz";
+import {
+  requireCurrentMembershipPermission,
+  type StarterMembershipContext,
+  starterPermissions,
+} from "$lib/server/authz";
 import { getAppDatabase } from "$lib/server/db";
 
 const reportReadCollection = "tenant.usage";
 const reportToolSlugs = new Set(["data.discover", "data.inspect", "data.query", "reports.query"]);
-
-export class TenantActivityReportAgentReadError extends Error {
-  readonly status = 403;
-}
 
 // The starter already resolves this permission for every report request. Register
 // the same existing slug with the SMRT operation catalog; this creates no role
@@ -57,9 +61,11 @@ export async function executeTenantActivityReportAgentTool(
   slug: string,
   args: Record<string, unknown>,
 ): Promise<unknown> {
-  if (!membership.permissions.includes("tenant.usage.read")) {
-    throw new TenantActivityReportAgentReadError("Missing permission: tenant.usage.read");
-  }
+  const currentMembership = await requireCurrentMembershipPermission(
+    membership.userId,
+    membership.tenantId,
+    starterPermissions.usageRead,
+  );
   const tool = tenantActivityReportAgentTools.find((candidate) => candidate.slug === slug);
   if (!tool) throw new Error("Tenant activity report tool is not available");
   const db = await getAppDatabase();
@@ -67,15 +73,15 @@ export async function executeTenantActivityReportAgentTool(
     {
       db,
       principal: {
-        runAsUserId: membership.userId,
-        tenantId: membership.tenantId,
+        runAsUserId: currentMembership.userId,
+        tenantId: currentMembership.tenantId,
         allowedTools: [...reportToolSlugs],
       },
-      onBehalfOfUserId: membership.userId,
+      onBehalfOfUserId: currentMembership.userId,
       // `requirePermission` re-resolves this membership on this request. Pass
       // that exact set so the operation gate and application authorization use
       // one live authority snapshot on every chat turn.
-      permissions: membership.permissions,
+      permissions: currentMembership.permissions,
     },
     async (run) => await tool.execute({ run, args, db }),
   );

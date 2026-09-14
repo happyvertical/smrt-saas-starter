@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   createTenantActivityReportRequest: vi.fn(),
   getAppDatabase: vi.fn(),
   execute: vi.fn(),
+  requireCurrentMembershipPermission: vi.fn(),
 }));
 
 vi.mock("@happyvertical/smrt-agents", () => ({
@@ -39,12 +40,15 @@ vi.mock("$lib/server/activity-report", () => ({
   getTenantActivityReportDescriptor: mocks.getTenantActivityReportDescriptor,
 }));
 vi.mock("$lib/server/db", () => ({ getAppDatabase: mocks.getAppDatabase }));
+vi.mock("$lib/server/authz", () => ({
+  requireCurrentMembershipPermission: mocks.requireCurrentMembershipPermission,
+  starterPermissions: { usageRead: "tenant.usage.read" },
+}));
 
 import {
   createTenantActivityReportQueryInput,
   executeTenantActivityReportAgentTool,
   getTenantActivityReportAgentTools,
-  TenantActivityReportAgentReadError,
 } from "$lib/server/agent-report-read";
 
 const membership = {
@@ -55,6 +59,11 @@ const membership = {
 
 describe("tenant activity report agent read adapter", () => {
   beforeEach(() => {
+    mocks.requireCurrentMembershipPermission.mockImplementation(async (userId, tenantId) => ({
+      ...membership,
+      userId,
+      tenantId,
+    }));
     mocks.execute.mockClear();
     mocks.executeAsPrincipal.mockClear();
     mocks.getAppDatabase.mockClear();
@@ -104,10 +113,13 @@ describe("tenant activity report agent read adapter", () => {
     );
   });
 
-  it("denies an empty or revoked permission snapshot before opening the report database", async () => {
+  it("denies a now-revoked membership before opening the report database", async () => {
+    mocks.requireCurrentMembershipPermission.mockRejectedValueOnce(
+      Object.assign(new Error("Missing permission: tenant.usage.read"), { status: 403 }),
+    );
     await expect(
-      executeTenantActivityReportAgentTool({ ...membership, permissions: [] }, "reports.query", {}),
-    ).rejects.toBeInstanceOf(TenantActivityReportAgentReadError);
+      executeTenantActivityReportAgentTool(membership, "reports.query", {}),
+    ).rejects.toMatchObject({ status: 403 });
     expect(mocks.getAppDatabase).not.toHaveBeenCalled();
   });
 
