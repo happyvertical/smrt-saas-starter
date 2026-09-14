@@ -7,6 +7,7 @@ import {
   type SmrtJobData,
   type TaskRunner,
 } from "@happyvertical/smrt-jobs";
+import { registerWorkerReportOperationRuntime } from "@happyvertical/smrt-saas-objects";
 import { initializeWorkerDeployedRuntime } from "./deployed-runtime.js";
 import {
   parseWorkerJob,
@@ -325,7 +326,12 @@ export async function startSmrtWorkerRuntime(
 
   const runtime = await initializeWorkerDeployedRuntime();
   const database = runtime.db as unknown as WorkerDatabase;
-  const unregisterReportRefreshRuntime = registerWorkerReportRefreshRuntime(database);
+  const unregisterRefresh = registerWorkerReportRefreshRuntime(database);
+  const unregisterOperations = registerWorkerReportOperationRuntime(runtime.db);
+  const unregisterReportRefreshRuntime = () => {
+    unregisterOperations();
+    unregisterRefresh();
+  };
   let taskRunner: TaskRunner | null = null;
   let scheduleRunner: ScheduleRunner | null = null;
   let stopped = false;

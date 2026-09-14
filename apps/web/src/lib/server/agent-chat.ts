@@ -20,6 +20,10 @@ import {
   runtimeTools,
   type RuntimeTool as StarterRuntimeTool,
 } from "$lib/server/mcp";
+import {
+  executeReportOperationAgentTool,
+  reportOperationAgentTools,
+} from "$lib/server/report-operation-agent";
 import { getSmrtConfig } from "$lib/server/smrt";
 import { type BillingOverview, getBillingOverview } from "$lib/server/subscriptions";
 import { withActiveTenant } from "$lib/server/tenant-context";
@@ -93,7 +97,7 @@ export async function sendTenantChatMessage(
 
     const session = await ensureTenantAgentSession(activeTenantId, membership, billing);
     const service = session.service;
-    await service.sendAgentUserMessage({
+    const userMessage = await service.sendAgentUserMessage({
       tenantId: activeTenantId,
       agentSessionId: session.sessionId,
       actorProfileId: membership.profileId,
@@ -124,6 +128,7 @@ export async function sendTenantChatMessage(
         toolName: selectedTool,
         message,
         availableTools: session.tools,
+        requestId: requireStringId(userMessage?.id, "Persisted user chat message id"),
       });
     }
 
@@ -144,6 +149,16 @@ async function ensureTenantAgentSession(
   const service = await ChatService.create(getSmrtConfig("ChatRoom"));
   const tools = listRuntimeTools(tenantBilling.snapshot.featureKeys, membership).filter(
     (tool) => tool.name !== "tenant.activity-report.query",
+  );
+  tools.push(
+    ...reportOperationAgentTools.filter(
+      (tool) =>
+        tenantBilling.snapshot.featureKeys.includes(tool.requiredFeature) &&
+        hasStarterPermission(
+          membership,
+          tool.readOnly ? starterPermissions.usageRead : starterPermissions.reportRefresh,
+        ),
+    ),
   );
   if (
     tenantBilling.snapshot.featureKeys.includes("mcp.read_tools") &&
@@ -229,6 +244,7 @@ async function callToolForChat(options: {
   toolName: string;
   message: string;
   availableTools: StarterRuntimeTool[];
+  requestId: string;
 }) {
   const tool = [...runtimeTools, ...options.availableTools].find(
     (candidate) => candidate.name === options.toolName,
@@ -248,7 +264,12 @@ async function callToolForChat(options: {
     return;
   }
 
-  const input = await buildToolInput(options.toolName, options.message, options.tenantId);
+  const input = await buildToolInput(
+    options.toolName,
+    options.message,
+    options.tenantId,
+    options.requestId,
+  );
   await sendAgentReply(options.service, {
     tenantId: options.tenantId,
     agentSessionId: options.sessionId,
@@ -262,8 +283,22 @@ async function callToolForChat(options: {
   });
 
   try {
-    const execution =
-      options.toolName === "reports.query"
+    const execution = options.toolName.startsWith("reports.operations.")
+      ? await executeRuntimeToolWithTenantPolicy(
+          options.toolName,
+          input,
+          options.tenantId,
+          async () => ({
+            content: [{ type: "text", text: "Report operation handled." }],
+            structuredContent: await executeReportOperationAgentTool(
+              options.membership,
+              options.toolName,
+              input,
+            ),
+          }),
+          reportOperationAgentTools,
+        )
+      : options.toolName === "reports.query"
         ? await executeRuntimeToolWithTenantPolicy(
             "tenant.activity-report.query",
             input,
@@ -311,6 +346,12 @@ async function callToolForChat(options: {
 
 function selectToolForMessage(message: string): string | null {
   const normalized = message.toLowerCase();
+  const operationId = /\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/.test(normalized);
+  if (/\bcancel report operation\b/.test(normalized) && operationId)
+    return "reports.operations.cancel";
+  if (/\breport operation status\b/.test(normalized)) return "reports.operations.status";
+  if (/\b(prepare report|start approval demo)\b/.test(normalized))
+    return "reports.operations.prepare";
   if (/\b(activity|report|usage history)\b/.test(normalized)) return "reports.query";
   if (/\b(usage|meter|threshold|quota|limit|tokens?|calls?)\b/.test(normalized)) {
     return "tenant.usage.summary";
@@ -331,7 +372,16 @@ async function buildToolInput(
   toolName: string,
   message: string,
   tenantId: string,
+  sessionId: string,
 ): Promise<Record<string, unknown>> {
+  if (toolName.startsWith("reports.operations.")) {
+    const id = message.match(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/i)?.[0];
+    return {
+      ...(id ? { id } : {}),
+      kind: /approval demo/i.test(message) ? "approval-demo" : "prepare",
+      requestId: `chat-${sessionId}-${createHash("sha256").update(message).digest("hex").slice(0, 32)}`,
+    };
+  }
   if (toolName === "reports.query") return await createTenantActivityReportQueryInput(tenantId);
   if (toolName === "tenant.prompt.preview") {
     return { message, key: "starter.assistant.system" };
@@ -344,6 +394,13 @@ async function buildToolInput(
 
 function renderAssistantResponse(tool: StarterRuntimeTool, content: unknown): string {
   const structured = isRecord(content) ? content : {};
+  if (tool.name.startsWith("reports.operations.")) {
+    const operation = isRecord(structured.operation) ? structured.operation : null;
+    if (operation)
+      return `Report operation ${String(operation.id ?? "")}: ${String(operation.status ?? "unknown")}.`;
+    const operations = Array.isArray(structured.operations) ? structured.operations : [];
+    return `Found ${operations.length} report operation${operations.length === 1 ? "" : "s"}.`;
+  }
   if (tool.name === "tenant.usage.summary") {
     const summaries = Array.isArray(structured.summaries) ? structured.summaries : [];
     if (summaries.length === 0) {

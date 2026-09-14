@@ -92,6 +92,8 @@ try {
   assertRequiredProductionTables(readDatabaseTables());
   assertSeedSnapshot(seedBeforeRestart, readSeedSnapshot());
 
+  const reportHumanSession = createReportHumanSession();
+
   run("pnpm", ["--filter", "@happyvertical/smrt-saas-web", "test:e2e"], {
     env: {
       ...process.env,
@@ -101,6 +103,9 @@ try {
       // The production suite includes the native WebMCP contract. Chromium
       // exposes that test API only when this feature is enabled.
       PLAYWRIGHT_WEBMCP_TESTING: "true",
+      // Minted only in this owned disposable database, never inherited from
+      // the host or exposed through an authentication-bypass HTTP endpoint.
+      E2E_REPORT_HUMAN_SESSION: reportHumanSession,
     },
   });
   console.log(`Production-image E2E passed for ${expectedVersion} at ${primaryBaseUrl}.`);
@@ -432,6 +437,38 @@ function containerRunning(name) {
       allowFailure: true,
     }).trim() === "true"
   );
+}
+
+function createReportHumanSession() {
+  const owner = commandOutput("docker", [
+    "inspect",
+    "--format",
+    `{{index .Config.Labels "${label}"}}`,
+    names.web,
+  ]).trim();
+  if (owner !== runId) throw new Error("Cannot mint a test session outside the owned fixture.");
+  const script = `
+    import { readFile } from 'node:fs/promises';
+    import { SessionService } from '@happyvertical/smrt-users';
+    const seed = JSON.parse(await readFile('src/lib/server/starter-data.json', 'utf8'));
+    const service = await SessionService.create({
+      db: { type: 'postgres', url: process.env.DATABASE_URL }, defaultTTL: 600,
+    });
+    const sessionId = await service.createSession(seed.demoTenant.ownerUser.id, seed.demoTenant.id);
+    process.stdout.write('REPORT_TEST_SESSION=' + JSON.stringify(sessionId) + '\\n');
+    process.exit(0);
+  `;
+  const result = spawnSync("docker", ["exec", "-i", names.web, "node", "--input-type=module"], {
+    input: script,
+    encoding: "utf8",
+    timeout: 30_000,
+  });
+  const line = result.stdout?.split("\n").find((value) => value.startsWith("REPORT_TEST_SESSION="));
+  if (result.status !== 0 || !line)
+    throw new Error("Could not create the isolated human test session.");
+  const sessionId = JSON.parse(line.slice("REPORT_TEST_SESSION=".length));
+  if (typeof sessionId !== "string" || !sessionId) throw new Error("Invalid human test session.");
+  return sessionId;
 }
 
 async function captureDiagnostics() {

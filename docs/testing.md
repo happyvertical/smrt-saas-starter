@@ -159,8 +159,29 @@ visible browser acknowledgment or durable operation/approval behavior.
 The chat activity-report path uses the same report adapter options and MCP
 feature, call-limit and usage-recording policy as the existing report command.
 Report-tool execution rechecks live membership before using the public
-principal executor. Refresh/export and operation status/cancel/approval tools
-are not included in this read-only agent catalog.
+principal executor. The read-only catalog remains separate from the chat
+operation catalog, which adds prepare/status/cancel through the same MCP policy
+wrapper. Neither catalog exposes a human approval tool.
+
+## Durable report operations
+
+The behavior and failure-case matrix is in
+[`testing/report-operations-contract.md`](testing/report-operations-contract.md).
+After the normal object build and database migration/seed, run the native proof
+against an owned disposable PostgreSQL database:
+
+```sh
+NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/report-operations.integration.proof.mjs
+NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/report-operations-recovery.integration.proof.mjs
+```
+
+The proof uses real released SMRT action, SQL state, Jobs, and session APIs.
+Use a separate disposable database for concurrent lanes. Production browser
+coverage lives in `apps/web/e2e/report-operations.spec.ts` and runs through
+`pnpm test:e2e:production`. Its approval test uses a short-lived genuine
+`SessionService` session minted inside the runner's owned web fixture; the runner
+passes it directly to Playwright without printing it. The other operation tests
+exercise visible browser-tool acknowledgment and persisted snapshots.
 
 ## Conventions
 

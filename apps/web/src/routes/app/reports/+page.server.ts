@@ -22,6 +22,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     tenantId: membership.tenantId,
     canExport: hasStarterPermission(membership, starterPermissions.reportExport),
     canRefresh: hasStarterPermission(membership, starterPermissions.reportRefresh),
+    actualSession: !membership.devFallback,
   };
 };
 

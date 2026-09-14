@@ -75,11 +75,37 @@ access, and fails closed when either setting or the existing `SESSION_SECRET` /
 OIDC client secret is absent.
 
 Manual activity-report refreshes are signed native report jobs. Set the same
-non-empty `REPORT_REFRESH_SIGNING_KEY` and `REPORT_REFRESH_SIGNING_KEY_ID` in
+random `REPORT_REFRESH_SIGNING_KEY` (at least 32 bytes) and non-empty
+`REPORT_REFRESH_SIGNING_KEY_ID` in
 the web and worker secret references before either process starts. The worker
 registers its application authority before polling and rechecks the queued
 actor's live tenant membership and refresh permission before materializing;
 missing signer configuration or a revoked principal fails before that effect.
+
+The reports page also offers **Prepare report**, which saves the current bounded
+report page as an immutable snapshot through the `reports` worker queue. This
+ordinary read needs no approval. **Synthetic approval demo** exercises a separate
+human decision before preparing the same kind of snapshot; it performs no
+financial action. The decision requires a real signed-in session and the exact
+displayed request fingerprint. Demo-owner fallback access cannot approve it.
+Chat and browser tools can submit, inspect, and cancel operations, but cannot
+approve them.
+
+Operation status and snapshots survive process restarts and are scoped to the
+requesting user and tenant. The worker rechecks live access before execution.
+Cancellation and snapshot persistence lock the same operation: an already
+committed snapshot remains committed. Status reads can reconcile a committed
+snapshot with interrupted framework bookkeeping using its saved execution
+evidence. A `recovery_required` result means the outcome needs investigation;
+do not resubmit under a new request ID to clear it. Preserve the operation ID and
+job ID when investigating worker logs and queue state.
+
+These operations use the released SMRT action adapter, SQL confirmation and
+idempotency store, and Jobs queue. Their stable worker handler is
+`smrt-saas-starter.report-operation.v1`; its signing key derives from the shared
+`REPORT_REFRESH_SIGNING_KEY`. Keep that secret stable across web and worker
+restarts while signed jobs remain queued. Run normal `db:migrate` before workers
+start so the operation and framework state tables exist.
 
 `subscriptions.reconcile` reads Stripe-backed tenant subscriptions from
 Postgres and asks `@happyvertical/accounting` for current subscription status.

@@ -323,6 +323,9 @@ importers:
       '@happyvertical/logger':
         specifier: 0.89.9
         version: 0.89.9
+      '@happyvertical/smrt-agents':
+        specifier: 0.49.8
+        version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-app-runtime':
         specifier: 0.49.8
         version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)
@@ -372,6 +375,9 @@ importers:
       '@happyvertical/logger':
         specifier: 0.89.9
         version: 0.89.9
+      '@happyvertical/smrt-agents':
+        specifier: 0.49.8
+        version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-reports':
         specifier: 0.49.8
         version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
@@ -381,6 +387,15 @@ importers:
       '@happyvertical/smrt-tenancy':
         specifier: 0.49.8
         version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-types':
+        specifier: 0.49.8
+        version: 0.49.8
+      '@happyvertical/smrt-users':
+        specifier: 0.49.8
+        version: 0.49.8(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/sql':
+        specifier: 0.89.9
+        version: 0.89.9
     devDependencies:
       '@happyvertical/smrt-core':
         specifier: 0.49.8

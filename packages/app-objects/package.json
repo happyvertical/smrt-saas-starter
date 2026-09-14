@@ -29,8 +29,12 @@
     "@happyvertical/accounting": "catalog:",
     "@happyvertical/logger": "catalog:",
     "@happyvertical/smrt-reports": "catalog:",
+    "@happyvertical/smrt-types": "catalog:",
+    "@happyvertical/sql": "catalog:",
     "@happyvertical/smrt-subscriptions": "catalog:",
-    "@happyvertical/smrt-tenancy": "catalog:"
+    "@happyvertical/smrt-tenancy": "catalog:",
+    "@happyvertical/smrt-agents": "catalog:",
+    "@happyvertical/smrt-users": "catalog:"
   },
   "peerDependencies": {
     "@happyvertical/smrt-core": "catalog:"

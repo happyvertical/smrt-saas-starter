@@ -4,6 +4,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
   import ReportActions from "./ReportActions.svelte";
+  import ReportOperations from "./ReportOperations.svelte";
   import ReportWebMcpTool from "./ReportWebMcpTool.svelte";
 
   let { data } = $props();
@@ -105,6 +106,20 @@
       }}
     />
   {/if}
+
+  <ReportOperations
+    tenantId={data.tenantId}
+    actualSession={data.actualSession}
+    query={{
+      page: data.page,
+      pageSize: data.pageSize,
+      sort: readSort(page.url.searchParams.get("sort")) ?? "window_start",
+      direction: page.url.searchParams.get("direction") === "asc" ? "asc" : "desc",
+      ...(boundedMetricKey(page.url.searchParams.get("metricKey"))
+        ? { metricKey: boundedMetricKey(page.url.searchParams.get("metricKey")) }
+        : {}),
+    }}
+  />
 
   <form class="filters" onsubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); update({ page: 1, metricKey: String(form.get("metricKey") ?? "") }); }}>
     <label>Activity <input name="metricKey" value={page.url.searchParams.get("metricKey") ?? ""} maxlength="120" /></label>
