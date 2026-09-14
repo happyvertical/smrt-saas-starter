@@ -88,6 +88,51 @@ try {
       requestId: randomUUID().replaceAll("-", ""),
       query,
     });
+  const sharedRequestId = randomUUID().replaceAll("-", "");
+  const tenantAOperation = await operations.createReportOperation(locals("adminA", "a"), {
+    kind: "prepare",
+    requestId: sharedRequestId,
+    query: { metricKey: "fixture.activity" },
+  });
+  const tenantBOperation = await operations.createReportOperation(locals("adminB", "b"), {
+    kind: "prepare",
+    requestId: sharedRequestId,
+    query: { metricKey: "fixture.activity" },
+  });
+  assert.notEqual(tenantAOperation.id, tenantBOperation.id);
+  assert.ok(tenantAOperation.jobId);
+  assert.ok(tenantBOperation.jobId);
+  const tenantARetry = await operations.createReportOperation(locals("adminA", "a"), {
+    kind: "prepare",
+    requestId: sharedRequestId,
+    query: { metricKey: "fixture.activity" },
+  });
+  assert.equal(tenantARetry.id, tenantAOperation.id);
+  assert.equal(tenantARetry.jobId, tenantAOperation.jobId);
+  await assert.rejects(
+    operations.createReportOperation(locals("adminA", "a"), {
+      kind: "prepare",
+      requestId: sharedRequestId,
+      query: { metricKey: "conflicting.activity" },
+    }),
+    (e) => e.status === 409,
+  );
+  await assert.rejects(
+    operations.getReportOperation(locals("adminA", "a"), tenantBOperation.id),
+    (e) => e.status === 404,
+  );
+  const sameRequestJobs = await db.query(
+    "SELECT tenant_id FROM _smrt_jobs WHERE id = ? OR id = ?",
+    tenantAOperation.jobId,
+    tenantBOperation.jobId,
+  );
+  assert.deepEqual(
+    new Set(sameRequestJobs.rows.map((job) => job.tenant_id)),
+    new Set([fixture.tenants.a, fixture.tenants.b]),
+  );
+  console.log(
+    "report operations: tenant-scoped request IDs create isolated jobs, retry locally, and preserve ownership",
+  );
   const ordinary = await create("prepare", { metricKey: "fixture.activity" });
   let runtime = objects.createReportOperationRuntime({ db });
   const envelopeFor = async (operation, runtimeFor = runtime) => {
@@ -257,6 +302,89 @@ try {
     await sessions.destroySession(foreignSessionId);
     await db.query("DELETE FROM sessions WHERE id = ?", foreignSessionId);
   }
+  const retryableApproval = await create("approval-demo");
+  const originalTransaction = db.transaction;
+  let decisionPersisted = false;
+  db.transaction = async (callback) => {
+    if (decisionPersisted) throw new Error("injected enqueue failure after decision persistence");
+    return originalTransaction(async (tx) =>
+      callback(
+        new Proxy(tx, {
+          get(target, property) {
+            if (property !== "query") {
+              const value = Reflect.get(target, property);
+              return typeof value === "function" ? value.bind(target) : value;
+            }
+            return async (sql, ...parameters) => {
+              const result = await target.query(sql, ...parameters);
+              if (
+                sql.includes("UPDATE starter_report_operations SET status = ?") &&
+                parameters[0] === "queued" &&
+                parameters.at(-1) === retryableApproval.id
+              )
+                decisionPersisted = true;
+              return result;
+            };
+          },
+        }),
+      ),
+    );
+  };
+  try {
+    await assert.rejects(
+      operations.decideReportOperation(
+        sessionLocals,
+        retryableApproval.id,
+        "approve",
+        retryableApproval.payloadFingerprint,
+        sessionId,
+      ),
+      /injected enqueue failure after decision persistence/,
+    );
+  } finally {
+    db.transaction = originalTransaction;
+  }
+  assert.equal(decisionPersisted, true);
+  const strandedApproval = await operations.getReportOperation(sessionLocals, retryableApproval.id);
+  assert.equal(strandedApproval.status, "queued");
+  assert.equal(strandedApproval.jobId, null);
+  await assert.rejects(
+    operations.decideReportOperation(
+      sessionLocals,
+      retryableApproval.id,
+      "approve",
+      randomUUID(),
+      sessionId,
+    ),
+    (e) => e.status === 409,
+  );
+  const resumedApproval = await operations.decideReportOperation(
+    sessionLocals,
+    retryableApproval.id,
+    "approve",
+    retryableApproval.payloadFingerprint,
+    sessionId,
+  );
+  assert.equal(resumedApproval.status, "queued");
+  assert.ok(resumedApproval.jobId);
+  const resumedJobs = await db.query(
+    "SELECT args FROM _smrt_jobs WHERE tenant_id = ?",
+    fixture.tenants.a,
+  );
+  assert.equal(
+    resumedJobs.rows.filter(
+      (job) => findEnvelope(parseJson(job.args))?.request?.requestId === retryableApproval.id,
+    ).length,
+    1,
+  );
+  runtime = objects.createReportOperationRuntime({ db });
+  const resumedEnvelope = await envelopeFor(resumedApproval);
+  assert.equal((await runtime.executeDeferred(resumedEnvelope)).ok, true);
+  runtime.unregister();
+  assert.equal(
+    (await operations.getReportOperation(sessionLocals, resumedApproval.id)).status,
+    "committed",
+  );
   const approved = await operations.decideReportOperation(
     sessionLocals,
     awaiting.id,
@@ -276,7 +404,7 @@ try {
   await sessions.destroySession(sessionId);
   await db.query("DELETE FROM sessions WHERE id = ?", sessionId);
   console.log(
-    "report operations: approval demo accepts actual SessionService approval; forged session, foreign real session and stale fingerprint denied",
+    "report operations: approval retry resumes only the same authenticated human's exact stranded approval; forged, foreign and stale decisions are denied",
   );
 } finally {
   if (db && fixture) {

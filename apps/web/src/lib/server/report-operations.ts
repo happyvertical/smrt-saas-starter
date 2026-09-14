@@ -89,7 +89,10 @@ export async function createReportOperation(
     throw new Error("Report operations require PostgreSQL transactions");
   // Serialize stable submission IDs, including concurrent retries, before insert.
   const operation = await db.transaction(async (tx) => {
-    await tx.query("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", input.requestId);
+    await tx.query(
+      "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+      `${membership.tenantId}:${input.requestId}`,
+    );
     return withTenant({ tenantId: membership.tenantId }, async () => {
       const collection = await ReportOperationCollection.create({ db: tx });
       const existing = (
@@ -181,8 +184,6 @@ export async function decideReportOperation(
     throw error(401, "A current signed-in browser session is required");
   if (decision !== "approve" && decision !== "decline") throw error(400, "Decision is invalid");
   await withLockedReportOperation(db, id, membership, async (tx, row) => {
-    if (row.kind !== "approval-demo" || row.status !== "awaiting_approval")
-      throw error(409, "Operation is not awaiting approval");
     const query = parseReportOperationJson<{ query: ActivityReportOperationQuery }>(
       row.request,
     ).query;
@@ -191,6 +192,16 @@ export async function decideReportOperation(
       reportOperationPayloadFingerprint(row, query) !== row.payload_fingerprint
     )
       throw error(409, "Approval payload no longer matches");
+    if (row.kind !== "approval-demo") throw error(409, "Operation is not awaiting approval");
+    if (
+      row.status === "queued" &&
+      decision === "approve" &&
+      !row.job_id &&
+      row.approved_fingerprint === row.payload_fingerprint &&
+      row.decided_by_user_id === membership.userId
+    )
+      return;
+    if (row.status !== "awaiting_approval") throw error(409, "Operation is not awaiting approval");
     await tx.query(
       "UPDATE starter_report_operations SET status = ?, decided_by_user_id = ?, decided_at = ?, approved_fingerprint = ?, updated_at = ? WHERE id = ?",
       decision === "approve" ? "queued" : "declined",

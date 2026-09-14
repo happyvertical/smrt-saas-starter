@@ -14,7 +14,19 @@ export type ReportOperationStatus =
 
 /** Starter-owned durable record for a caller's immutable activity-report view. */
 @TenantScoped({ mode: "required" })
-@smrt({ tableName: "starter_report_operations", api: false, cli: false, mcp: false })
+@smrt({
+  tableName: "starter_report_operations",
+  api: false,
+  cli: false,
+  mcp: false,
+  indexes: [
+    {
+      name: "starter_report_operations_tenant_request_id_key",
+      columns: ["tenantId", "requestId"],
+      unique: true,
+    },
+  ],
+})
 export class ReportOperation extends SmrtObject {
   @tenantId()
   tenantId?: string;
@@ -34,7 +46,7 @@ export class ReportOperation extends SmrtObject {
   @field({ type: "text", required: true })
   payloadFingerprint = "";
 
-  @field({ type: "text", required: true, unique: true })
+  @field({ type: "text", required: true })
   requestId = "";
 
   @field({ type: "json", required: true })

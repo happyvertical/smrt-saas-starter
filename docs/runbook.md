@@ -91,6 +91,13 @@ displayed request fingerprint. Demo-owner fallback access cannot approve it.
 Chat and browser tools can submit, inspect, and cancel operations, but cannot
 approve them.
 
+If a demo approval is recorded but its enqueue response fails, the owner can
+reload the operation and use **Resume approved demo**. That form resubmits the
+same operation ID and fingerprint and is accepted only for the same human, with
+a current authenticated session; it does not create a new approval or expose an
+agent decision. Client `requestId` values are idempotent within a tenant, so
+the same value may safely identify independent operations in different tenants.
+
 Operation status and snapshots survive process restarts and are scoped to the
 requesting user and tenant. The worker rechecks live access before execution.
 Cancellation and snapshot persistence lock the same operation: an already

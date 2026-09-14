@@ -143,6 +143,13 @@ import { onDestroy, onMount } from "svelte";
               <p><a href="/login">Sign in to approve demo</a></p>
             {/if}
           {/if}
+          {#if operation.kind === "approval-demo" && operation.status === "queued" && !operation.jobId && actualSession}
+            <p>This approval was recorded but was not queued. Resume the approved demo while signed in as the approving person.</p>
+            <form action={`/api/reports/operations/${encodeURIComponent(operation.id)}/decision`} method="POST" onsubmit={(event) => void decide(event, operation)}>
+              <input type="hidden" name="payloadFingerprint" value={operation.payloadFingerprint} />
+              <button type="submit" name="decision" value="approve" disabled={busy}>Resume approved demo</button>
+            </form>
+          {/if}
         </li>
       {/each}
     </ul>
