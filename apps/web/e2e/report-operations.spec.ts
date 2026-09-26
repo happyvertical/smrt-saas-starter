@@ -94,6 +94,14 @@ test("synthetic approval requires a real human session and the exact displayed p
     form: { decision: "approve", payloadFingerprint: "stale-proposal" },
   });
   expect(stale.status()).toBe(409);
+  const missing = await page.request.post(
+    `/api/reports/operations/${crypto.randomUUID()}/decision`,
+    {
+      headers: { origin },
+      form: { decision: "approve", payloadFingerprint: pending.payloadFingerprint },
+    },
+  );
+  expect(missing.status()).toBe(404);
   const card = page.locator(`[data-report-operation-id="${pending.id}"]`);
   await card.getByRole("button", { name: "Approve demo", exact: true }).click();
   await waitForPrepared(page, pending.id);

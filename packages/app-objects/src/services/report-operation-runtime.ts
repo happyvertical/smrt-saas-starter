@@ -27,6 +27,13 @@ export interface ReportOperationPrincipal {
   tenantId: string;
   profileId: string;
 }
+/** A lookup denial that HTTP adapters may safely present as a bounded 404. */
+export class ReportOperationNotFoundError extends Error {
+  constructor() {
+    super("Report operation not found");
+    this.name = "ReportOperationNotFoundError";
+  }
+}
 export interface ReportOperationRow extends Record<string, unknown> {
   id: string;
   tenant_id: string;
@@ -102,7 +109,7 @@ export async function withLockedReportOperation<T>(
     );
     const row = result.rows[0] as ReportOperationRow | undefined;
     if (!row || row.requester_profile_id !== principal.profileId)
-      throw new Error("Report operation not found");
+      throw new ReportOperationNotFoundError();
     await authorizeReportOperationPrincipal(tx, principal);
     return fn(tx, row);
   });
