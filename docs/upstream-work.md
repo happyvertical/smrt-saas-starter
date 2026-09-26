@@ -7,7 +7,7 @@ Reusable starter functionality should continue to move upstream from isolated wo
 - SMRT packages (`@happyvertical/smrt-*`): **0.51.30**
 - SDK family (excluding independently versioned `@happyvertical/ocr`): **0.94.0**
 - OCR (`@happyvertical/ocr`): **0.61.6**
-- Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
+- Svelte: **5.57.1 or newer in the 5.x line** (SMRT peer requirement)
 
 The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.51.30`
 uses the SDK line at `^0.94.0`, so the catalog/`overrides` pin the SDK family to
