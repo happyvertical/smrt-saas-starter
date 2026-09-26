@@ -10,7 +10,6 @@ const required = [
   "manifests/base/worker.deployment.yaml",
   "manifests/base/postgres.cluster.yaml",
   "manifests/base/app.secret.yaml",
-  "manifests/base/assets.pvc.yaml",
   "manifests/overlays/dev/kustomization.yaml",
   "manifests/overlays/demo/kustomization.yaml",
   "manifests/overlays/demo/ingress.yaml",
@@ -23,31 +22,42 @@ for (const file of required) {
   await access(join(root, file));
 }
 
-const assetClaim = await readFile(join(root, "manifests/base/assets.pvc.yaml"), "utf8");
 const webDeployment = await readFile(join(root, "manifests/base/web.deployment.yaml"), "utf8");
 const workerDeployment = await readFile(
   join(root, "manifests/base/worker.deployment.yaml"),
   "utf8",
 );
-if (!assetClaim.includes("ReadWriteMany")) {
-  throw new Error("shared report assets must use a ReadWriteMany claim");
-}
-for (const [name, manifest] of [
-  ["web", webDeployment],
-  ["worker", workerDeployment],
-]) {
-  if (
-    !manifest.includes("claimName: smrt-saas-assets") ||
-    !manifest.includes("mountPath: /var/lib/smrt-assets")
-  ) {
-    throw new Error(`${name} deployment must mount the shared report asset claim`);
-  }
-}
-
 for (const dockerfile of ["apps/web/Dockerfile", "apps/worker/Dockerfile"]) {
   const text = await readFile(join(root, dockerfile), "utf8");
   if (!/^USER\s+1000:1000\s*$/m.test(text)) {
     throw new Error(`${dockerfile} must declare the numeric non-root runtime user 1000:1000`);
+  }
+}
+
+const assetConfig = await readFile(join(root, "manifests/base/app.configmap.yaml"), "utf8");
+const assetKustomization = await readFile(join(root, "manifests/base/kustomization.yaml"), "utf8");
+for (const phrase of [
+  'SMRT_ASSETS_STORAGE_TYPE: "s3"',
+  'SMRT_ASSETS_S3_BUCKET: "smrt-saas-assets"',
+  'SMRT_ASSETS_S3_REGION: "garage"',
+  'SMRT_ASSETS_S3_ENDPOINT: "http://garage.garage.svc.cluster.local:3900"',
+  'SMRT_ASSETS_S3_FORCE_PATH_STYLE: "true"',
+]) {
+  if (!assetConfig.includes(phrase))
+    throw new Error(`asset storage config must include: ${phrase}`);
+}
+for (const deployment of [webDeployment, workerDeployment]) {
+  if (!deployment.includes("name: smrt-saas-assets-s3")) {
+    throw new Error("web and worker deployments must consume the S3 credential Secret");
+  }
+}
+for (const text of [assetKustomization, webDeployment, workerDeployment]) {
+  if (
+    text.includes("assets.pvc.yaml") ||
+    text.includes("claimName:") ||
+    text.includes("/var/lib/smrt-assets")
+  ) {
+    throw new Error("asset PVC mounts must not remain after moving assets to S3");
   }
 }
 

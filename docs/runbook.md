@@ -63,12 +63,18 @@ there.
 
 Deployed worker startup uses the published SMRT deployed runtime. Run the
 separate `pnpm run db:migrate` release step before starting workers; a worker
-never migrates application schema. The web and worker must receive the same
-explicit `SMRT_STARTER_ASSET_STORAGE_PATH`, mounted as shared durable storage.
-The base manifests provide `/var/lib/smrt-assets` through the
-`smrt-saas-assets` `ReadWriteMany` claim and keep both pods in the claim's
-mount group. Select an RWX-capable storage class; the local-files provider is
-not safe to run with separate unshared web and worker filesystems. Set `PUBLIC_SITE_URL` to the HTTPS origin whose
+never migrates application schema. Report-export assets use the shared
+S3-compatible AssetStore configuration in the base ConfigMap:
+`SMRT_ASSETS_STORAGE_TYPE=s3`, `SMRT_ASSETS_S3_BUCKET`,
+`SMRT_ASSETS_S3_REGION`, `SMRT_ASSETS_S3_ENDPOINT`, and
+`SMRT_ASSETS_S3_FORCE_PATH_STYLE`. Both workloads also require the external
+`smrt-saas-assets-s3` Secret with `SMRT_ASSETS_S3_ACCESS_KEY_ID` and
+`SMRT_ASSETS_S3_SECRET_ACCESS_KEY`. The Secret is intentionally not declared
+in this repository: the deployment owner provisions its scoped credentials.
+For the demo Garage service, use bucket `smrt-saas-assets`, region `garage`,
+endpoint `http://garage.garage.svc.cluster.local:3900`, and path-style requests.
+Local development defaults to `.runtime/assets`; set
+`SMRT_STARTER_ASSET_STORAGE_PATH` only to override that local path. Set `PUBLIC_SITE_URL` to the HTTPS origin whose
 `/auth/happyvertical/callback` URI is registered with the configured OIDC
 provider. Startup probes that provider's public metadata and asset read/write
 access, and fails closed when either setting or the existing `SESSION_SECRET` /
