@@ -22,6 +22,7 @@ import {
   starterPermissions,
 } from "$lib/server/authz";
 import { getAppDatabase } from "$lib/server/db";
+import { isUuid } from "$lib/server/starter-data";
 
 export interface ReportOperationDto {
   id: string;
@@ -183,6 +184,7 @@ export async function decideReportOperation(
   const session = await sessions.loadSessionContext(sessionId);
   if (!session || session.user.id !== membership.userId)
     throw error(401, "A current signed-in browser session is required");
+  if (!isUuid(id)) throw error(404, "Report operation not found");
   if (decision !== "approve" && decision !== "decline") throw error(400, "Decision is invalid");
   try {
     await withLockedReportOperation(db, id, membership, async (tx, row) => {

@@ -66,4 +66,19 @@ describe("report operation decisions", () => {
     expect(mocks.requirePermission).toHaveBeenCalledOnce();
     expect(mocks.loadSessionContext).toHaveBeenCalledWith("real-session");
   });
+
+  it("rejects a malformed ID after the session and membership gates without querying PostgreSQL", async () => {
+    await expect(
+      decideReportOperation(
+        { sessionId: "real-session" } as App.Locals,
+        "not-a-uuid",
+        "approve",
+        "fingerprint",
+        "real-session",
+      ),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(mocks.requirePermission).toHaveBeenCalledOnce();
+    expect(mocks.loadSessionContext).toHaveBeenCalledWith("real-session");
+    expect(mocks.withLockedReportOperation).not.toHaveBeenCalled();
+  });
 });

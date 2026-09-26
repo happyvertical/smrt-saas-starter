@@ -23,11 +23,9 @@ data:
   # the tenant subdomain instead.
   SMRT_STARTER_TRUST_TENANT_HEADER: "false"
   # Comma/space-separated allow list of registered mobile auth redirect URIs.
-  # When non-empty, mobile auth start/complete reject any redirect URI not in
-  # the list. Leave empty to allow any non-dangerous scheme (https, native
-  # loopback http, or private-use app schemes). An entry ending in "/" matches
-  # as a path prefix so one origin can cover its callback sub-paths.
-  MOBILE_AUTH_ALLOWED_REDIRECT_URIS: ""
+  # Every entry is an exact registered callback; deployments must update this
+  # together with their mobile OAuth client registration and URL handler.
+  MOBILE_AUTH_ALLOWED_REDIRECT_URIS: "smrtstarter://auth/callback,http://127.0.0.1:8765/callback"
   # Same redirect-URI allow list, scoped to the built-in HappyVertical IDP
   # provider. Merged with MOBILE_AUTH_ALLOWED_REDIRECT_URIS at request time.
   MOBILE_AUTH_HAPPYVERTICAL_REDIRECT_URIS: ""

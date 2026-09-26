@@ -102,6 +102,11 @@ test("synthetic approval requires a real human session and the exact displayed p
     },
   );
   expect(missing.status()).toBe(404);
+  const malformed = await page.request.post(`/api/reports/operations/not-a-uuid/decision`, {
+    headers: { origin },
+    form: { decision: "approve", payloadFingerprint: pending.payloadFingerprint },
+  });
+  expect(malformed.status()).toBe(404);
   const card = page.locator(`[data-report-operation-id="${pending.id}"]`);
   await card.getByRole("button", { name: "Approve demo", exact: true }).click();
   await waitForPrepared(page, pending.id);
