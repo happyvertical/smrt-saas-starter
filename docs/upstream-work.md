@@ -4,21 +4,19 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT packages (`@happyvertical/smrt-*`): **0.49.8**
-- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.89.9**
+- SMRT packages (`@happyvertical/smrt-*`): **0.51.30**
+- SDK family (excluding independently versioned `@happyvertical/ocr`): **0.94.0**
 - OCR (`@happyvertical/ocr`): **0.61.6**
 - Svelte: **5.56.4 or newer in the 5.x line** (SMRT peer requirement)
 
-The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.49.8`
-uses the SDK line at `^0.89.6`, so the catalog/`overrides` pin the SDK family to
-`0.89.9`. The Starter Vite SSR build passes against the published SQL artifact
+The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.51.30`
+uses the SDK line at `^0.94.0`, so the catalog/`overrides` pin the SDK family to
+`0.94.0`. The Starter Vite SSR build passes against the published SQL artifact
 without DuckDB externals, so the prior consumer-side bundler mitigation is removed.
 
-These are now installed from **public npm** (`registry.npmjs.org`) — `.npmrc` routes the
-`@happyvertical` scope to npmjs and **no GitHub token is required** to install. This
-completes the publish migration tracked in [smrt#1563](https://github.com/happyvertical/smrt/issues/1563)
-/ [sdk#1046](https://github.com/happyvertical/sdk/issues/1046) (and the straggler fixes
-[sdk#1051](https://github.com/happyvertical/sdk/issues/1051) / [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)).
+The owning registry is **npm.happyvertical.com** — `.npmrc` routes the `@happyvertical`
+scope there, where the v0.51.30 release is published. npmjs mirroring remains a
+best-effort follow-up and is not the install source for this cohort.
 
 The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to absorb:
 
@@ -166,7 +164,7 @@ separate downstream change:
    are complete. None of those downstream edits are made by this starter
    release.
 
-### `@happyvertical/*` packages now publish to public npm
+### `@happyvertical/*` package registry migration
 
 Was: SMRT/SDK packages published only to GitHub Packages (`npm.pkg.github.com`), which
 requires a token for every read, so a public `pnpm install` needed `gh auth token`.
@@ -176,8 +174,9 @@ strays were caught in [sdk#1051](https://github.com/happyvertical/sdk/issues/105
 (missing `documents`) and [sdk#1055](https://github.com/happyvertical/sdk/issues/1055)
 (a release gate so a package can't ship with dependency ranges that don't resolve on npm).
 
-Now: the packages publish to `registry.npmjs.org`, `.npmrc` routes the `@happyvertical`
-scope there, and the token is gone — a clean `pnpm install` needs no auth. See
+Now: the owning registry is `npm.happyvertical.com`; `.npmrc` routes the
+`@happyvertical` scope there, where release publication is authoritative. npmjs
+mirroring remains best-effort, and a clean `pnpm install` needs no auth. See
 **Consumed Versions** above.
 
 ### SMRT: Field metadata lost in vite-bundled production servers

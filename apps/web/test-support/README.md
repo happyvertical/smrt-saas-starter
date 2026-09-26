@@ -48,7 +48,7 @@ isolation, cleanup and deterministic recreation. It makes no browser, report
 refresh, durable job, session or end-to-end acceptance claim. This support is
 outside the web package's published `files` list and has no production import.
 
-API inspection: public SMRT users/profiles0.49.2 model schemas and agents0.49.2
-`PrincipalBinding`; public SQL0.89.9 transaction/insert/query interface. Direct
+API inspection: public SMRT users/profiles0.51.30 model schemas and agents0.51.30
+`PrincipalBinding`; public SQL0.94.0 transaction/insert/query interface. Direct
 seed rows follow existing `scripts/smrt-db-seed.mjs` and transactional onboarding
 conventions, with insert-only behavior to avoid replacing existing identities.
