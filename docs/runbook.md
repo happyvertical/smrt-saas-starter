@@ -80,6 +80,17 @@ provider. Startup probes that provider's public metadata and asset read/write
 access, and fails closed when either setting or the existing `SESSION_SECRET` /
 OIDC client secret is absent.
 
+### Asset storage migration
+
+The demo RWX claim remained Pending and never bound, so it contains no demo
+asset data to migrate; the previously serving ReplicaSet did not mount it.
+For an existing installation, inventory and retain the old storage before
+switching the provider. Copy objects to the configured bucket without changing
+their Asset `sourceUri` keys, verify representative downloads through the web
+endpoint and worker readiness probe, then retain the old volume until those
+checks pass. The deployment does not delete or rewrite old asset data
+automatically.
+
 Manual activity-report refreshes are signed native report jobs. Set the same
 random `REPORT_REFRESH_SIGNING_KEY` (at least 32 bytes) and non-empty
 `REPORT_REFRESH_SIGNING_KEY_ID` in

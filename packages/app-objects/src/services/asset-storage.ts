@@ -22,10 +22,19 @@ export type AssetStorageConfig = S3AssetStorageConfig | LocalAssetStorageConfig;
 export function readAssetStorageConfig(
   environment: Record<string, string | undefined> = process.env,
 ): AssetStorageConfig {
-  const type = optional(environment, "SMRT_ASSETS_STORAGE_TYPE") ?? "local";
+  const type = optional(environment, "SMRT_ASSETS_STORAGE_TYPE");
+  if (!type) {
+    if (environment.NODE_ENV === "production") {
+      throw new Error("SMRT_ASSETS_STORAGE_TYPE is required in production");
+    }
+    return {
+      type: "local",
+      basePath: optional(environment, "SMRT_STARTER_ASSET_STORAGE_PATH") ?? ".runtime/assets",
+    };
+  }
   if (type === "local") {
     return {
-      type,
+      type: "local",
       basePath: optional(environment, "SMRT_STARTER_ASSET_STORAGE_PATH") ?? ".runtime/assets",
     };
   }

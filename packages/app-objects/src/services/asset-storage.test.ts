@@ -6,6 +6,22 @@ describe("readAssetStorageConfig", () => {
     expect(readAssetStorageConfig({})).toEqual({ type: "local", basePath: ".runtime/assets" });
   });
 
+  it("requires an explicit provider in production but permits an explicit local test path", () => {
+    expect(() => readAssetStorageConfig({ NODE_ENV: "production" })).toThrow(
+      "SMRT_ASSETS_STORAGE_TYPE is required in production",
+    );
+    expect(() =>
+      readAssetStorageConfig({ NODE_ENV: "production", SMRT_ASSETS_STORAGE_TYPE: " " }),
+    ).toThrow("SMRT_ASSETS_STORAGE_TYPE is required in production");
+    expect(
+      readAssetStorageConfig({
+        NODE_ENV: "production",
+        SMRT_ASSETS_STORAGE_TYPE: "local",
+        SMRT_STARTER_ASSET_STORAGE_PATH: "/tmp/isolated-assets",
+      }),
+    ).toEqual({ type: "local", basePath: "/tmp/isolated-assets" });
+  });
+
   it("returns the S3-compatible provider contract", () => {
     expect(
       readAssetStorageConfig({
