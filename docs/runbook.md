@@ -233,6 +233,54 @@ Do not change `SMRT_STARTER_MIGRATE_ON_START` or relax its PostgreSQL-safe defau
 Before the rollout, back up the database and quiesce writers. Run the starter's registered schemas through the released migration APIs with `postgresSafe: false` and `useConcurrentIndexes: false`, then preflight the released null-equal targets. Abort if ordinary migration reports `hasManualDrift`, or if preflight reports blocked targets; inspect its duplicate/drift detector output with the data owner. Do not merge or delete duplicates automatically.
 
 During the same maintenance window, apply `migrateNullEqualIndexes` only after its preflight is unblocked. It takes deterministic `ACCESS EXCLUSIVE` locks and replaces pending indexes atomically. Restart application processes after the change so cached database capability probes are refreshed, then repeat ordinary safe startup migration and the null-equal preflight. The locally installed CLI may not expose this release command, so use the API imports from `@happyvertical/smrt-core/migrations` with the same `ObjectRegistry`, `registerSmrtRuntimePackages`, and app-object registration used by `scripts/smrt-db-migrate.mjs`.
+
+From the upgraded checkout, run `pnpm build` first. Set `DATABASE_URL` to the intended database through the normal secret mechanism. With writers stopped, execute this from the repository root; this is an explicit maintenance command, not a startup command:
+
+```sh
+cd apps/web
+node --input-type=module <<'JS'
+import { ObjectRegistry, resolveDatabase } from '@happyvertical/smrt-core';
+import {
+  migrateSmrtSchemas, collectNullEqualIndexTargets,
+  preflightNullEqualIndexes, migrateNullEqualIndexes,
+} from '@happyvertical/smrt-core/migrations';
+import { registerSmrtRuntimePackages } from './smrt-packages.mjs';
+import '@happyvertical/smrt-saas-objects';
+
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+await registerSmrtRuntimePackages();
+const schemas = ObjectRegistry.getAllSchemasAsDefinitions();
+const db = await resolveDatabase(
+  { type: 'postgres', url: process.env.DATABASE_URL }, { schemas },
+);
+const migration = await migrateSmrtSchemas({
+  db, description: 'SMRT 0.51.30 maintenance upgrade', engineHint: 'postgres',
+  packageName: 'smrt-saas-starter', version: process.env.APP_VERSION ?? '0.1.1',
+  postgresSafe: false, useConcurrentIndexes: false,
+});
+if (migration.hasManualDrift) {
+  console.error(migration.unactionableChanges);
+  throw new Error('Manual schema drift requires operator resolution');
+}
+const targets = collectNullEqualIndexTargets(schemas);
+const before = await preflightNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+console.log(JSON.stringify(before, null, 2));
+if (!before.supported || before.indexes.some((index) => index.state === 'blocked')) {
+  throw new Error('Index preflight blocked; keep writers stopped and inspect the report');
+}
+await migrateNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+const after = await preflightNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+console.log(JSON.stringify(after, null, 2));
+if (!after.supported || after.indexes.some((index) => index.state !== 'current')) {
+  throw new Error('Index verification failed; keep writers stopped');
+}
+JS
+```
+
+An upgrade rehearsal from the starter's 0.49.8 fixture reported manual drift for `journal_entries.account_id` referencing `ledger_accounts.id` (foreign-key target or actions differ). This procedure intentionally stops on that report. Inspect the live constraint and the migration advisory before a production rollout; do not assume an empty-database test proves existing-database compatibility.
+
+Stop on any error. Ordinary schema migration and index conversion are separate transactions, so failure does not imply that earlier schema work was rolled back. Resolve or restore from the verified backup before resuming writers. After successful maintenance, run the normal `pnpm run db:migrate` from the repository root, then restart the application and verify readiness before resuming traffic.
+
 Network policies admit web traffic only from the ingress-controller namespace
 and PostgreSQL traffic only from the web pod.
 
