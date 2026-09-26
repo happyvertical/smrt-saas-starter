@@ -132,7 +132,7 @@ importers:
         version: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   apps/mobile:
     devDependencies:
@@ -144,13 +144,13 @@ importers:
     dependencies:
       '@happyvertical/accounting':
         specifier: 0.94.0
-        version: 0.94.0(supports-color@7.2.0)
+        version: 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@happyvertical/ai':
         specifier: 0.94.0
-        version: 0.94.0(ws@8.21.3)(zod@4.6.2)
+        version: 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/analytics':
         specifier: 0.94.0
-        version: 0.94.0
+        version: 0.94.0(supports-color@7.2.0)
       '@happyvertical/auth':
         specifier: 0.94.0
         version: 0.94.0(typescript@5.9.3)
@@ -159,7 +159,7 @@ importers:
         version: 0.94.0
       '@happyvertical/files':
         specifier: 0.94.0
-        version: 0.94.0
+        version: 0.94.0(supports-color@7.2.0)
       '@happyvertical/github-actions':
         specifier: 0.94.0
         version: 0.94.0(typescript@5.9.3)
@@ -171,7 +171,7 @@ importers:
         version: 0.94.0
       '@happyvertical/messages':
         specifier: 0.94.0
-        version: 0.94.0
+        version: 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@happyvertical/projects':
         specifier: 0.94.0
         version: 0.94.0(typescript@5.9.3)
@@ -183,64 +183,64 @@ importers:
         version: 0.94.0
       '@happyvertical/smrt-agents':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-analytics':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-app-mcp':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-assets':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-chat':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-cli':
         specifier: 0.51.30
-        version: 0.51.30(hono@4.13.7)(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(hono@4.13.7)(supports-color@7.2.0)(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-commerce':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-config':
         specifier: 0.51.30
         version: 0.51.30
       '@happyvertical/smrt-content':
         specifier: 0.51.30
-        version: 0.51.30(@types/node@24.13.4)(jimp@1.6.1)(sharp@0.35.4(@types/node@24.13.4))(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(@types/node@24.13.4)(debug@4.4.3(supports-color@7.2.0))(jimp@1.6.1(supports-color@7.2.0))(sharp@0.35.4(@types/node@24.13.4))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-core':
         specifier: 0.51.30
-        version: 0.51.30(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-features':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-fields':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-jobs':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-languages':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-ledgers':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-messages':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-profiles':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-projects':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-prompts':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-reports':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-saas-objects':
         specifier: workspace:*
         version: link:../../packages/app-objects
@@ -252,47 +252,47 @@ importers:
         version: 0.51.30
       '@happyvertical/smrt-secrets':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-sites':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-subscriptions':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-svelte':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-tags':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-tenancy':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types':
         specifier: 0.51.30
         version: 0.51.30
       '@happyvertical/smrt-ui':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)
+        version: 0.51.30(svelte@5.57.1)
       '@happyvertical/smrt-users':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/translator':
         specifier: 0.94.0
-        version: 0.94.0
+        version: 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@sveltejs/adapter-node':
         specifier: ^5.5.4
-        version: 5.5.7(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.56.5)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))
+        version: 5.5.7(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.57.1)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))
       lucide-svelte:
         specifier: 'catalog:'
-        version: 0.561.0(svelte@5.56.5)
+        version: 0.561.0(svelte@5.57.1)
     devDependencies:
       '@sveltejs/kit':
         specifier: 2.69.3
-        version: 2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.56.5)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.57.1)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       '@sveltejs/vite-plugin-svelte':
         specifier: 7.2.0
-        version: 7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       '@types/node':
         specifier: ^24.10.1
         version: 24.13.4
@@ -300,11 +300,11 @@ importers:
         specifier: ^1.58.2
         version: 1.63.0
       svelte:
-        specifier: 5.56.5
-        version: 5.56.5
+        specifier: 5.57.1
+        version: 5.57.1
       svelte-check:
         specifier: ^4.0.0
-        version: 4.7.6(picomatch@4.0.7)(svelte@5.56.5)(typescript@5.9.3)
+        version: 4.7.6(picomatch@4.0.7)(svelte@5.57.1)(typescript@5.9.3)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -313,7 +313,7 @@ importers:
         version: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   apps/worker:
     dependencies:
@@ -325,37 +325,37 @@ importers:
         version: 0.94.0
       '@happyvertical/smrt-agents':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-app-runtime':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)
       '@happyvertical/smrt-assets':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-core':
         specifier: 0.51.30
-        version: 0.51.30(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-jobs':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-profiles':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-reports':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-saas-objects':
         specifier: workspace:*
         version: link:../../packages/app-objects
       '@happyvertical/smrt-subscriptions':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-tenancy':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-users':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
     devDependencies:
       tsx:
         specifier: ^4.20.6
@@ -365,41 +365,41 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   packages/app-objects:
     dependencies:
       '@happyvertical/accounting':
         specifier: 0.94.0
-        version: 0.94.0(supports-color@7.2.0)
+        version: 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@happyvertical/logger':
         specifier: 0.94.0
         version: 0.94.0
       '@happyvertical/smrt-agents':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-reports':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-subscriptions':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-tenancy':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types':
         specifier: 0.51.30
         version: 0.51.30
       '@happyvertical/smrt-users':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.57.1)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql':
         specifier: 0.94.0
         version: 0.94.0
     devDependencies:
       '@happyvertical/smrt-core':
         specifier: 0.51.30
-        version: 0.51.30(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -408,7 +408,7 @@ importers:
         version: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   packages/app-ui:
     dependencies:
@@ -417,17 +417,17 @@ importers:
         version: link:../app-objects
       '@happyvertical/smrt-svelte':
         specifier: 0.51.30
-        version: 0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+        version: 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
       lucide-svelte:
         specifier: 'catalog:'
-        version: 0.561.0(svelte@5.56.5)
+        version: 0.561.0(svelte@5.57.1)
       svelte:
-        specifier: 5.56.5
-        version: 5.56.5
+        specifier: 5.57.1
+        version: 5.57.1
     devDependencies:
       svelte-check:
         specifier: ^4.0.0
-        version: 4.7.6(picomatch@4.0.7)(svelte@5.56.5)(typescript@5.9.3)
+        version: 4.7.6(picomatch@4.0.7)(svelte@5.57.1)(typescript@5.9.3)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -3438,9 +3438,6 @@ packages:
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
 
-  '@types/trusted-types@2.0.7':
-    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
-
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
 
@@ -5974,10 +5971,6 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: ^5.0.0 || ^6.0.0
 
-  svelte@5.56.5:
-    resolution: {integrity: sha512-P03YJmUy2JoOxYHb4Ka3oFat1hq2ko2it1MOItSjsJ4B6WgZPLc3+RyyU+57OGWhs3Ieq74EJpZtSnNXdAGgDw==}
-    engines: {node: '>=18'}
-
   svelte@5.57.1:
     resolution: {integrity: sha512-Uqj49lWKB+iSSnneuwiYYJ7MZgkB+eXr0LXBhv4uDuAkXqnWmq65Sxflfvp0Lc6MdKjMUxGaeOKWJqz5SNiVIA==}
     engines: {node: '>=18'}
@@ -7190,15 +7183,15 @@ snapshots:
     optionalDependencies:
       conventional-commits-parser: 6.4.0
 
-  '@crawlee/basic@3.18.1':
+  '@crawlee/basic@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/datastructures': 2.0.6
       '@apify/log': 2.5.54
       '@apify/timeout': 0.4.14
       '@apify/utilities': 2.35.11
-      '@crawlee/core': 3.18.1
+      '@crawlee/core': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       csv-stringify: 6.8.3
       fs-extra: 11.4.0
       got-scraping: 4.2.1
@@ -7209,11 +7202,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@crawlee/browser-pool@3.18.1(playwright@1.61.1)':
+  '@crawlee/browser-pool@3.18.1(playwright@1.61.1)(supports-color@7.2.0)':
     dependencies:
       '@apify/log': 2.5.54
       '@apify/timeout': 0.4.14
-      '@crawlee/core': 3.18.1
+      '@crawlee/core': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
       fingerprint-generator: 2.1.88
       fingerprint-injector: 2.1.88(playwright@1.61.1)
@@ -7221,7 +7214,7 @@ snapshots:
       nanoid: 3.3.19
       ow: 0.28.2
       p-limit: 3.1.0
-      proxy-chain: 2.7.1
+      proxy-chain: 2.7.1(supports-color@7.2.0)
       quick-lru: 5.1.1
       tiny-typed-emitter: 2.1.0
       tslib: 2.8.1
@@ -7230,13 +7223,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@crawlee/browser@3.18.1(playwright@1.61.1)':
+  '@crawlee/browser@3.18.1(playwright@1.61.1)(supports-color@7.2.0)':
     dependencies:
       '@apify/timeout': 0.4.14
-      '@crawlee/basic': 3.18.1
-      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)
+      '@crawlee/basic': 3.18.1(supports-color@7.2.0)
+      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       ow: 0.28.2
       tslib: 2.8.1
       type-fest: 4.41.0
@@ -7245,11 +7238,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@crawlee/cheerio@3.18.1':
+  '@crawlee/cheerio@3.18.1(supports-color@7.2.0)':
     dependencies:
-      '@crawlee/http': 3.18.1
+      '@crawlee/http': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       cheerio: 1.0.0-rc.12
       htmlparser2: 9.1.0
       tslib: 2.8.1
@@ -7268,7 +7261,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@crawlee/core@3.18.1':
+  '@crawlee/core@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/consts': 2.58.1
       '@apify/datastructures': 2.0.6
@@ -7278,7 +7271,7 @@ snapshots:
       '@apify/utilities': 2.35.11
       '@crawlee/memory-storage': 3.18.1
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       '@sapphire/async-queue': 1.5.5
       '@standard-schema/spec': 1.1.0
       '@vladfrangu/async_event_emitter': 2.4.7
@@ -7296,14 +7289,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@crawlee/http@3.18.1':
+  '@crawlee/http@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/timeout': 0.4.14
       '@apify/utilities': 2.35.11
-      '@crawlee/basic': 3.18.1
-      '@crawlee/core': 3.18.1
+      '@crawlee/basic': 3.18.1(supports-color@7.2.0)
+      '@crawlee/core': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       '@types/content-type': 1.1.9
       cheerio: 1.0.0-rc.12
       content-type: 1.0.5
@@ -7316,16 +7309,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@crawlee/jsdom@3.18.1':
+  '@crawlee/jsdom@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/timeout': 0.4.14
       '@apify/utilities': 2.35.11
-      '@crawlee/http': 3.18.1
+      '@crawlee/http': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       '@types/jsdom': 21.1.7
       cheerio: 1.0.0-rc.12
-      jsdom: 26.1.0
+      jsdom: 26.1.0(supports-color@7.2.0)
       ow: 0.28.2
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -7334,13 +7327,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@crawlee/linkedom@3.18.1':
+  '@crawlee/linkedom@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/timeout': 0.4.14
       '@apify/utilities': 2.35.11
-      '@crawlee/http': 3.18.1
+      '@crawlee/http': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       cheerio: 1.0.0-rc.12
       linkedom: 0.18.13
       ow: 0.28.2
@@ -7363,16 +7356,16 @@ snapshots:
       proper-lockfile: 4.1.2
       tslib: 2.8.1
 
-  '@crawlee/playwright@3.18.1(playwright@1.61.1)':
+  '@crawlee/playwright@3.18.1(playwright@1.61.1)(supports-color@7.2.0)':
     dependencies:
       '@apify/datastructures': 2.0.6
       '@apify/log': 2.5.54
       '@apify/timeout': 0.4.14
-      '@crawlee/browser': 3.18.1(playwright@1.61.1)
-      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)
-      '@crawlee/core': 3.18.1
+      '@crawlee/browser': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/core': 3.18.1(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       cheerio: 1.0.0-rc.12
       jquery: 3.7.1
       lodash.isequal: 4.5.0
@@ -7388,14 +7381,14 @@ snapshots:
       - puppeteer
       - supports-color
 
-  '@crawlee/puppeteer@3.18.1(playwright@1.61.1)':
+  '@crawlee/puppeteer@3.18.1(playwright@1.61.1)(supports-color@7.2.0)':
     dependencies:
       '@apify/datastructures': 2.0.6
       '@apify/log': 2.5.54
-      '@crawlee/browser': 3.18.1(playwright@1.61.1)
-      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)
+      '@crawlee/browser': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
       '@crawlee/types': 3.18.1
-      '@crawlee/utils': 3.18.1
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       cheerio: 1.0.0-rc.12
       devtools-protocol: 0.0.1696802
       jquery: 3.7.1
@@ -7419,14 +7412,14 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@crawlee/utils@3.18.1':
+  '@crawlee/utils@3.18.1(supports-color@7.2.0)':
     dependencies:
       '@apify/log': 2.5.54
       '@apify/ps-tree': 1.2.0
       '@crawlee/types': 3.18.1
       '@types/sax': 1.2.7
       cheerio: 1.0.0-rc.12
-      file-type: 21.3.4
+      file-type: 21.3.4(supports-color@7.2.0)
       got-scraping: 4.2.1
       ow: 0.28.2
       robots-parser: 3.0.1
@@ -7600,17 +7593,17 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@google-cloud/common@6.1.0':
+  '@google-cloud/common@6.1.0(supports-color@7.2.0)':
     dependencies:
       '@google-cloud/projectify': 4.0.0
       '@google-cloud/promisify': 4.1.0
       arrify: 2.0.1
       duplexify: 4.1.3
       extend: 3.0.2
-      google-auth-library: 10.9.1
+      google-auth-library: 10.9.1(supports-color@7.2.0)
       html-entities: 2.6.0
-      retry-request: 8.0.4
-      teeny-request: 10.1.4
+      retry-request: 8.0.4(supports-color@7.2.0)
+      teeny-request: 10.1.4(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7620,20 +7613,20 @@ snapshots:
 
   '@google-cloud/promisify@5.1.0': {}
 
-  '@google-cloud/translate@9.4.2':
+  '@google-cloud/translate@9.4.2(supports-color@7.2.0)':
     dependencies:
-      '@google-cloud/common': 6.1.0
+      '@google-cloud/common': 6.1.0(supports-color@7.2.0)
       '@google-cloud/promisify': 5.1.0
       arrify: 2.0.1
       extend: 3.0.2
-      google-gax: 5.0.8
+      google-gax: 5.0.8(supports-color@7.2.0)
       is-html: 2.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@google/genai@1.50.1':
+  '@google/genai@1.50.1(supports-color@7.2.0)':
     dependencies:
-      google-auth-library: 10.9.1
+      google-auth-library: 10.9.1(supports-color@7.2.0)
       p-retry: 4.6.2
       protobufjs: 7.6.6
       ws: 8.21.3
@@ -7642,13 +7635,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@googlemaps/google-maps-services-js@3.4.2':
+  '@googlemaps/google-maps-services-js@3.4.2(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
       '@googlemaps/url-signature': 1.0.40
       agentkeepalive: 4.6.0
-      axios: 1.20.0(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       query-string: 7.1.3
-      retry-axios: 2.6.0(axios@1.20.0)
+      retry-axios: 2.6.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -7677,19 +7670,19 @@ snapshots:
 
   '@gutenye/ocr-models@1.4.2': {}
 
-  '@happyvertical/accounting@0.94.0(supports-color@7.2.0)':
+  '@happyvertical/accounting@0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
       '@happyvertical/utils': 0.94.0
-      intuit-oauth: 4.2.5(supports-color@7.2.0)
+      intuit-oauth: 4.2.5(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@happyvertical/ai@0.94.0(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/ai@0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@anthropic-ai/sdk': 0.90.0(zod@4.6.2)
       '@aws-sdk/client-bedrock-runtime': 3.1034.0
-      '@google/genai': 1.50.1
+      '@google/genai': 1.50.1(supports-color@7.2.0)
       '@happyvertical/utils': 0.94.0
       openai: 6.34.0(ws@8.21.3)(zod@4.6.2)
     transitivePeerDependencies:
@@ -7700,10 +7693,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/analytics@0.94.0':
+  '@happyvertical/analytics@0.94.0(supports-color@7.2.0)':
     dependencies:
       '@happyvertical/utils': 0.94.0
-      googleapis: 170.1.0
+      googleapis: 170.1.0(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7727,12 +7720,12 @@ snapshots:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'
 
-  '@happyvertical/documents@0.94.0(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/documents@0.94.0(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/pdf': 0.65.9(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/spider': 1.1.13(@types/node@24.13.4)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
+      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/pdf': 0.65.9(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/spider': 1.1.13(@types/node@24.13.4)(supports-color@7.2.0)
       '@happyvertical/utils': 0.94.0
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
@@ -7752,12 +7745,12 @@ snapshots:
       - yauzl
       - zod
 
-  '@happyvertical/email@0.94.0':
+  '@happyvertical/email@0.94.0(supports-color@7.2.0)':
     dependencies:
       '@happyvertical/logger': 0.94.0
       '@happyvertical/utils': 0.94.0
-      google-auth-library: 10.9.1
-      googleapis: 170.1.0
+      google-auth-library: 10.9.1(supports-color@7.2.0)
+      googleapis: 170.1.0(supports-color@7.2.0)
       imapflow: 1.7.8
       mailparser: 3.9.26
       node-pop3: 0.11.0
@@ -7766,19 +7759,19 @@ snapshots:
       - '@sentry/node'
       - supports-color
 
-  '@happyvertical/files@0.94.0':
+  '@happyvertical/files@0.94.0(supports-color@7.2.0)':
     dependencies:
       '@aws-sdk/client-s3': 3.1131.0
       '@happyvertical/utils': 0.94.0
-      google-auth-library: 9.15.1
-      googleapis: 144.0.0
+      google-auth-library: 9.15.1(supports-color@7.2.0)
+      googleapis: 144.0.0(supports-color@7.2.0)
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  '@happyvertical/geo@0.94.0':
+  '@happyvertical/geo@0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
-      '@googlemaps/google-maps-services-js': 3.4.2
+      '@googlemaps/google-maps-services-js': 3.4.2(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@happyvertical/cache': 0.94.0
       '@happyvertical/utils': 0.94.0
     transitivePeerDependencies:
@@ -7796,12 +7789,12 @@ snapshots:
 
   '@happyvertical/graphql@0.94.0': {}
 
-  '@happyvertical/images@0.94.0(jimp@1.6.1)(sharp@0.35.4(@types/node@24.13.4))':
+  '@happyvertical/images@0.94.0(jimp@1.6.1(supports-color@7.2.0))(sharp@0.35.4(@types/node@24.13.4))':
     dependencies:
       '@resvg/resvg-js': 2.6.2
       satori: 0.26.0
     optionalDependencies:
-      jimp: 1.6.1
+      jimp: 1.6.1(supports-color@7.2.0)
       sharp: 0.35.4(@types/node@24.13.4)
 
   '@happyvertical/jobs@0.94.0':
@@ -7822,22 +7815,22 @@ snapshots:
     dependencies:
       '@happyvertical/utils': 0.94.0
 
-  '@happyvertical/messages@0.94.0':
+  '@happyvertical/messages@0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
-      '@happyvertical/email': 0.94.0
+      '@happyvertical/email': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
       '@happyvertical/utils': 0.94.0
-      '@slack/web-api': 7.19.0
+      '@slack/web-api': 7.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
     transitivePeerDependencies:
       - '@sentry/node'
       - debug
       - supports-color
 
-  '@happyvertical/ocr@0.61.6(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/ocr@0.61.6(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@gutenye/ocr-common': 1.4.8
       '@gutenye/ocr-models': 1.4.2
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/utils': 0.94.0
       onnxruntime-common: 1.29.0
       onnxruntime-node: 1.29.0
@@ -7853,9 +7846,9 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/pdf@0.65.9(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/pdf@0.65.9(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/utils': 0.94.0
       '@napi-rs/canvas': 0.1.100
       marked: 18.0.12
@@ -7904,57 +7897,20 @@ snapshots:
       - pg-native
       - utf-8-validate
 
-  '@happyvertical/smrt-agents@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-agents@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-playbooks': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-reports': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-secrets': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@aws-sdk/client-sqs'
-      - '@google-cloud/tasks'
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - bull
-      - bullmq
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-agents@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-playbooks': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-reports': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-secrets': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-playbooks': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-reports': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-secrets': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     optionalDependencies:
@@ -7978,15 +7934,15 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-analytics@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-analytics@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8002,10 +7958,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-app-mcp@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-app-mcp@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@modelcontextprotocol/server': 2.0.0
     transitivePeerDependencies:
@@ -8028,14 +7984,14 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-app-runtime@0.51.30(svelte@5.57.1)':
+  '@happyvertical/smrt-app-runtime@0.51.30(supports-color@7.2.0)(svelte@5.57.1)':
     dependencies:
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-profiles': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-profiles': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
@@ -8057,43 +8013,14 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-assets@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-assets@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tags': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-assets@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tags': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tags': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
@@ -8115,20 +8042,20 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-chat@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-chat@0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-agents': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-personas': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-profiles': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-agents': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-personas': 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-profiles': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -8150,19 +8077,19 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-cli@0.51.30(hono@4.13.7)(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-cli@0.51.30(hono@4.13.7)(supports-color@7.2.0)(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-agents': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-agents': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-dev-mcp': 0.51.30(hono@4.13.7)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ledgers': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-playground': 0.51.30(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-dev-mcp': 0.51.30(hono@4.13.7)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ledgers': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-playground': 0.51.30(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
       acorn: 8.18.0
@@ -8190,18 +8117,18 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-commerce@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-commerce@0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/accounting': 0.94.0(supports-color@7.2.0)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ledgers': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-subscriptions': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/accounting': 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ledgers': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-subscriptions': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -8228,35 +8155,35 @@ snapshots:
       cosmiconfig: 10.0.1
       jiti: 2.7.0
 
-  '@happyvertical/smrt-content@0.51.30(@types/node@24.13.4)(jimp@1.6.1)(sharp@0.35.4(@types/node@24.13.4))(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-content@0.51.30(@types/node@24.13.4)(debug@4.4.3(supports-color@7.2.0))(jimp@1.6.1(supports-color@7.2.0))(sharp@0.35.4(@types/node@24.13.4))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/documents': 0.94.0(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/geo': 0.94.0
-      '@happyvertical/images': 0.94.0(jimp@1.6.1)(sharp@0.35.4(@types/node@24.13.4))
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/documents': 0.94.0(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
+      '@happyvertical/geo': 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      '@happyvertical/images': 0.94.0(jimp@1.6.1(supports-color@7.2.0))(sharp@0.35.4(@types/node@24.13.4))
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/pdf': 0.65.9(@types/node@24.13.4)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-agents': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-assets': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-chat': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-facts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-images': 0.51.30(@types/node@24.13.4)(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-messages': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-profiles': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ocr': 0.61.6(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/pdf': 0.65.9(@types/node@24.13.4)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-agents': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-assets': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-chat': 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-facts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-images': 0.51.30(@types/node@24.13.4)(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-messages': 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-profiles': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/spider': 1.1.13(@types/node@24.13.4)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
+      '@happyvertical/spider': 1.1.13(@types/node@24.13.4)(supports-color@7.2.0)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
       fast-xml-parser: 5.11.1
       yaml: 2.9.1
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -8289,10 +8216,10 @@ snapshots:
       - yauzl
       - zod
 
-  '@happyvertical/smrt-core@0.51.30(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-core@0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/json': 0.94.0
       '@happyvertical/logger': 0.94.0
       '@happyvertical/smrt-config': 0.51.30
@@ -8321,10 +8248,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-dev-mcp@0.51.30(hono@4.13.7)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-dev-mcp@0.51.30(hono@4.13.7)(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-scanner': 0.51.30
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/sql': 0.94.0
@@ -8346,14 +8273,14 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-facts@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-facts@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     transitivePeerDependencies:
@@ -8372,12 +8299,12 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-features@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-features@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8393,15 +8320,15 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-fields@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-fields@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8417,20 +8344,20 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-images@0.51.30(@types/node@24.13.4)(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-images@0.51.30(@types/node@24.13.4)(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/images': 0.94.0(jimp@1.6.1)(sharp@0.35.4(@types/node@24.13.4))
-      '@happyvertical/smrt-assets': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/images': 0.94.0(jimp@1.6.1(supports-color@7.2.0))(sharp@0.35.4(@types/node@24.13.4))
+      '@happyvertical/smrt-assets': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/utils': 0.94.0
-      jimp: 1.6.1
+      jimp: 1.6.1(supports-color@7.2.0)
       sharp: 0.35.4(@types/node@24.13.4)
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8447,45 +8374,13 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-jobs@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-jobs@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/jobs': 0.94.0
       '@happyvertical/logger': 0.94.0
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@aws-sdk/client-sqs'
-      - '@google-cloud/tasks'
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - bull
-      - bullmq
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-jobs@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/jobs': 0.94.0
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
@@ -8511,16 +8406,16 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-languages@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-languages@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/logger': 0.94.0
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-features': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-features': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
@@ -8542,11 +8437,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-ledgers@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-ledgers@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8563,22 +8458,22 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-messages@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-messages@0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/email': 0.94.0
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/email': 0.94.0(supports-color@7.2.0)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/messages': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-secrets': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/messages': 0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-secrets': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8597,17 +8492,17 @@ snapshots:
 
   '@happyvertical/smrt-mobile-contract@0.51.30': {}
 
-  '@happyvertical/smrt-personas@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-personas@0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-agents': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-messages': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/smrt-users': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-agents': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-messages': 0.51.30(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-users': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -8629,11 +8524,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-playbooks@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-playbooks@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/sql': 0.94.0
     transitivePeerDependencies:
@@ -8652,47 +8547,24 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-playbooks@0.51.30(svelte@5.57.1)':
+  '@happyvertical/smrt-playground@0.51.30(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
-      '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/sql': 0.94.0
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - svelte
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-playground@0.51.30(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
-    dependencies:
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       fast-glob: 3.3.3
       tsx: 4.23.13
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
       vite: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
 
-  '@happyvertical/smrt-profiles@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-profiles@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-assets': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-assets': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
       '@noble/curves': 2.4.0
@@ -8713,53 +8585,24 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-profiles@0.51.30(svelte@5.57.1)':
+  '@happyvertical/smrt-projects@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-assets': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-      '@noble/curves': 2.4.0
-      bech32: 2.0.0
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - svelte
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-projects@0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)':
-    dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/logger': 0.94.0
       '@happyvertical/projects': 0.94.0(typescript@5.9.3)
       '@happyvertical/repos': 0.94.0(typescript@5.9.3)
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-prompts': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-subscriptions': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-svelte': 0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-prompts': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-subscriptions': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-svelte': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     optionalDependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -8784,35 +8627,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-prompts@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-prompts@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-prompts@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
     optionalDependencies:
@@ -8832,38 +8651,11 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-reports@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-reports@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/sql': 0.94.0
-    transitivePeerDependencies:
-      - '@aws-sdk/client-sqs'
-      - '@google-cloud/tasks'
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - bull
-      - bullmq
-      - encoding
-      - pg-native
-      - supports-color
-      - svelte
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-reports@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-jobs': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-jobs': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/sql': 0.94.0
     transitivePeerDependencies:
@@ -8893,12 +8685,12 @@ snapshots:
       oxc-parser: 0.150.0
       oxc-resolver: 11.24.2
 
-  '@happyvertical/smrt-secrets@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-secrets@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/logger': 0.94.0
       '@happyvertical/secrets': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     transitivePeerDependencies:
@@ -8917,14 +8709,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-secrets@0.51.30(svelte@5.57.1)':
+  '@happyvertical/smrt-sites@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/secrets': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - '@modelcontextprotocol/sdk'
@@ -8941,53 +8729,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-sites@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-subscriptions@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - svelte
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-subscriptions@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
-    dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-subscriptions@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
     optionalDependencies:
@@ -9007,17 +8752,17 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-svelte@0.51.30(svelte@5.56.5)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-svelte@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(typescript@5.9.3)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-languages': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-languages': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
+      '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/smrt-web': 0.51.30(typescript@5.9.3)
       '@tanstack/db': 0.6.17(typescript@5.9.3)
-      '@tanstack/svelte-db': 0.1.94(svelte@5.56.5)(typescript@5.9.3)
+      '@tanstack/svelte-db': 0.1.94(svelte@5.57.1)(typescript@5.9.3)
       esm-env: 1.2.2
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - '@aws-sdk/client-sqs'
       - '@google-cloud/tasks'
@@ -9036,13 +8781,13 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-tags@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-tags@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
+      '@happyvertical/ai': 0.94.0(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/files': 0.94.0(supports-color@7.2.0)
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/sql': 0.94.0
       '@happyvertical/utils': 0.94.0
     transitivePeerDependencies:
@@ -9061,60 +8806,10 @@ snapshots:
       - ws
       - zod
 
-  '@happyvertical/smrt-tags@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/ai': 0.94.0(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/files': 0.94.0
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - svelte
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-tenancy@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-tenancy@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-      '@happyvertical/utils': 0.94.0
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-tenancy@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
@@ -9138,13 +8833,6 @@ snapshots:
 
   '@happyvertical/smrt-types@0.51.30': {}
 
-  '@happyvertical/smrt-ui@0.51.30(svelte@5.56.5)':
-    dependencies:
-      '@happyvertical/smrt-types': 0.51.30
-      esm-env: 1.2.2
-    optionalDependencies:
-      svelte: 5.56.5
-
   '@happyvertical/smrt-ui@0.51.30(svelte@5.57.1)':
     dependencies:
       '@happyvertical/smrt-types': 0.51.30
@@ -9152,43 +8840,14 @@ snapshots:
     optionalDependencies:
       svelte: 5.57.1
 
-  '@happyvertical/smrt-users@0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)':
+  '@happyvertical/smrt-users@0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)':
     dependencies:
       '@happyvertical/logger': 0.94.0
       '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-core': 0.51.30(supports-color@7.2.0)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-mobile-contract': 0.51.30
-      '@happyvertical/smrt-profiles': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.56.5)(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-types': 0.51.30
-      '@happyvertical/smrt-ui': 0.51.30(svelte@5.56.5)
-      '@happyvertical/sql': 0.94.0
-      jose: 6.2.12
-    optionalDependencies:
-      svelte: 5.56.5
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@modelcontextprotocol/sdk'
-      - '@russellthehippo/honker-node'
-      - '@sentry/node'
-      - '@sqliteai/sqlite-vector'
-      - '@xenova/transformers'
-      - bufferutil
-      - encoding
-      - pg-native
-      - supports-color
-      - utf-8-validate
-      - ws
-      - zod
-
-  '@happyvertical/smrt-users@0.51.30(svelte@5.57.1)':
-    dependencies:
-      '@happyvertical/logger': 0.94.0
-      '@happyvertical/smrt-config': 0.51.30
-      '@happyvertical/smrt-core': 0.51.30(ws@8.21.3)(zod@4.6.2)
-      '@happyvertical/smrt-mobile-contract': 0.51.30
-      '@happyvertical/smrt-profiles': 0.51.30(svelte@5.57.1)
-      '@happyvertical/smrt-tenancy': 0.51.30(svelte@5.57.1)
+      '@happyvertical/smrt-profiles': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
+      '@happyvertical/smrt-tenancy': 0.51.30(supports-color@7.2.0)(svelte@5.57.1)(ws@8.21.3)(zod@4.6.2)
       '@happyvertical/smrt-types': 0.51.30
       '@happyvertical/smrt-ui': 0.51.30(svelte@5.57.1)
       '@happyvertical/sql': 0.94.0
@@ -9218,12 +8877,12 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@happyvertical/spider@1.1.13(@types/node@24.13.4)':
+  '@happyvertical/spider@1.1.13(@types/node@24.13.4)(supports-color@7.2.0)':
     dependencies:
       '@happyvertical/cache': 0.94.0
       '@happyvertical/utils': 0.94.0
       cheerio: 1.2.0
-      crawlee: 3.18.1(@types/node@24.13.4)(playwright@1.61.1)
+      crawlee: 3.18.1(@types/node@24.13.4)(playwright@1.61.1)(supports-color@7.2.0)
       happy-dom: 20.14.5
       playwright: 1.61.1
       undici: 8.10.2
@@ -9251,12 +8910,12 @@ snapshots:
       - pg-native
       - utf-8-validate
 
-  '@happyvertical/translator@0.94.0':
+  '@happyvertical/translator@0.94.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
-      '@google-cloud/translate': 9.4.2
+      '@google-cloud/translate': 9.4.2(supports-color@7.2.0)
       '@happyvertical/cache': 0.94.0
       '@happyvertical/utils': 0.94.0
-      deepl-node: 1.28.0
+      deepl-node: 1.28.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
     transitivePeerDependencies:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'
@@ -9402,21 +9061,21 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  '@jimp/core@1.6.1':
+  '@jimp/core@1.6.1(supports-color@7.2.0)':
     dependencies:
       '@jimp/file-ops': 1.6.1
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       await-to-js: 3.0.0
       exif-parser: 0.1.12
-      file-type: 21.3.4
+      file-type: 21.3.4(supports-color@7.2.0)
       mime: 3.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/diff@1.6.1':
+  '@jimp/diff@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/plugin-resize': 1.6.1
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       pixelmatch: 5.3.0
@@ -9425,43 +9084,43 @@ snapshots:
 
   '@jimp/file-ops@1.6.1': {}
 
-  '@jimp/js-bmp@1.6.1':
+  '@jimp/js-bmp@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       bmp-ts: 1.0.9
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/js-gif@1.6.1':
+  '@jimp/js-gif@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       gifwrap: 0.10.1
       omggif: 1.0.10
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/js-jpeg@1.6.1':
+  '@jimp/js-jpeg@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       jpeg-js: 0.4.4
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/js-png@1.6.1':
+  '@jimp/js-png@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       pngjs: 7.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/js-tiff@1.6.1':
+  '@jimp/js-tiff@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       utif2: 4.1.0
     transitivePeerDependencies:
@@ -9473,9 +9132,9 @@ snapshots:
       '@jimp/utils': 1.6.1
       zod: 3.25.76
 
-  '@jimp/plugin-blur@1.6.1':
+  '@jimp/plugin-blur@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/utils': 1.6.1
     transitivePeerDependencies:
       - supports-color
@@ -9485,9 +9144,9 @@ snapshots:
       '@jimp/types': 1.6.1
       zod: 3.25.76
 
-  '@jimp/plugin-color@1.6.1':
+  '@jimp/plugin-color@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       tinycolor2: 1.6.0
@@ -9495,30 +9154,30 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/plugin-contain@1.6.1':
+  '@jimp/plugin-contain@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-blit': 1.6.1
-      '@jimp/plugin-resize': 1.6.1
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/plugin-cover@1.6.1':
+  '@jimp/plugin-cover@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/plugin-crop': 1.6.1
-      '@jimp/plugin-resize': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-crop': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/plugin-crop@1.6.1':
+  '@jimp/plugin-crop@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       zod: 3.25.76
@@ -9546,15 +9205,15 @@ snapshots:
       '@jimp/types': 1.6.1
       zod: 3.25.76
 
-  '@jimp/plugin-hash@1.6.1':
+  '@jimp/plugin-hash@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/js-bmp': 1.6.1
-      '@jimp/js-jpeg': 1.6.1
-      '@jimp/js-png': 1.6.1
-      '@jimp/js-tiff': 1.6.1
-      '@jimp/plugin-color': 1.6.1
-      '@jimp/plugin-resize': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-bmp': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-jpeg': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-png': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-tiff': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-color': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       any-base: 1.1.0
@@ -9566,11 +9225,11 @@ snapshots:
       '@jimp/types': 1.6.1
       zod: 3.25.76
 
-  '@jimp/plugin-print@1.6.1':
+  '@jimp/plugin-print@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/js-jpeg': 1.6.1
-      '@jimp/js-png': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-jpeg': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-png': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-blit': 1.6.1
       '@jimp/types': 1.6.1
       parse-bmfont-ascii: 1.0.6
@@ -9586,30 +9245,30 @@ snapshots:
       image-q: 4.0.0
       zod: 3.25.76
 
-  '@jimp/plugin-resize@1.6.1':
+  '@jimp/plugin-resize@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/plugin-rotate@1.6.1':
+  '@jimp/plugin-rotate@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/plugin-crop': 1.6.1
-      '@jimp/plugin-resize': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-crop': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
 
-  '@jimp/plugin-threshold@1.6.1':
+  '@jimp/plugin-threshold@1.6.1(supports-color@7.2.0)':
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/plugin-color': 1.6.1
-      '@jimp/plugin-hash': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-color': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-hash': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
       zod: 3.25.76
@@ -10413,13 +10072,13 @@ snapshots:
 
   '@slack/types@2.22.0': {}
 
-  '@slack/web-api@7.19.0':
+  '@slack/web-api@7.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
       '@slack/logger': 4.0.1
       '@slack/types': 2.22.0
       '@types/node': 24.13.4
       '@types/retry': 0.12.0
-      axios: 1.20.0(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       eventemitter3: 5.0.4
       form-data: 4.0.6
       is-electron: 2.2.2
@@ -10645,15 +10304,6 @@ snapshots:
     dependencies:
       acorn: 8.18.0
 
-  '@sveltejs/adapter-node@5.5.7(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.56.5)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))':
-    dependencies:
-      '@rollup/plugin-commonjs': 29.0.3(rollup@4.63.2)
-      '@rollup/plugin-json': 6.1.0(rollup@4.63.2)
-      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.63.2)
-      '@rollup/plugin-replace': 6.0.3(rollup@4.63.2)
-      '@sveltejs/kit': 2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.56.5)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
-      rollup: 4.63.2
-
   '@sveltejs/adapter-node@5.5.7(@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.57.1)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))':
     dependencies:
       '@rollup/plugin-commonjs': 29.0.3(rollup@4.63.2)
@@ -10662,26 +10312,6 @@ snapshots:
       '@rollup/plugin-replace': 6.0.3(rollup@4.63.2)
       '@sveltejs/kit': 2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.57.1)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       rollup: 4.63.2
-
-  '@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.56.5)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      '@sveltejs/acorn-typescript': 1.0.13(acorn@8.18.0)
-      '@sveltejs/vite-plugin-svelte': 7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
-      '@types/cookie': 0.6.0
-      acorn: 8.18.0
-      cookie: 0.6.0
-      devalue: 5.9.2
-      esm-env: 1.2.2
-      kleur: 4.1.5
-      magic-string: 0.30.21
-      mrmime: 2.0.1
-      set-cookie-parser: 3.1.2
-      sirv: 3.0.2
-      svelte: 5.56.5
-      vite: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
-    optionalDependencies:
-      typescript: 5.9.3
 
   '@sveltejs/kit@2.69.3(@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)))(svelte@5.57.1)(typescript@5.9.3)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
@@ -10704,15 +10334,6 @@ snapshots:
       typescript: 5.9.3
 
   '@sveltejs/load-config@0.2.3': {}
-
-  '@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.56.5)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
-    dependencies:
-      deepmerge: 4.3.1
-      magic-string: 0.30.21
-      obug: 2.2.1
-      svelte: 5.56.5
-      vite: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
-      vitefu: 1.1.3(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   '@sveltejs/vite-plugin-svelte@7.2.0(svelte@5.57.1)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
@@ -10760,16 +10381,16 @@ snapshots:
       '@tanstack/query-core': 5.103.2
       typescript: 5.9.3
 
-  '@tanstack/svelte-db@0.1.94(svelte@5.56.5)(typescript@5.9.3)':
+  '@tanstack/svelte-db@0.1.94(svelte@5.57.1)(typescript@5.9.3)':
     dependencies:
       '@tanstack/db': 0.6.17(typescript@5.9.3)
-      svelte: 5.56.5
+      svelte: 5.57.1
     transitivePeerDependencies:
       - typescript
 
   '@techstark/opencv-js@4.9.0-release.3': {}
 
-  '@tokenizer/inflate@0.4.1':
+  '@tokenizer/inflate@0.4.1(supports-color@7.2.0)':
     dependencies:
       debug: 4.4.3(supports-color@7.2.0)
       token-types: 6.1.2
@@ -10840,8 +10461,6 @@ snapshots:
 
   '@types/triple-beam@1.3.5': {}
 
-  '@types/trusted-types@2.0.7': {}
-
   '@types/whatwg-mimetype@3.0.2': {}
 
   '@types/ws@8.18.1':
@@ -10860,7 +10479,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+      vitest: 4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   '@vitest/expect@4.1.10':
     dependencies:
@@ -10984,9 +10603,9 @@ snapshots:
 
   await-to-js@3.0.0: {}
 
-  axios@1.20.0(supports-color@7.2.0):
+  axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1(supports-color@7.2.0)
       proxy-from-env: 2.1.0
@@ -11253,21 +10872,21 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  crawlee@3.18.1(@types/node@24.13.4)(playwright@1.61.1):
+  crawlee@3.18.1(@types/node@24.13.4)(playwright@1.61.1)(supports-color@7.2.0):
     dependencies:
-      '@crawlee/basic': 3.18.1
-      '@crawlee/browser': 3.18.1(playwright@1.61.1)
-      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)
-      '@crawlee/cheerio': 3.18.1
+      '@crawlee/basic': 3.18.1(supports-color@7.2.0)
+      '@crawlee/browser': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/browser-pool': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/cheerio': 3.18.1(supports-color@7.2.0)
       '@crawlee/cli': 3.18.1(@types/node@24.13.4)
-      '@crawlee/core': 3.18.1
-      '@crawlee/http': 3.18.1
-      '@crawlee/jsdom': 3.18.1
-      '@crawlee/linkedom': 3.18.1
+      '@crawlee/core': 3.18.1(supports-color@7.2.0)
+      '@crawlee/http': 3.18.1(supports-color@7.2.0)
+      '@crawlee/jsdom': 3.18.1(supports-color@7.2.0)
+      '@crawlee/linkedom': 3.18.1(supports-color@7.2.0)
       '@crawlee/memory-storage': 3.18.1
-      '@crawlee/playwright': 3.18.1(playwright@1.61.1)
-      '@crawlee/puppeteer': 3.18.1(playwright@1.61.1)
-      '@crawlee/utils': 3.18.1
+      '@crawlee/playwright': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/puppeteer': 3.18.1(playwright@1.61.1)(supports-color@7.2.0)
+      '@crawlee/utils': 3.18.1(supports-color@7.2.0)
       import-local: 3.2.0
       tslib: 2.8.1
     optionalDependencies:
@@ -11365,11 +10984,11 @@ snapshots:
     dependencies:
       mimic-response: 4.0.0
 
-  deepl-node@1.28.0:
+  deepl-node@1.28.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       '@types/node': 24.13.4
       adm-zip: 0.6.1
-      axios: 1.20.0(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       form-data: 3.0.5
       loglevel: 1.9.2
     transitivePeerDependencies:
@@ -11655,9 +11274,9 @@ snapshots:
     dependencies:
       escape-string-regexp: 1.0.5
 
-  file-type@21.3.4:
+  file-type@21.3.4(supports-color@7.2.0):
     dependencies:
-      '@tokenizer/inflate': 0.4.1
+      '@tokenizer/inflate': 0.4.1(supports-color@7.2.0)
       strtok3: 10.3.5
       token-types: 6.1.2
       uint8array-extras: 1.5.0
@@ -11690,7 +11309,9 @@ snapshots:
 
   fn.name@1.1.0: {}
 
-  follow-redirects@1.16.0: {}
+  follow-redirects@1.16.0(debug@4.4.3(supports-color@7.2.0)):
+    optionalDependencies:
+      debug: 4.4.3(supports-color@7.2.0)
 
   foreground-child@3.3.1:
     dependencies:
@@ -11737,10 +11358,10 @@ snapshots:
 
   function-bind@1.1.2: {}
 
-  gaxios@6.7.1:
+  gaxios@6.7.1(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       is-stream: 2.0.1
       node-fetch: 2.7.0
       uuid: 9.0.1
@@ -11748,43 +11369,43 @@ snapshots:
       - encoding
       - supports-color
 
-  gaxios@7.1.3:
+  gaxios@7.1.3(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       node-fetch: 3.3.2
       rimraf: 5.0.10
     transitivePeerDependencies:
       - supports-color
 
-  gaxios@7.3.1:
+  gaxios@7.3.1(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       node-fetch: 3.3.2
     transitivePeerDependencies:
       - supports-color
 
-  gcp-metadata@6.1.1:
+  gcp-metadata@6.1.1(supports-color@7.2.0):
     dependencies:
-      gaxios: 6.7.1
+      gaxios: 6.7.1(supports-color@7.2.0)
       google-logging-utils: 0.0.2
       json-bigint: 1.0.0
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  gcp-metadata@8.1.2:
+  gcp-metadata@8.1.2(supports-color@7.2.0):
     dependencies:
-      gaxios: 7.3.1
+      gaxios: 7.3.1(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       json-bigint: 1.0.0
     transitivePeerDependencies:
       - supports-color
 
-  gcp-metadata@8.1.4:
+  gcp-metadata@8.1.4(supports-color@7.2.0):
     dependencies:
-      gaxios: 7.1.3
+      gaxios: 7.1.3(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       json-bigint: 1.0.0
     transitivePeerDependencies:
@@ -11864,53 +11485,53 @@ snapshots:
       define-properties: 1.2.1
       gopd: 1.2.0
 
-  google-auth-library@10.5.0:
+  google-auth-library@10.5.0(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.3.1
-      gcp-metadata: 8.1.4
+      gaxios: 7.3.1(supports-color@7.2.0)
+      gcp-metadata: 8.1.4(supports-color@7.2.0)
       google-logging-utils: 1.1.3
-      gtoken: 8.0.0
+      gtoken: 8.0.0(supports-color@7.2.0)
       jws: 4.0.1
     transitivePeerDependencies:
       - supports-color
 
-  google-auth-library@10.9.1:
+  google-auth-library@10.9.1(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.3.1
-      gcp-metadata: 8.1.2
+      gaxios: 7.3.1(supports-color@7.2.0)
+      gcp-metadata: 8.1.2(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       jws: 4.0.1
     transitivePeerDependencies:
       - supports-color
 
-  google-auth-library@9.15.1:
+  google-auth-library@9.15.1(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
-      gaxios: 6.7.1
-      gcp-metadata: 6.1.1
-      gtoken: 7.1.0
+      gaxios: 6.7.1(supports-color@7.2.0)
+      gcp-metadata: 6.1.1(supports-color@7.2.0)
+      gtoken: 7.1.0(supports-color@7.2.0)
       jws: 4.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  google-gax@5.0.8:
+  google-gax@5.0.8(supports-color@7.2.0):
     dependencies:
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.8.1
       duplexify: 4.1.3
-      google-auth-library: 10.5.0
+      google-auth-library: 10.5.0(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       node-fetch: 3.3.2
       object-hash: 3.0.0
       proto3-json-serializer: 3.0.4
       protobufjs: 7.6.6
-      retry-request: 8.0.4
+      retry-request: 8.0.4(supports-color@7.2.0)
       rimraf: 5.0.10
     transitivePeerDependencies:
       - supports-color
@@ -11919,11 +11540,11 @@ snapshots:
 
   google-logging-utils@1.1.3: {}
 
-  googleapis-common@7.2.0:
+  googleapis-common@7.2.0(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      gaxios: 6.7.1
-      google-auth-library: 9.15.1
+      gaxios: 6.7.1(supports-color@7.2.0)
+      google-auth-library: 9.15.1(supports-color@7.2.0)
       qs: 6.16.0
       url-template: 2.0.8
       uuid: 9.0.1
@@ -11931,29 +11552,29 @@ snapshots:
       - encoding
       - supports-color
 
-  googleapis-common@8.0.3:
+  googleapis-common@8.0.3(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      gaxios: 7.1.3
-      google-auth-library: 10.5.0
+      gaxios: 7.1.3(supports-color@7.2.0)
+      google-auth-library: 10.5.0(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       qs: 6.16.0
       url-template: 2.0.8
     transitivePeerDependencies:
       - supports-color
 
-  googleapis@144.0.0:
+  googleapis@144.0.0(supports-color@7.2.0):
     dependencies:
-      google-auth-library: 9.15.1
-      googleapis-common: 7.2.0
+      google-auth-library: 9.15.1(supports-color@7.2.0)
+      googleapis-common: 7.2.0(supports-color@7.2.0)
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  googleapis@170.1.0:
+  googleapis@170.1.0(supports-color@7.2.0):
     dependencies:
-      google-auth-library: 10.9.1
-      googleapis-common: 8.0.3
+      google-auth-library: 10.9.1(supports-color@7.2.0)
+      googleapis-common: 8.0.3(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11986,17 +11607,17 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  gtoken@7.1.0:
+  gtoken@7.1.0(supports-color@7.2.0):
     dependencies:
-      gaxios: 6.7.1
+      gaxios: 6.7.1(supports-color@7.2.0)
       jws: 4.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  gtoken@8.0.0:
+  gtoken@8.0.0(supports-color@7.2.0):
     dependencies:
-      gaxios: 7.3.1
+      gaxios: 7.3.1(supports-color@7.2.0)
       jws: 4.0.1
     transitivePeerDependencies:
       - supports-color
@@ -12090,7 +11711,7 @@ snapshots:
 
   http-cache-semantics@4.2.0: {}
 
-  http-proxy-agent@7.0.2:
+  http-proxy-agent@7.0.2(supports-color@7.2.0):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@7.2.0)
@@ -12109,7 +11730,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@7.0.6:
+  https-proxy-agent@7.0.6(supports-color@7.2.0):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@7.2.0)
@@ -12200,10 +11821,10 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  intuit-oauth@4.2.5(supports-color@7.2.0):
+  intuit-oauth@4.2.5(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       atob: 2.1.2
-      axios: 1.20.0(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       csrf: 3.1.0
       jsonwebtoken: 9.0.3
       query-string: 6.14.1
@@ -12291,33 +11912,33 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
-  jimp@1.6.1:
+  jimp@1.6.1(supports-color@7.2.0):
     dependencies:
-      '@jimp/core': 1.6.1
-      '@jimp/diff': 1.6.1
-      '@jimp/js-bmp': 1.6.1
-      '@jimp/js-gif': 1.6.1
-      '@jimp/js-jpeg': 1.6.1
-      '@jimp/js-png': 1.6.1
-      '@jimp/js-tiff': 1.6.1
+      '@jimp/core': 1.6.1(supports-color@7.2.0)
+      '@jimp/diff': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-bmp': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-gif': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-jpeg': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-png': 1.6.1(supports-color@7.2.0)
+      '@jimp/js-tiff': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-blit': 1.6.1
-      '@jimp/plugin-blur': 1.6.1
+      '@jimp/plugin-blur': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-circle': 1.6.1
-      '@jimp/plugin-color': 1.6.1
-      '@jimp/plugin-contain': 1.6.1
-      '@jimp/plugin-cover': 1.6.1
-      '@jimp/plugin-crop': 1.6.1
+      '@jimp/plugin-color': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-contain': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-cover': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-crop': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-displace': 1.6.1
       '@jimp/plugin-dither': 1.6.1
       '@jimp/plugin-fisheye': 1.6.1
       '@jimp/plugin-flip': 1.6.1
-      '@jimp/plugin-hash': 1.6.1
+      '@jimp/plugin-hash': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-mask': 1.6.1
-      '@jimp/plugin-print': 1.6.1
+      '@jimp/plugin-print': 1.6.1(supports-color@7.2.0)
       '@jimp/plugin-quantize': 1.6.1
-      '@jimp/plugin-resize': 1.6.1
-      '@jimp/plugin-rotate': 1.6.1
-      '@jimp/plugin-threshold': 1.6.1
+      '@jimp/plugin-resize': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-rotate': 1.6.1(supports-color@7.2.0)
+      '@jimp/plugin-threshold': 1.6.1(supports-color@7.2.0)
       '@jimp/types': 1.6.1
       '@jimp/utils': 1.6.1
     transitivePeerDependencies:
@@ -12345,14 +11966,14 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jsdom@26.1.0:
+  jsdom@26.1.0(supports-color@7.2.0):
     dependencies:
       cssstyle: 4.6.0
       data-urls: 5.0.0
       decimal.js: 10.6.0
       html-encoding-sniffer: 4.0.0
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@7.2.0)
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.27
       parse5: 7.3.0
@@ -12614,9 +12235,9 @@ snapshots:
 
   lru-cache@10.4.3: {}
 
-  lucide-svelte@0.561.0(svelte@5.56.5):
+  lucide-svelte@0.561.0(svelte@5.57.1):
     dependencies:
-      svelte: 5.56.5
+      svelte: 5.57.1
 
   magic-string@0.30.21:
     dependencies:
@@ -13162,10 +12783,10 @@ snapshots:
       '@types/node': 24.13.4
       long: 5.3.2
 
-  proxy-chain@2.7.1:
+  proxy-chain@2.7.1(supports-color@7.2.0):
     dependencies:
       socks: 2.8.10
-      socks-proxy-agent: 8.0.5
+      socks-proxy-agent: 8.0.5(supports-color@7.2.0)
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -13274,14 +12895,14 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.20.0):
+  retry-axios@2.6.0(axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)):
     dependencies:
-      axios: 1.20.0(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
 
-  retry-request@8.0.4:
+  retry-request@8.0.4(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
-      teeny-request: 10.1.4
+      teeny-request: 10.1.4(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -13493,7 +13114,7 @@ snapshots:
 
   smart-buffer@4.2.0: {}
 
-  socks-proxy-agent@8.0.5:
+  socks-proxy-agent@8.0.5(supports-color@7.2.0):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@7.2.0)
@@ -13627,19 +13248,6 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.7.6(picomatch@4.0.7)(svelte@5.56.5)(typescript@5.9.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      '@sveltejs/load-config': 0.2.3
-      chokidar: 4.0.3
-      fdir: 6.5.0(picomatch@4.0.7)
-      picocolors: 1.1.1
-      sade: 1.8.1
-      svelte: 5.56.5
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - picomatch
-
   svelte-check@4.7.6(picomatch@4.0.7)(svelte@5.57.1)(typescript@5.9.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
@@ -13652,27 +13260,6 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - picomatch
-
-  svelte@5.56.5:
-    dependencies:
-      '@jridgewell/remapping': 2.3.5
-      '@jridgewell/sourcemap-codec': 1.6.0
-      '@sveltejs/acorn-typescript': 1.0.13(acorn@8.18.0)
-      '@types/estree': 1.0.9
-      '@types/trusted-types': 2.0.7
-      acorn: 8.18.0
-      aria-query: 5.3.1
-      axobject-query: 4.1.0
-      clsx: 2.1.1
-      devalue: 5.9.2
-      esm-env: 1.2.2
-      esrap: 2.3.7
-      is-reference: 3.0.3
-      locate-character: 3.0.0
-      magic-string: 0.30.21
-      zimmerframe: 1.1.5
-    transitivePeerDependencies:
-      - '@typescript-eslint/types'
 
   svelte@5.57.1:
     dependencies:
@@ -13704,10 +13291,10 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  teeny-request@10.1.4:
+  teeny-request@10.1.4(supports-color@7.2.0):
     dependencies:
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@7.2.0)
+      https-proxy-agent: 7.0.6(supports-color@7.2.0)
       node-fetch: 3.3.2
       stream-events: 1.0.5
     transitivePeerDependencies:
@@ -13899,7 +13486,7 @@ snapshots:
     optionalDependencies:
       vite: 8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
 
-  vitest@4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0)(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)):
+  vitest@4.1.10(@types/node@24.13.4)(@vitest/coverage-v8@4.1.10)(happy-dom@20.14.5)(jsdom@26.1.0(supports-color@7.2.0))(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)):
     dependencies:
       '@vitest/expect': 4.1.10
       '@vitest/mocker': 4.1.10(vite@8.1.4(@types/node@24.13.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
@@ -13925,7 +13512,7 @@ snapshots:
       '@types/node': 24.13.4
       '@vitest/coverage-v8': 4.1.10(vitest@4.1.10)
       happy-dom: 20.14.5
-      jsdom: 26.1.0
+      jsdom: 26.1.0(supports-color@7.2.0)
     transitivePeerDependencies:
       - msw
 
