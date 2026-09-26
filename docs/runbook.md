@@ -225,6 +225,14 @@ the released PostgreSQL-safe/concurrent-index defaults; an introspection failure
 stops migration rather than treating the database as empty. Serialize the first
 application bootstrap before allowing multiple web replicas to start; normal
 initialized runs retain the safe migration defaults.
+
+### Existing-database SMRT 0.51.30 upgrade
+
+Do not change `SMRT_STARTER_MIGRATE_ON_START` or relax its PostgreSQL-safe defaults for an existing database. The 0.51.30 release adds nullable conflict indexes that require an atomic maintenance-window migration; startup's concurrent-index mode deliberately refuses that DDL.
+
+Before the rollout, back up the database and quiesce writers. Run the starter's registered schemas through the released migration APIs with `postgresSafe: false` and `useConcurrentIndexes: false`, then preflight the released null-equal targets. Abort if ordinary migration reports `hasManualDrift`, or if preflight reports blocked targets; inspect its duplicate/drift detector output with the data owner. Do not merge or delete duplicates automatically.
+
+During the same maintenance window, apply `migrateNullEqualIndexes` only after its preflight is unblocked. It takes deterministic `ACCESS EXCLUSIVE` locks and replaces pending indexes atomically. Restart application processes after the change so cached database capability probes are refreshed, then repeat ordinary safe startup migration and the null-equal preflight. The locally installed CLI may not expose this release command, so use the API imports from `@happyvertical/smrt-core/migrations` with the same `ObjectRegistry`, `registerSmrtRuntimePackages`, and app-object registration used by `scripts/smrt-db-migrate.mjs`.
 Network policies admit web traffic only from the ingress-controller namespace
 and PostgreSQL traffic only from the web pod.
 
