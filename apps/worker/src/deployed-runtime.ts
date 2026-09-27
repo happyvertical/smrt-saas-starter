@@ -5,6 +5,7 @@ import {
 } from "@happyvertical/smrt-app-runtime";
 import { getFilesystemLazy } from "@happyvertical/smrt-assets";
 import "@happyvertical/smrt-assets/filesystem";
+import { readAssetStorageConfig } from "@happyvertical/smrt-saas-objects";
 import { OidcLoginService } from "@happyvertical/smrt-users";
 import { ensureWorkerTenancy, getWorkerDatabase } from "./runtime.js";
 
@@ -22,7 +23,7 @@ export async function initializeWorkerDeployedRuntime(): Promise<DeployedApplica
     profile: "self-hosted",
     providers: {
       tenancy: { mode: "multi-tenant", context: "required", isolation: "application" },
-      assets: { provider: "local-files", ownership: "operator" },
+      assets: { provider: assetStorageProvider(), ownership: "operator" },
     },
     database: {
       engine: "postgres",
@@ -36,7 +37,7 @@ export async function initializeWorkerDeployedRuntime(): Promise<DeployedApplica
       readiness: verifyWorkerOidcReadiness,
     },
     assets: {
-      provider: "local-files",
+      provider: assetStorageProvider(),
       readiness: verifyWorkerAssetStorageReadiness,
     },
     secrets: {
@@ -91,7 +92,7 @@ export interface WorkerAssetFilesystem {
 }
 
 export async function verifyWorkerAssetStorageReadiness(): Promise<void> {
-  const filesystem = await getFilesystemLazy({ type: "local", basePath: assetStoragePath() });
+  const filesystem = await getFilesystemLazy(readAssetStorageConfig());
   await verifyWorkerAssetFilesystemReadiness(filesystem);
 }
 
@@ -117,8 +118,8 @@ export async function verifyWorkerEnvironmentSecretsReadiness(): Promise<void> {
   requiredEnvironmentValue("OIDC_CLIENT_SECRET");
 }
 
-function assetStoragePath(): string {
-  return requiredEnvironmentValue("SMRT_STARTER_ASSET_STORAGE_PATH");
+function assetStorageProvider(): "local-files" | "s3-compatible" {
+  return readAssetStorageConfig().type === "s3" ? "s3-compatible" : "local-files";
 }
 
 function requiredEnvironmentValue(name: string): string {
