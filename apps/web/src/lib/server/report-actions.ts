@@ -21,7 +21,7 @@ import {
   validateReportExportArtifact,
   validateReportExportExecution,
 } from "@happyvertical/smrt-reports";
-import { TenantActivityReport } from "@happyvertical/smrt-saas-objects";
+import { readAssetStorageConfig, TenantActivityReport } from "@happyvertical/smrt-saas-objects";
 import { withSystemContext } from "@happyvertical/smrt-tenancy";
 import {
   createTenantActivityReportRequest,
@@ -530,7 +530,7 @@ function parseStoredExportMetadata(value: unknown): StoredExportMetadata {
 async function createReportAssetRuntime(db: AppDatabase) {
   return await createAssetRuntime({
     db,
-    storage: process.env.SMRT_STARTER_ASSET_STORAGE_PATH ?? ".runtime/assets",
+    storage: readAssetStorageConfig(),
   });
 }
 

@@ -75,12 +75,34 @@ export async function syncStripeBillingEvent(
   event: StripeWebhookEvent,
   store?: SubscriptionSyncStore,
 ): Promise<StripeBillingSyncResult> {
-  const syncStore = store ?? (await createSmrtSubscriptionSyncStore());
   const update = normalizeStripeSubscriptionUpdate(event);
   if (!update) {
     return { action: "ignored", reason: "event-not-subscription-related" };
   }
+  if (store) return applyStripeSubscriptionUpdate(update, store);
 
+  const db = await getAppDatabase();
+  // This first read resolves only the lock identity. Authority and event ordering
+  // are checked again against a fresh row while the tenant transaction is held.
+  const candidate = await findExistingSubscription(update, createSmrtSubscriptionSyncStore(db));
+  const tenantId = candidate?.tenantId ?? validTenantId(update.tenantId);
+  if (!tenantId) return { action: "ignored", reason: "tenant-not-resolved" };
+  if (typeof db.transaction !== "function")
+    throw new Error("Subscription sync requires transactions");
+  return db.transaction(async (tx) => {
+    await tx.query(
+      "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+      `starter.stripe-subscription-sync:${tenantId}`,
+    );
+    return applyStripeSubscriptionUpdate(update, createSmrtSubscriptionSyncStore(tx), tenantId);
+  });
+}
+
+async function applyStripeSubscriptionUpdate(
+  update: StripeSubscriptionUpdate,
+  syncStore: SubscriptionSyncStore,
+  lockedTenantId?: string,
+): Promise<StripeBillingSyncResult> {
   const existing = await findExistingSubscription(update, syncStore);
   const eventTenantId = validTenantId(update.tenantId);
   if (existing && eventTenantId && existing.tenantId !== eventTenantId) {
@@ -113,6 +135,10 @@ export async function syncStripeBillingEvent(
   const tenantId = eventTenantId ?? existing?.tenantId;
   if (!tenantId) {
     return { action: "ignored", reason: "tenant-not-resolved" };
+  }
+
+  if (lockedTenantId && tenantId !== lockedTenantId) {
+    return { action: "ignored", reason: "tenant-mismatch", tenantId };
   }
 
   const plan = await resolvePlan(update, existing, syncStore);
@@ -223,8 +249,9 @@ export function normalizeStripeSubscriptionUpdate(
   };
 }
 
-async function createSmrtSubscriptionSyncStore(): Promise<SubscriptionSyncStore> {
-  const db = await getAppDatabase();
+function createSmrtSubscriptionSyncStore(
+  db: Pick<Awaited<ReturnType<typeof getAppDatabase>>, "query" | "upsert">,
+): SubscriptionSyncStore {
   const findPlanByIdOrKey = async (planIdOrKey: string): Promise<SubscriptionSyncPlan | null> => {
     const result = isUuid(planIdOrKey)
       ? await db.query(

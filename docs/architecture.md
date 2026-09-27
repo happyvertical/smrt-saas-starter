@@ -32,8 +32,10 @@ its own auth.
 
 Mobile auth redirect URIs are scheme-restricted (https, native loopback http,
 or private-use app schemes; `javascript:`/`data:`/`file:` and similar are
-rejected) and, when `MOBILE_AUTH_ALLOWED_REDIRECT_URIS` (global) or a provider's
-`allowedRedirectUris` is configured, must match the registered allow list.
+rejected) and must exactly match the registered allow list. The checked-in
+mobile registrations are `smrtstarter://auth/callback` and the local native
+loopback callback `http://127.0.0.1:8765/callback`; change deployment values
+only together with the OAuth client and native URL-handler registrations.
 
 The non-production demo-owner fallback is intentionally local developer
 scaffolding. Production requests require a real SMRT session identity and an

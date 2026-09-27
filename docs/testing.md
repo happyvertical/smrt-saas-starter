@@ -175,6 +175,20 @@ NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/report-o
 NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/report-operations-recovery.integration.proof.mjs
 ```
 
+The decision endpoint also has a native route regression test: an authenticated
+human session that targets a missing or foreign operation receives a bounded
+404 only after the existing session, membership, and payload gates run.
+
+## Subscription sync and worker keysets
+
+After migration and seed of an owned disposable PostgreSQL database, run the
+native concurrency and UUID keyset proofs:
+
+```sh
+NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/web/test-support/subscription-sync.integration.proof.mjs
+NEUTRAL_FIXTURE_DATABASE_URL="$DATABASE_URL" node apps/worker/test-support/keyset.integration.proof.mjs
+```
+
 The proof uses real released SMRT action, SQL state, Jobs, and session APIs.
 Use a separate disposable database for concurrent lanes. Production browser
 coverage lives in `apps/web/e2e/report-operations.spec.ts` and runs through

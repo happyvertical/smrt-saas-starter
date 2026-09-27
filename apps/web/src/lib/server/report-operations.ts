@@ -8,6 +8,7 @@ import {
   type ReportOperation,
   ReportOperationCollection,
   type ReportOperationKind,
+  ReportOperationNotFoundError,
   type ReportOperationStatus,
   reportOperationPayloadFingerprint,
   withLockedReportOperation,
@@ -21,6 +22,7 @@ import {
   starterPermissions,
 } from "$lib/server/authz";
 import { getAppDatabase } from "$lib/server/db";
+import { isUuid } from "$lib/server/starter-data";
 
 export interface ReportOperationDto {
   id: string;
@@ -182,36 +184,44 @@ export async function decideReportOperation(
   const session = await sessions.loadSessionContext(sessionId);
   if (!session || session.user.id !== membership.userId)
     throw error(401, "A current signed-in browser session is required");
+  if (!isUuid(id)) throw error(404, "Report operation not found");
   if (decision !== "approve" && decision !== "decline") throw error(400, "Decision is invalid");
-  await withLockedReportOperation(db, id, membership, async (tx, row) => {
-    const query = parseReportOperationJson<{ query: ActivityReportOperationQuery }>(
-      row.request,
-    ).query;
-    if (
-      payloadFingerprint !== row.payload_fingerprint ||
-      reportOperationPayloadFingerprint(row, query) !== row.payload_fingerprint
-    )
-      throw error(409, "Approval payload no longer matches");
-    if (row.kind !== "approval-demo") throw error(409, "Operation is not awaiting approval");
-    if (
-      row.status === "queued" &&
-      decision === "approve" &&
-      !row.job_id &&
-      row.approved_fingerprint === row.payload_fingerprint &&
-      row.decided_by_user_id === membership.userId
-    )
-      return;
-    if (row.status !== "awaiting_approval") throw error(409, "Operation is not awaiting approval");
-    await tx.query(
-      "UPDATE starter_report_operations SET status = ?, decided_by_user_id = ?, decided_at = ?, approved_fingerprint = ?, updated_at = ? WHERE id = ?",
-      decision === "approve" ? "queued" : "declined",
-      membership.userId,
-      new Date().toISOString(),
-      decision === "approve" ? payloadFingerprint : null,
-      new Date().toISOString(),
-      id,
-    );
-  });
+  try {
+    await withLockedReportOperation(db, id, membership, async (tx, row) => {
+      const query = parseReportOperationJson<{ query: ActivityReportOperationQuery }>(
+        row.request,
+      ).query;
+      if (
+        payloadFingerprint !== row.payload_fingerprint ||
+        reportOperationPayloadFingerprint(row, query) !== row.payload_fingerprint
+      )
+        throw error(409, "Approval payload no longer matches");
+      if (row.kind !== "approval-demo") throw error(409, "Operation is not awaiting approval");
+      if (
+        row.status === "queued" &&
+        decision === "approve" &&
+        !row.job_id &&
+        row.approved_fingerprint === row.payload_fingerprint &&
+        row.decided_by_user_id === membership.userId
+      )
+        return;
+      if (row.status !== "awaiting_approval")
+        throw error(409, "Operation is not awaiting approval");
+      await tx.query(
+        "UPDATE starter_report_operations SET status = ?, decided_by_user_id = ?, decided_at = ?, approved_fingerprint = ?, updated_at = ? WHERE id = ?",
+        decision === "approve" ? "queued" : "declined",
+        membership.userId,
+        new Date().toISOString(),
+        decision === "approve" ? payloadFingerprint : null,
+        new Date().toISOString(),
+        id,
+      );
+    });
+  } catch (cause) {
+    if (cause instanceof ReportOperationNotFoundError)
+      throw error(404, "Report operation not found");
+    throw cause;
+  }
   const operation = await requireOwnedOperation(membership, id);
   if (decision === "approve") await enqueueOperation(operation, membership);
   return toDto(operation);
