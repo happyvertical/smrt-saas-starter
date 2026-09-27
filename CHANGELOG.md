@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Advance the SMRT and SDK families together to SMRT **0.51.30**, the coordinated
+- Advance the SMRT and SDK families together to SMRT **0.51.31**, the coordinated
   HappyVertical SDK family at **0.94.0**, and independently versioned
   `@happyvertical/ocr` at **0.61.6**. The published SQL artifact no longer needs
   the starter's DuckDB SSR externalization, so the consumer workaround is removed.

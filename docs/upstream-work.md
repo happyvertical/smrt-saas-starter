@@ -4,18 +4,18 @@ Reusable starter functionality should continue to move upstream from isolated wo
 
 ## Consumed Versions
 
-- SMRT packages (`@happyvertical/smrt-*`): **0.51.30**
+- SMRT packages (`@happyvertical/smrt-*`): **0.51.31**
 - SDK family (excluding independently versioned `@happyvertical/ocr`): **0.94.0**
 - OCR (`@happyvertical/ocr`): **0.61.6**
 - Svelte: **5.57.1 or newer in the 5.x line** (SMRT peer requirement)
 
-The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.51.30`
+The SMRT and SDK families are advanced together: `@happyvertical/smrt-core@0.51.31`
 uses the SDK line at `^0.94.0`, so the catalog/`overrides` pin the SDK family to
 `0.94.0`. The Starter Vite SSR build passes against the published SQL artifact
 without DuckDB externals, so the prior consumer-side bundler mitigation is removed.
 
 The owning registry is **npm.happyvertical.com** — `.npmrc` routes the `@happyvertical`
-scope there, where the v0.51.30 release is published. npmjs mirroring remains a
+scope there, where the v0.51.31 release is published. npmjs mirroring remains a
 best-effort follow-up and is not the install source for this cohort.
 
 The 0.29 → 0.37 SMRT line introduced two breaking changes the starter had to absorb:

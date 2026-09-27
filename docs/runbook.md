@@ -226,9 +226,9 @@ stops migration rather than treating the database as empty. Serialize the first
 application bootstrap before allowing multiple web replicas to start; normal
 initialized runs retain the safe migration defaults.
 
-### Existing-database SMRT 0.51.30 upgrade
+### Existing-database SMRT 0.51.31 upgrade
 
-Do not change `SMRT_STARTER_MIGRATE_ON_START` or relax its PostgreSQL-safe defaults for an existing database. The 0.51.30 release adds nullable conflict indexes that require an atomic maintenance-window migration; startup's concurrent-index mode deliberately refuses that DDL.
+Do not change `SMRT_STARTER_MIGRATE_ON_START` or relax its PostgreSQL-safe defaults for an existing database. The 0.51.31 release adds nullable conflict indexes that require an atomic maintenance-window migration; startup's concurrent-index mode deliberately refuses that DDL.
 
 Before the rollout, back up the database and quiesce writers. Run the starter's registered schemas through the released migration APIs with `postgresSafe: false` and `useConcurrentIndexes: false`, then preflight the released null-equal targets. Abort if ordinary migration reports `hasManualDrift`, or if preflight reports blocked targets; inspect its duplicate/drift detector output with the data owner. Do not merge or delete duplicates automatically.
 
@@ -254,7 +254,7 @@ const db = await resolveDatabase(
   { type: 'postgres', url: process.env.DATABASE_URL }, { schemas },
 );
 const migration = await migrateSmrtSchemas({
-  db, description: 'SMRT 0.51.30 maintenance upgrade', engineHint: 'postgres',
+  db, description: 'SMRT 0.51.31 maintenance upgrade', engineHint: 'postgres',
   packageName: 'smrt-saas-starter', version: process.env.APP_VERSION ?? '0.1.1',
   postgresSafe: false, useConcurrentIndexes: false,
 });
