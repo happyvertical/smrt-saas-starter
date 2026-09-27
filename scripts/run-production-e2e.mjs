@@ -226,6 +226,8 @@ async function startWeb(name) {
     // The image runs as uid 1000, so its copied application tree is read-only.
     // This disposable path is owned by the container and is only for this fixture.
     "-e",
+    "SMRT_ASSETS_STORAGE_TYPE=local",
+    "-e",
     "SMRT_STARTER_ASSET_STORAGE_PATH=/tmp/smrt-assets",
     "-e",
     "PUBLIC_APP_NAME=SMRT Production E2E",
@@ -348,6 +350,8 @@ function startReportWorker() {
     `SESSION_SECRET=${workerRuntimeSecret}`,
     "-e",
     `PUBLIC_SITE_URL=http://${names.web}:3000`,
+    "-e",
+    "SMRT_ASSETS_STORAGE_TYPE=local",
     "-e",
     "SMRT_STARTER_ASSET_STORAGE_PATH=/tmp/smrt-assets",
     "-e",
