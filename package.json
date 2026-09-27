@@ -61,7 +61,7 @@
     "@vitest/coverage-v8": "4.1.10",
     "lefthook": "2.1.10",
     "playwright": "^1.58.2",
-    "svelte": "5.56.5",
+    "svelte": "5.57.1",
     "svelte-check": "^4.0.0",
     "turbo": "2.10.5",
     "typescript": "5.9.3",

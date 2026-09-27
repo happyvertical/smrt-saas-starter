@@ -242,6 +242,96 @@ the released PostgreSQL-safe/concurrent-index defaults; an introspection failure
 stops migration rather than treating the database as empty. Serialize the first
 application bootstrap before allowing multiple web replicas to start; normal
 initialized runs retain the safe migration defaults.
+
+### Existing-database SMRT 0.51.31 upgrade
+
+Do not change `SMRT_STARTER_MIGRATE_ON_START` or relax its PostgreSQL-safe defaults for an existing database. The 0.51.31 release adds nullable conflict indexes that require an atomic maintenance-window migration; startup's concurrent-index mode deliberately refuses that DDL.
+
+Before the rollout, back up the database and quiesce writers. Run the starter's registered schemas through the released migration APIs with `postgresSafe: false` and `useConcurrentIndexes: false`, then preflight the released null-equal targets. Abort if ordinary migration reports `hasManualDrift`, or if preflight reports blocked targets; inspect its duplicate/drift detector output with the data owner. Do not merge or delete duplicates automatically.
+
+During the same maintenance window, apply `migrateNullEqualIndexes` only after its preflight is unblocked. It takes deterministic `ACCESS EXCLUSIVE` locks and replaces pending indexes atomically. Restart application processes after the change so cached database capability probes are refreshed, then repeat ordinary safe startup migration and the null-equal preflight. The locally installed CLI may not expose this release command, so use the API imports from `@happyvertical/smrt-core/migrations` with the same `ObjectRegistry`, `registerSmrtRuntimePackages`, and app-object registration used by `scripts/smrt-db-migrate.mjs`.
+
+From the upgraded checkout, run `pnpm build` first. Set `DATABASE_URL` to the intended database through the normal secret mechanism. With writers stopped, execute this from the repository root; this is an explicit maintenance command, not a startup command:
+
+```sh
+cd apps/web
+node --input-type=module <<'JS'
+import { ObjectRegistry, resolveDatabase } from '@happyvertical/smrt-core';
+import {
+  migrateSmrtSchemas, collectNullEqualIndexTargets,
+  preflightNullEqualIndexes, migrateNullEqualIndexes,
+} from '@happyvertical/smrt-core/migrations';
+import { registerSmrtRuntimePackages } from './smrt-packages.mjs';
+import '@happyvertical/smrt-saas-objects';
+
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+await registerSmrtRuntimePackages();
+const schemas = ObjectRegistry.getAllSchemasAsDefinitions();
+const db = await resolveDatabase(
+  { type: 'postgres', url: process.env.DATABASE_URL }, { schemas },
+);
+const migration = await migrateSmrtSchemas({
+  db, description: 'SMRT 0.51.31 maintenance upgrade', engineHint: 'postgres',
+  packageName: 'smrt-saas-starter', version: process.env.APP_VERSION ?? '0.1.1',
+  postgresSafe: false, useConcurrentIndexes: false,
+});
+if (migration.hasManualDrift) {
+  console.error(migration.unactionableChanges);
+  throw new Error('Manual schema drift requires operator resolution');
+}
+const targets = collectNullEqualIndexTargets(schemas);
+const before = await preflightNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+console.log(JSON.stringify(before, null, 2));
+if (!before.supported || before.indexes.some((index) => index.state === 'blocked')) {
+  throw new Error('Index preflight blocked; keep writers stopped and inspect the report');
+}
+await migrateNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+const after = await preflightNullEqualIndexes(db, targets, { engineHint: 'postgres' });
+console.log(JSON.stringify(after, null, 2));
+if (!after.supported || after.indexes.some((index) => index.state !== 'current')) {
+  throw new Error('Index verification failed; keep writers stopped');
+}
+JS
+```
+
+An upgrade rehearsal from the starter's 0.49.8 fixture reported manual drift for `journal_entries.account_id` referencing `ledger_accounts.id` (foreign-key target or actions differ). This procedure intentionally stops on that report. Inspect the live constraint and the migration advisory before a production rollout; do not assume an empty-database test proves existing-database compatibility.
+
+For the public demo only, a read-only inspection found `accounts` and `journal_entries` empty before the upgrade. Recheck under locks; that observation is not authorization to discard future data. If the first maintenance command stops on **only** the exact foreign-key drift above after creating `ledger_accounts`, the following narrowly guarded repair is available during the same maintenance window. It refuses any financial rows or a different constraint definition, changes no records, and rolls back on error. Any populated table requires a separate data migration design. Run through `psql` with `ON_ERROR_STOP` enabled and the intended database connection:
+
+```sql
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+LOCK TABLE public.accounts, public.ledger_accounts, public.journal_entries IN ACCESS EXCLUSIVE MODE;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.accounts)
+     OR EXISTS (SELECT 1 FROM public.ledger_accounts)
+     OR EXISTS (SELECT 1 FROM public.journal_entries) THEN
+    RAISE EXCEPTION 'Financial tables contain data; an explicit data mapping is required';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.journal_entries'::regclass
+      AND conname = 'journal_entries_account_id_accounts_id_fkey'
+      AND contype = 'f'
+      AND pg_get_constraintdef(oid) = 'FOREIGN KEY (account_id) REFERENCES accounts(id) ON UPDATE CASCADE'
+  ) THEN
+    RAISE EXCEPTION 'Unexpected foreign-key definition; inspect schema drift manually';
+  END IF;
+  ALTER TABLE public.journal_entries
+    DROP CONSTRAINT journal_entries_account_id_accounts_id_fkey;
+  ALTER TABLE public.journal_entries
+    ADD CONSTRAINT journal_entries_account_id_ledger_accounts_id_fkey
+    FOREIGN KEY (account_id) REFERENCES public.ledger_accounts(id)
+    ON UPDATE CASCADE ON DELETE NO ACTION;
+END $$;
+COMMIT;
+```
+
+After a successful repair, rerun the complete maintenance API command above and the normal safe `pnpm run db:migrate`. A repeated repair is deliberately refused once the constraint has changed; the maintenance API command itself is repeatable. Resume writers only after both migration checks and application readiness pass.
+
+Stop on any error. Ordinary schema migration and index conversion are separate transactions, so failure does not imply that earlier schema work was rolled back. Resolve or restore from the verified backup before resuming writers. After successful maintenance, run the normal `pnpm run db:migrate` from the repository root, then restart the application and verify readiness before resuming traffic.
+
 Network policies admit web traffic only from the ingress-controller namespace
 and PostgreSQL traffic only from the web pod.
 

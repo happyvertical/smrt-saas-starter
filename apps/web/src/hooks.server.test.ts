@@ -186,8 +186,61 @@ describe("starter request bootstrap", () => {
     expect(locals.permissions).toEqual(["tenant.settings.manage"]);
   });
 
-  it("protects generated starter-setting CRUD with the existing admin capability", async () => {
-    const locals = { user: { id: userId, email: "Person@Example.com" } };
+  it("grants the generated create permission after the existing admin capability", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requirePermission.mockResolvedValue({
+      tenantId: starterData.demoTenant.id,
+      userId,
+      permissions: ["tenant.settings.manage"],
+    });
+    await handle({
+      event: {
+        locals,
+        request: new Request("http://localhost/api/starterappsettings", { method: "POST" }),
+        url: new URL("http://localhost/api/starterappsettings"),
+      },
+      resolve: async () => new Response("ok"),
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(mocks.resolveMembershipContext).toHaveBeenCalledOnce();
+    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
+    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
+    expect(locals.permissions).toEqual(["tenant.settings.manage", "starterappsettings.create"]);
+    expect(mocks.withTenant).toHaveBeenCalledWith(
+      {
+        tenantId: starterData.demoTenant.id,
+        userId,
+        permissions: new Set(["tenant.settings.manage", "starterappsettings.create"]),
+      },
+      expect.any(Function),
+    );
+  });
+
+  it("grants the generated update permission after the existing admin capability", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requirePermission.mockResolvedValue({
+      tenantId: starterData.demoTenant.id,
+      userId,
+      permissions: ["tenant.settings.manage"],
+    });
+    await handle({
+      event: {
+        locals,
+        request: new Request(`http://localhost/api/starterappsettings/${userId}`, {
+          method: "PUT",
+        }),
+        url: new URL(`http://localhost/api/starterappsettings/${userId}`),
+      },
+      resolve: async () => new Response("ok"),
+    } as unknown as Parameters<typeof handle>[0]);
+
+    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
+    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
+    expect(locals.permissions).toEqual(["tenant.settings.manage", "starterappsettings.update"]);
+  });
+
+  it("does not add a generated write permission to starter-setting reads", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
     mocks.requirePermission.mockResolvedValue({
       tenantId: starterData.demoTenant.id,
       userId,
@@ -202,21 +255,11 @@ describe("starter request bootstrap", () => {
       resolve: async () => new Response("ok"),
     } as unknown as Parameters<typeof handle>[0]);
 
-    expect(mocks.resolveMembershipContext).toHaveBeenCalledOnce();
-    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
-    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
-    expect(mocks.withTenant).toHaveBeenCalledWith(
-      {
-        tenantId: starterData.demoTenant.id,
-        userId,
-        permissions: new Set(["tenant.settings.manage"]),
-      },
-      expect.any(Function),
-    );
+    expect(locals.permissions).toEqual(["tenant.settings.manage"]);
   });
 
-  it("protects generated starter-setting item updates with the same capability", async () => {
-    const locals = { user: { id: userId, email: "Person@Example.com" } };
+  it("does not add an unexposed delete permission to starter-setting requests", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
     mocks.requirePermission.mockResolvedValue({
       tenantId: starterData.demoTenant.id,
       userId,
@@ -225,14 +268,56 @@ describe("starter request bootstrap", () => {
     await handle({
       event: {
         locals,
-        request: new Request(`http://localhost/api/starterappsettings/${userId}`),
+        request: new Request(`http://localhost/api/starterappsettings/${userId}`, {
+          method: "DELETE",
+        }),
         url: new URL(`http://localhost/api/starterappsettings/${userId}`),
       },
       resolve: async () => new Response("ok"),
     } as unknown as Parameters<typeof handle>[0]);
 
-    expect(mocks.requireSuperUser).toHaveBeenCalledWith(locals);
-    expect(mocks.requirePermission).toHaveBeenCalledWith(locals, "tenant.settings.manage");
+    expect(locals.permissions).toEqual(["tenant.settings.manage"]);
+  });
+
+  it("does not publish a generated permission when the super-user gate rejects", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requireSuperUser.mockImplementationOnce(() => {
+      throw new Error("Super user required");
+    });
+
+    await expect(
+      handle({
+        event: {
+          locals,
+          request: new Request("http://localhost/api/starterappsettings", { method: "POST" }),
+          url: new URL("http://localhost/api/starterappsettings"),
+        },
+        resolve: async () => new Response("unexpected"),
+      } as unknown as Parameters<typeof handle>[0]),
+    ).rejects.toThrow("Super user required");
+
+    expect(mocks.requirePermission).not.toHaveBeenCalled();
+    expect(locals.permissions).toBeUndefined();
+  });
+
+  it("does not publish a generated permission when settings management is denied", async () => {
+    const locals: Record<string, unknown> = { user: { id: userId, email: "Person@Example.com" } };
+    mocks.requirePermission.mockRejectedValueOnce(new Error("Missing permission"));
+
+    await expect(
+      handle({
+        event: {
+          locals,
+          request: new Request(`http://localhost/api/starterappsettings/${userId}`, {
+            method: "PUT",
+          }),
+          url: new URL(`http://localhost/api/starterappsettings/${userId}`),
+        },
+        resolve: async () => new Response("unexpected"),
+      } as unknown as Parameters<typeof handle>[0]),
+    ).rejects.toThrow("Missing permission");
+
+    expect(locals.permissions).toBeUndefined();
   });
 
   it("disables the generated sync write path", async () => {

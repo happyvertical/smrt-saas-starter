@@ -133,11 +133,19 @@ const starterAppSettingsApiHandle: Handle = async ({ event, resolve }) => {
   if (isStarterAppSettingsApiRequest(event.url.pathname)) {
     requireSuperUser(event.locals);
     const membership = await requirePermission(event.locals, starterPermissions.settingsManage);
+    const permissions = [
+      ...membership.permissions,
+      ...starterAppSettingsOperationPermissions(event.request, event.url.pathname),
+    ];
+    // Generated SMRT write routes enforce their collection operation permission
+    // in addition to this application's super-user and settings-manage gates.
+    // Publish the matching grant only after those application gates succeed.
+    event.locals.permissions = permissions;
     return withTenant(
       {
         tenantId: membership.tenantId,
         userId: membership.userId,
-        permissions: new Set(membership.permissions),
+        permissions: new Set(permissions),
       },
       async () => await resolve(event),
     );
@@ -147,6 +155,16 @@ const starterAppSettingsApiHandle: Handle = async ({ event, resolve }) => {
 
 function isStarterAppSettingsApiRequest(pathname: string): boolean {
   return pathname === "/api/starterappsettings" || pathname.startsWith("/api/starterappsettings/");
+}
+
+function starterAppSettingsOperationPermissions(request: Request, pathname: string): string[] {
+  if (request.method === "POST" && pathname === "/api/starterappsettings") {
+    return ["starterappsettings.create"];
+  }
+  if (request.method === "PUT" && pathname.startsWith("/api/starterappsettings/")) {
+    return ["starterappsettings.update"];
+  }
+  return [];
 }
 
 function readAuthenticatedUser(
