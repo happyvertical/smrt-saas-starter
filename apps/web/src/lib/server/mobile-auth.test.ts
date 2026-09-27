@@ -233,6 +233,43 @@ describe("mobile auth", () => {
     });
   });
 
+  it("rejects redirects when the effective allow list is empty", async () => {
+    vi.stubEnv("MOBILE_AUTH_ALLOWED_REDIRECT_URIS", "");
+
+    await expect(
+      startMobileAuth({ redirectUri: "smrtstarter://auth/callback" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Mobile redirect URI is not allowed for this provider",
+    });
+    expect(mobileAuthMocks.getAuth).not.toHaveBeenCalled();
+  });
+
+  it("requires exact callback matches instead of accepting a path prefix lookalike", async () => {
+    vi.stubEnv("MOBILE_AUTH_ALLOWED_REDIRECT_URIS", "smrtstarter://auth/callback/");
+
+    await expect(
+      startMobileAuth({ redirectUri: "smrtstarter://auth/callback/attacker" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Mobile redirect URI is not allowed for this provider",
+    });
+    expect(mobileAuthMocks.getAuth).not.toHaveBeenCalled();
+  });
+
+  it("allows a provider-specific callback when no global callback is configured", async () => {
+    vi.stubEnv("MOBILE_AUTH_ALLOWED_REDIRECT_URIS", "");
+    vi.stubEnv("MOBILE_AUTH_HAPPYVERTICAL_REDIRECT_URIS", "smrtstarter://provider/callback");
+    mobileAuthMocks.getAuthorizationUrl.mockResolvedValue({
+      url: "https://idp.example.test/oauth2/authorize",
+      state: "state-1",
+    });
+
+    await expect(
+      startMobileAuth({ redirectUri: "smrtstarter://provider/callback" }),
+    ).resolves.toMatchObject({ redirectUri: "smrtstarter://provider/callback" });
+  });
+
   it("exchanges an authorization code for a smrt-users bearer session", async () => {
     mobileAuthMocks.exchangeCode.mockResolvedValue({
       accessToken: "provider-access-token",
@@ -489,6 +526,10 @@ function configureHappyVerticalProvider() {
   vi.stubEnv("HAPPYVERTICAL_IDP_ISSUER", "https://idp.example.test");
   vi.stubEnv("MOBILE_OIDC_CLIENT_ID", "mobile-client");
   vi.stubEnv("MOBILE_OIDC_CLIENT_SECRET", "mobile-secret");
+  vi.stubEnv(
+    "MOBILE_AUTH_ALLOWED_REDIRECT_URIS",
+    "smrtstarter://auth/callback http://127.0.0.1:8765/callback",
+  );
 }
 
 function mobileCompleteRequest() {

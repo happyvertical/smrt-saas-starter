@@ -679,7 +679,7 @@ function normalizeRedirectUri(value: string, provider: MobileAuthProviderConfig)
   // requested URI must match it exactly. This is the primary defense against
   // redirecting authorization responses to an attacker-controlled URI.
   const allowList = [...getGlobalAllowedRedirectUris(), ...provider.allowedRedirectUris];
-  if (allowList.length > 0 && !isAllowedRedirectUri(redirectUri, allowList)) {
+  if (allowList.length === 0 || !isAllowedRedirectUri(redirectUri, allowList)) {
     throw new MobileAuthError(400, "Mobile redirect URI is not allowed for this provider");
   }
 
@@ -698,12 +698,7 @@ function isAllowedRedirectUri(candidate: string, allowList: string[]): boolean {
     if (!allowed) {
       return false;
     }
-    if (normalized === allowed) {
-      return true;
-    }
-    // An allow-list entry ending in "/" is treated as a path prefix so a single
-    // registered origin can cover its callback sub-paths without wildcards.
-    return allowed.endsWith("/") && normalized.startsWith(allowed);
+    return normalized === allowed;
   });
 }
 

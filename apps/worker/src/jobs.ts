@@ -98,7 +98,8 @@ export interface ReconciledSubscriptionUpdate {
 }
 
 export interface SubscriptionReconciliationStore {
-  listStripeSubscriptions(limit: number): Promise<ReconcileSubscriptionRecord[]>;
+  /** Returns an ID-ordered page after `afterId`. */
+  listStripeSubscriptions(limit: number, afterId?: string): Promise<ReconcileSubscriptionRecord[]>;
   updateStripeSubscription(
     subscription: ReconcileSubscriptionRecord,
     update: ReconciledSubscriptionUpdate,
@@ -113,7 +114,8 @@ export interface ReconcileSubscriptionsOptions {
 }
 
 export interface TenantUsageAuditStore {
-  listTenantIdsWithSubscriptions(limit: number): Promise<string[]>;
+  /** Returns a tenant-ID-ordered page after `afterTenantId`. */
+  listTenantIdsWithSubscriptions(limit: number, afterTenantId?: string): Promise<string[]>;
 }
 
 export interface TenantUsageAuditResolver {
@@ -188,53 +190,82 @@ export async function runWorkerCycle(options: WorkerCycleOptions = {}): Promise<
 export async function reconcileSubscriptions(
   options: ReconcileSubscriptionsOptions = {},
 ): Promise<WorkerJobResult> {
-  const limit = options.limit ?? DEFAULT_JOB_LIMIT;
+  const limit = workerBatchLimit(options.limit);
   const store = options.store ?? (await createSmrtSubscriptionReconciliationStore());
   const billing =
     options.billing === undefined
       ? ((await getWorkerStripeBillingProvider()) as StripeSubscriptionBillingProvider | null)
       : options.billing;
-  const subscriptions = await store.listStripeSubscriptions(limit);
-
   if (!billing) {
+    let skipped = 0;
+    let afterId: string | undefined;
+
+    for (;;) {
+      const subscriptions = await store.listStripeSubscriptions(limit, afterId);
+      if (subscriptions.length === 0) {
+        break;
+      }
+
+      skipped += subscriptions.length;
+      afterId = nextKeysetCursor(
+        subscriptions.map((subscription) => subscription.id),
+        afterId,
+      );
+    }
+
     return {
       job: "subscriptions.reconcile",
       processed: 0,
-      skipped: subscriptions.length,
+      skipped,
       reason: "billing-provider-not-configured",
     };
   }
 
+  let processed = 0;
   let updated = 0;
   let skipped = 0;
   let failed = 0;
+  let afterId: string | undefined;
 
-  for (const subscription of subscriptions) {
-    try {
-      const status = await billing.retrieveSubscriptionStatus(subscription.stripeSubscriptionId);
-      const update = toReconciledSubscriptionUpdate(subscription, status);
-
-      if (!hasSubscriptionChanges(subscription, update)) {
-        skipped += 1;
-        continue;
-      }
-
-      await store.updateStripeSubscription(subscription, update);
-      updated += 1;
-    } catch (error) {
-      failed += 1;
-      options.logger?.error("Subscription reconciliation failed", {
-        subscriptionId: subscription.id,
-        tenantId: subscription.tenantId,
-        stripeSubscriptionId: subscription.stripeSubscriptionId,
-        message: error instanceof Error ? error.message : String(error),
-      });
+  for (;;) {
+    const subscriptions = await store.listStripeSubscriptions(limit, afterId);
+    if (subscriptions.length === 0) {
+      break;
     }
+
+    for (const subscription of subscriptions) {
+      processed += 1;
+      try {
+        const status = await billing.retrieveSubscriptionStatus(subscription.stripeSubscriptionId);
+        const update = toReconciledSubscriptionUpdate(subscription, status);
+
+        if (!hasSubscriptionChanges(subscription, update)) {
+          skipped += 1;
+          continue;
+        }
+
+        await store.updateStripeSubscription(subscription, update);
+        updated += 1;
+      } catch (error) {
+        failed += 1;
+        options.logger?.error("Subscription reconciliation failed", {
+          subscriptionId: subscription.id,
+          tenantId: subscription.tenantId,
+          stripeSubscriptionId: subscription.stripeSubscriptionId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    afterId = nextKeysetCursor(
+      subscriptions.map((subscription) => subscription.id),
+      afterId,
+    );
   }
 
   return {
     job: "subscriptions.reconcile",
-    processed: subscriptions.length,
+    processed,
     updated,
     skipped,
     failed,
@@ -245,54 +276,64 @@ export async function auditUsageThresholds(
   options: AuditUsageThresholdsOptions = {},
 ): Promise<WorkerJobResult> {
   ensureWorkerTenancy();
-  const limit = options.limit ?? DEFAULT_JOB_LIMIT;
+  const limit = workerBatchLimit(options.limit);
   const store = options.store ?? (await createSmrtUsageAuditStore());
   const resolver = options.resolver ?? (await createSmrtSubscriptionResolver());
-  const tenantIds = await store.listTenantIdsWithSubscriptions(limit);
-
+  let processed = 0;
   let ok = 0;
   let warned = 0;
   let blocked = 0;
   let observed = 0;
   let failed = 0;
+  let afterTenantId: string | undefined;
 
-  for (const tenantId of tenantIds) {
-    try {
-      const resolution = await withTenant({ tenantId }, () =>
-        resolver.resolveTenantEntitlements(tenantId, { now: options.now }),
-      );
-
-      for (const evaluation of resolution.thresholdEvaluations) {
-        // `observe` thresholds are informational only — the resolver never
-        // enforces them, but it can still report state "warn" for them. They
-        // must not feed the ok/warned/blocked counters or the warn logs below,
-        // otherwise an informational threshold over its warning ratio triggers
-        // a misleading "thresholds near/exceeded" warning.
-        if (evaluation.threshold.enforcement === "observe") {
-          observed += 1;
-          continue;
-        }
-
-        if (evaluation.state === "blocked") {
-          blocked += 1;
-        } else if (evaluation.state === "warn") {
-          warned += 1;
-        } else {
-          ok += 1;
-        }
-      }
-    } catch (error) {
-      failed += 1;
-      options.logger?.error("Usage threshold audit failed", {
-        tenantId,
-        message: error instanceof Error ? error.message : String(error),
-      });
+  for (;;) {
+    const tenantIds = await store.listTenantIdsWithSubscriptions(limit, afterTenantId);
+    if (tenantIds.length === 0) {
+      break;
     }
+
+    for (const tenantId of tenantIds) {
+      processed += 1;
+      try {
+        const resolution = await withTenant({ tenantId }, () =>
+          resolver.resolveTenantEntitlements(tenantId, { now: options.now }),
+        );
+
+        for (const evaluation of resolution.thresholdEvaluations) {
+          // `observe` thresholds are informational only — the resolver never
+          // enforces them, but it can still report state "warn" for them. They
+          // must not feed the ok/warned/blocked counters or the warn logs below,
+          // otherwise an informational threshold over its warning ratio triggers
+          // a misleading "thresholds near/exceeded" warning.
+          if (evaluation.threshold.enforcement === "observe") {
+            observed += 1;
+            continue;
+          }
+
+          if (evaluation.state === "blocked") {
+            blocked += 1;
+          } else if (evaluation.state === "warn") {
+            warned += 1;
+          } else {
+            ok += 1;
+          }
+        }
+      } catch (error) {
+        failed += 1;
+        options.logger?.error("Usage threshold audit failed", {
+          tenantId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    afterTenantId = nextKeysetCursor(tenantIds, afterTenantId);
   }
 
   const result = {
     job: "usage.audit",
-    processed: tenantIds.length,
+    processed,
     ok,
     warned,
     blocked,
@@ -336,7 +377,8 @@ export async function createSmrtSubscriptionReconciliationStore(
   const database = db ?? (await getWorkerDatabase());
 
   return {
-    async listStripeSubscriptions(limit) {
+    async listStripeSubscriptions(limit, afterId) {
+      const cursorPredicate = afterId ? "AND id > ?" : "";
       const result = await database.query(
         `
           SELECT
@@ -357,10 +399,11 @@ export async function createSmrtSubscriptionReconciliationStore(
             AND external_provider = 'stripe'
             AND stripe_subscription_id IS NOT NULL
             AND stripe_subscription_id <> ''
-          ORDER BY updated_at ASC
+            ${cursorPredicate}
+          ORDER BY id ASC
           LIMIT ?
         `,
-        limit,
+        ...(afterId ? [afterId, limit] : [limit]),
       );
 
       return result.rows.map(rowToReconcileSubscriptionRecord).filter(isPresent);
@@ -404,7 +447,8 @@ export async function createSmrtUsageAuditStore(
   const database = db ?? (await getWorkerDatabase());
 
   return {
-    async listTenantIdsWithSubscriptions(limit) {
+    async listTenantIdsWithSubscriptions(limit, afterTenantId) {
+      const cursorPredicate = afterTenantId ? "AND tenant_id > ?" : "";
       const result = await database.query(
         `
           SELECT DISTINCT tenant_id
@@ -412,10 +456,11 @@ export async function createSmrtUsageAuditStore(
           WHERE subscriber_kind = 'tenant'
             AND subscriber_external_id = ''
             AND status IN ('active', 'trialing', 'past_due')
+            ${cursorPredicate}
           ORDER BY tenant_id ASC
           LIMIT ?
         `,
-        limit,
+        ...(afterTenantId ? [afterTenantId, limit] : [limit]),
       );
 
       return result.rows.map((row) => readString(readRecord(row)?.tenant_id)).filter(isPresent);
@@ -566,6 +611,29 @@ function mapStripeSubscriptionStatus(status: StripeSubscriptionStatusSummary["st
     case "paused":
       return "past_due";
   }
+}
+
+function nextKeysetCursor(keys: string[], previous: string | undefined): string {
+  const cursor = keys.at(-1);
+  if (!cursor || (previous !== undefined && cursor <= previous)) {
+    throw new Error("Worker keyset page did not advance");
+  }
+
+  for (let index = 1; index < keys.length; index += 1) {
+    if (keys[index] <= keys[index - 1]) {
+      throw new Error("Worker keyset page was not ordered by stable ID");
+    }
+  }
+
+  return cursor;
+}
+
+function workerBatchLimit(value: number | undefined): number {
+  const limit = value ?? DEFAULT_JOB_LIMIT;
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new RangeError("Worker job limit must be a positive integer");
+  }
+  return limit;
 }
 
 function rowToReconcileSubscriptionRecord(row: unknown): ReconcileSubscriptionRecord | null {

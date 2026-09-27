@@ -5,6 +5,9 @@ const dbMocks = vi.hoisted(() => ({
   getAppDatabase: vi.fn(),
   query: vi.fn(),
   upsert: vi.fn(),
+  transaction: vi.fn(),
+  transactionQuery: vi.fn(),
+  transactionUpsert: vi.fn(),
 }));
 
 vi.mock("$lib/server/db", () => ({
@@ -32,7 +35,13 @@ describe("Stripe subscription sync", () => {
     dbMocks.getAppDatabase.mockResolvedValue({
       query: dbMocks.query,
       upsert: dbMocks.upsert,
+      transaction: dbMocks.transaction,
     });
+    dbMocks.transaction.mockImplementation(async (callback) =>
+      callback({ query: dbMocks.transactionQuery, upsert: dbMocks.transactionUpsert }),
+    );
+    dbMocks.transactionQuery.mockImplementation((...args) => dbMocks.query(...args));
+    dbMocks.transactionUpsert.mockResolvedValue(undefined);
     dbMocks.query.mockImplementation(async (sql: string) => ({
       rows: sql.includes("FROM _smrt_subscription_plans")
         ? [{ id: growthPlan.id, plan_key: growthPlan.planKey }]
@@ -88,7 +97,14 @@ describe("Stripe subscription sync", () => {
       "tenant",
       "",
     );
-    expect(dbMocks.upsert).toHaveBeenCalledWith(
+    expect(dbMocks.upsert).not.toHaveBeenCalled();
+    expect(dbMocks.transaction).toHaveBeenCalledOnce();
+    expect(dbMocks.transactionQuery).toHaveBeenNthCalledWith(
+      1,
+      "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
+      `starter.stripe-subscription-sync:${tenantId}`,
+    );
+    expect(dbMocks.transactionUpsert).toHaveBeenCalledWith(
       "_smrt_tenant_subscriptions",
       ["tenant_id", "subscriber_kind", "subscriber_external_id"],
       expect.objectContaining({
