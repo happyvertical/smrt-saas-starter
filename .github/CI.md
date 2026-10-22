@@ -1,7 +1,7 @@
 # Hosted CI
 
 Starter pull requests run on GitHub-hosted `ubuntu-latest` runners. The shared
-setup action installs Node `24.18.0`, then lets Corepack activate the single
+setup action installs Node `24.22.1`, then lets Corepack activate the single
 pnpm pin from `package.json#packageManager`. Do not copy the pnpm version into
 a workflow.
 

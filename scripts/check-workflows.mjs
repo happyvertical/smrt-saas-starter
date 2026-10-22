@@ -50,7 +50,7 @@ const setupEnvironmentAction = await readFile(
 );
 for (const phrase of [
   "uses: actions/setup-node@v6",
-  'node-version: "24.18.0"',
+  'node-version: "24.22.1"',
   'corepack prepare "$package_manager" --activate',
   "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
   "pnpm store path --silent",

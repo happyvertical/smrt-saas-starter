@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Security
+
+- Pin Node.js to **24.22.1** (Dockerfiles, CI, `engines`) for the October 2026
+  Node.js security releases (Brotli decoder RCE, TLS hostname-validation bypasses).
+
 ### Changed
 
 - Advance the SMRT and SDK families together to SMRT **0.51.31**, the coordinated
